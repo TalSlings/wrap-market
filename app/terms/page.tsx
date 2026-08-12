@@ -1,0 +1,1 @@
+export default function Page(){return <main className="page"><div className="section"><h1>תנאי שימוש</h1><p>האתר הוא לוח מקשר בין משתמשות ואינו צד לעסקה. נוסח משפטי מלא יתווסף לפני השקה ציבורית.</p></div></main>}
