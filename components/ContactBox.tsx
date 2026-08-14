@@ -1,1 +1,77 @@
-"use client";import{useEffect,useState}from"react";import Link from"next/link";import{createClient}from"@/lib/supabase/client";export default function ContactBox({listingId,userId}:{listingId:string,userId?:string|null}){const[c,setC]=useState<any>(null);useEffect(()=>{if(userId)createClient().rpc("get_listing_contact",{p_listing_id:listingId}).then(({data})=>setC(data?.[0]||null))},[listingId,userId]);if(!userId)return <div className="section"><Link className="btn primary" href={`/login?next=/listing/${listingId}`}>התחברי כדי לראות פרטי קשר</Link></div>;if(!c)return <div className="section muted">טוענת פרטי קשר...</div>;return <div className="section"><h2>יצירת קשר</h2>{c.display_name&&<p>{c.display_name}</p>}{c.contact_email&&<p><a href={`mailto:${c.contact_email}`}>{c.contact_email}</a></p>}{c.whatsapp_number&&<p><a href={`https://wa.me/${String(c.whatsapp_number).replace(/\D/g,'')}`}>WhatsApp</a></p>}</div>}
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+
+export default function ContactBox({
+  listingId,
+  userId,
+}: {
+  listingId: string;
+  userId?: string | null;
+}) {
+  const [contact, setContact] = useState<any>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    createClient()
+      .rpc("get_listing_contact", { p_listing_id: listingId })
+      .then(({ data }) => {
+        setContact(data?.[0] || null);
+        setLoaded(true);
+      });
+  }, [listingId, userId]);
+
+  if (!userId) {
+    return (
+      <div className="section">
+        <h2>יצירת קשר</h2>
+        <Link className="btn primary" href={`/login?next=/listing/${listingId}`}>
+          התחברי כדי לראות פרטי קשר
+        </Link>
+      </div>
+    );
+  }
+
+  if (!loaded) return <div className="section muted">טוענת פרטי קשר...</div>;
+
+  if (!contact?.contact_email && !contact?.whatsapp_number) {
+    return (
+      <div className="section">
+        <h2>יצירת קשר</h2>
+        <p className="muted">המפרסמת לא הגדירה דרך יצירת קשר למודעה הזו.</p>
+      </div>
+    );
+  }
+
+  const digits = String(contact.whatsapp_number || "").replace(/\D/g, "");
+  const whatsappHref = digits.startsWith("0")
+    ? `https://wa.me/972${digits.slice(1)}`
+    : `https://wa.me/${digits}`;
+
+  return (
+    <div className="section">
+      <h2>יצירת קשר</h2>
+      {contact.display_name && <p>{contact.display_name}</p>}
+
+      <div className="toolbar">
+        {contact.contact_email && (
+          <a className="btn" href={`mailto:${contact.contact_email}`}>מייל</a>
+        )}
+        {contact.whatsapp_number && (
+          <a
+            className="btn primary"
+            href={whatsappHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
