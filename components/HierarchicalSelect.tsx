@@ -2,14 +2,56 @@
 
 import { useMemo } from "react";
 
-export type TreeParent = { id: string; name: string; selectable?: boolean };
-export type TreeChild = { id: string; name: string; parent_id: string };
+export type TreeParent = {
+  id: string;
+  name: string;
+  selectable?: boolean;
+};
+
+export type TreeChild = {
+  id: string;
+  name: string;
+  parent_id: string;
+};
 
 const boxStyle = {
   border: "1px solid var(--line)",
   borderRadius: 10,
   background: "var(--surface, white)",
 } as const;
+
+function DropdownSummary({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <summary
+      style={{
+        cursor: "pointer",
+        padding: "12px 14px",
+        listStyle: "none",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 10,
+      }}
+    >
+      <span style={{ minWidth: 0, flex: 1 }}>{children}</span>
+      <span
+        aria-hidden="true"
+        style={{
+          flex: "0 0 auto",
+          fontSize: 16,
+          lineHeight: 1,
+          opacity: 0.75,
+        }}
+      >
+        ▾
+      </span>
+    </summary>
+  );
+}
 
 export function FlatMultiSelect({
   label,
@@ -25,24 +67,59 @@ export function FlatMultiSelect({
   onChange: (ids: string[]) => void;
 }) {
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const names = selectedIds.map(id => options.find(x => x.id === id)?.name).filter(Boolean) as string[];
-  const summary = names.length === 0 ? placeholder : names.length <= 2 ? names.join(", ") : `${names.length} נבחרו`;
 
   const toggle = (id: string) => {
     const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
+
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+
     onChange([...next]);
   };
+
+  const names = selectedIds
+    .map((id) => options.find((x) => x.id === id)?.name)
+    .filter(Boolean) as string[];
+
+  const summary =
+    names.length === 0
+      ? placeholder
+      : names.length <= 2
+        ? names.join(", ")
+        : `${names.length} נבחרו`;
 
   return (
     <div className="field">
       {label && <label>{label}</label>}
+
       <details style={boxStyle}>
-        <summary style={{ cursor: "pointer", padding: "12px 14px", listStyle: "none" }}>{summary}</summary>
-        <div style={{ borderTop: "1px solid var(--line)", padding: "8px 10px 12px", maxHeight: 320, overflowY: "auto", display: "grid", gap: 6 }}>
-          {options.map(option => (
-            <label key={option.id} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
-              <input type="checkbox" checked={selected.has(option.id)} onChange={() => toggle(option.id)} />
+        <DropdownSummary>{summary}</DropdownSummary>
+
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            padding: "8px 10px 12px",
+            maxHeight: 320,
+            overflowY: "auto",
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          {options.map((option) => (
+            <label
+              key={option.id}
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={selected.has(option.id)}
+                onChange={() => toggle(option.id)}
+              />
               <span>{option.name}</span>
             </label>
           ))}
@@ -68,70 +145,155 @@ export function HierarchicalMultiSelect({
   onChange: (ids: string[]) => void;
 }) {
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+
   const childMap = useMemo(() => {
     const map = new Map<string, TreeChild[]>();
+
     for (const child of children) {
       const arr = map.get(child.parent_id) || [];
       arr.push(child);
       map.set(child.parent_id, arr);
     }
-    for (const arr of map.values()) arr.sort((a, b) => a.name.localeCompare(b.name, "he"));
+
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.name.localeCompare(b.name, "he"));
+    }
+
     return map;
   }, [children]);
 
   const nameMap = useMemo(() => {
     const map = new Map<string, string>();
-    parents.forEach(x => map.set(x.id, x.name));
-    children.forEach(x => map.set(x.id, x.name));
+
+    parents.forEach((x) => map.set(x.id, x.name));
+    children.forEach((x) => map.set(x.id, x.name));
+
     return map;
   }, [parents, children]);
 
   const groupIds = (parent: TreeParent) => {
-    const ids = (childMap.get(parent.id) || []).map(x => x.id);
-    if (parent.selectable !== false) ids.unshift(parent.id);
+    const ids = (childMap.get(parent.id) || []).map((x) => x.id);
+
+    if (parent.selectable !== false) {
+      ids.unshift(parent.id);
+    }
+
     return ids;
   };
 
   const toggleParent = (parent: TreeParent) => {
     const ids = groupIds(parent);
-    const allSelected = ids.length > 0 && ids.every(id => selected.has(id));
+
+    const allSelected =
+      ids.length > 0 && ids.every((id) => selected.has(id));
+
     const next = new Set(selected);
-    ids.forEach(id => allSelected ? next.delete(id) : next.add(id));
+
+    ids.forEach((id) => {
+      if (allSelected) next.delete(id);
+      else next.add(id);
+    });
+
     onChange([...next]);
   };
 
   const toggleChild = (id: string) => {
     const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
+
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+
     onChange([...next]);
   };
 
-  const names = selectedIds.map(id => nameMap.get(id)).filter(Boolean) as string[];
-  const summary = names.length === 0 ? placeholder : names.length <= 2 ? names.join(", ") : `${names.length} נבחרו`;
+  const names = selectedIds
+    .map((id) => nameMap.get(id))
+    .filter(Boolean) as string[];
+
+  const summary =
+    names.length === 0
+      ? placeholder
+      : names.length <= 2
+        ? names.join(", ")
+        : `${names.length} נבחרו`;
 
   return (
     <div className="field">
       {label && <label>{label}</label>}
+
       <details style={boxStyle}>
-        <summary style={{ cursor: "pointer", padding: "12px 14px", listStyle: "none" }}>{summary}</summary>
-        <div style={{ borderTop: "1px solid var(--line)", padding: "8px 10px 12px", maxHeight: 360, overflowY: "auto" }}>
-          {parents.map(parent => {
+        <DropdownSummary>{summary}</DropdownSummary>
+
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            padding: "8px 10px 12px",
+            maxHeight: 360,
+            overflowY: "auto",
+          }}
+        >
+          {parents.map((parent) => {
             const kids = childMap.get(parent.id) || [];
             const ids = groupIds(parent);
-            const selectedCount = ids.filter(id => selected.has(id)).length;
-            const allSelected = ids.length > 0 && selectedCount === ids.length;
-            const partial = selectedCount > 0 && !allSelected;
+
+            const selectedCount = ids.filter((id) =>
+              selected.has(id)
+            ).length;
+
+            const allSelected =
+              ids.length > 0 && selectedCount === ids.length;
+
+            const partial =
+              selectedCount > 0 && !allSelected;
+
             return (
               <div key={parent.id} style={{ padding: "5px 0" }}>
-                <label style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 650, cursor: "pointer" }}>
-                  <input type="checkbox" checked={allSelected} onChange={() => toggleParent(parent)} />
-                  <span>{partial ? "◩ " : ""}{parent.name}</span>
+                <label
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    fontWeight: 650,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={() => toggleParent(parent)}
+                  />
+
+                  <span>
+                    {partial ? "◩ " : ""}
+                    {parent.name}
+                  </span>
                 </label>
+
                 {kids.length > 0 && (
-                  <div style={{ marginInlineStart: 28, paddingTop: 4, display: "grid", gap: 5 }}>
-                    {kids.map(child => (
-                      <label key={child.id} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer", fontWeight: 400 }}>
-                        <input type="checkbox" checked={selected.has(child.id)} onChange={() => toggleChild(child.id)} />
+                  <div
+                    style={{
+                      marginInlineStart: 28,
+                      paddingTop: 4,
+                      display: "grid",
+                      gap: 5,
+                    }}
+                  >
+                    {kids.map((child) => (
+                      <label
+                        key={child.id}
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "center",
+                          cursor: "pointer",
+                          fontWeight: 400,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected.has(child.id)}
+                          onChange={() => toggleChild(child.id)}
+                        />
                         <span>{child.name}</span>
                       </label>
                     ))}
@@ -163,39 +325,104 @@ export function HierarchicalSingleSelect({
 }) {
   const childMap = useMemo(() => {
     const map = new Map<string, TreeChild[]>();
+
     for (const child of children) {
       const arr = map.get(child.parent_id) || [];
       arr.push(child);
       map.set(child.parent_id, arr);
     }
-    for (const arr of map.values()) arr.sort((a, b) => a.name.localeCompare(b.name, "he"));
+
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.name.localeCompare(b.name, "he"));
+    }
+
     return map;
   }, [children]);
 
-  const selectedName = parents.find(x => x.id === value)?.name || children.find(x => x.id === value)?.name || placeholder;
+  const selectedName =
+    parents.find((x) => x.id === value)?.name ||
+    children.find((x) => x.id === value)?.name ||
+    placeholder;
+
+  const radioName = useMemo(
+    () => `hierarchical-single-${Math.random().toString(36).slice(2)}`,
+    []
+  );
 
   return (
     <div className="field" style={{ margin: 0 }}>
       {label && <label>{label}</label>}
+
       <details style={boxStyle}>
-        <summary style={{ cursor: "pointer", padding: "12px 14px", listStyle: "none" }}>{selectedName}</summary>
-        <div style={{ borderTop: "1px solid var(--line)", padding: "8px 10px 12px", maxHeight: 360, overflowY: "auto" }}>
-          {parents.map(parent => {
+        <DropdownSummary>{selectedName}</DropdownSummary>
+
+        <div
+          style={{
+            borderTop: "1px solid var(--line)",
+            padding: "8px 10px 12px",
+            maxHeight: 360,
+            overflowY: "auto",
+          }}
+        >
+          {parents.map((parent) => {
             const kids = childMap.get(parent.id) || [];
+
             return (
               <div key={parent.id} style={{ padding: "5px 0" }}>
-                <div style={{ fontWeight: 650, paddingBottom: 4 }}>{parent.name}</div>
+                <div
+                  style={{
+                    fontWeight: 650,
+                    paddingBottom: 4,
+                  }}
+                >
+                  {parent.name}
+                </div>
+
                 {parent.selectable !== false && (
-                  <label style={{ display: "flex", gap: 8, alignItems: "center", marginInlineStart: 12, cursor: "pointer" }}>
-                    <input type="radio" name="hierarchical-single" checked={value === parent.id} onChange={() => onChange(parent.id)} />
+                  <label
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      marginInlineStart: 12,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name={radioName}
+                      checked={value === parent.id}
+                      onChange={() => onChange(parent.id)}
+                    />
                     <span>{parent.name}</span>
                   </label>
                 )}
+
                 {kids.length > 0 && (
-                  <div style={{ marginInlineStart: 28, paddingTop: 4, display: "grid", gap: 5 }}>
-                    {kids.map(child => (
-                      <label key={child.id} style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
-                        <input type="radio" name="hierarchical-single" checked={value === child.id} onChange={() => onChange(child.id)} />
+                  <div
+                    style={{
+                      marginInlineStart: 28,
+                      paddingTop: 4,
+                      display: "grid",
+                      gap: 5,
+                    }}
+                  >
+                    {kids.map((child) => (
+                      <label
+                        key={child.id}
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          alignItems: "center",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name={radioName}
+                          checked={value === child.id}
+                          onChange={() => onChange(child.id)}
+                        />
                         <span>{child.name}</span>
                       </label>
                     ))}
