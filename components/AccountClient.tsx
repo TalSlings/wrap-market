@@ -6,9 +6,13 @@ import { createClient } from "@/lib/supabase/client";
 export default function AccountClient({
   listings,
   searches,
+  email,
+  provider,
 }: {
   listings: any[];
   searches: any[];
+  email: string;
+  provider: string;
 }) {
   const s = createClient();
 
@@ -64,6 +68,12 @@ export default function AccountClient({
 
   return (
     <>
+      <div className="section">
+        <strong>מחוברת כ־</strong>
+        <div>{email}</div>
+        <div className="muted">באמצעות {provider}</div>
+      </div>
+
       <div className="toolbar">
         <button className="btn" onClick={logout}>
           התנתקות
