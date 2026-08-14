@@ -1,5 +1,6 @@
 "use client";
 
+
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -763,54 +764,34 @@ export default function ListingForm({
         }
       }
 
-      const selectedWholeRegions =
-        new Set(regionIds);
+      const selectedWholeRegions = new Set(regionIds);
 
-      const subLocationRows =
-        subIds
-          .filter((si) => {
-            const sub =
-              subregions.find(
-                (x: any) =>
-                  x.id === si
-              );
+      const lr: {
+        listing_id: string;
+        region_id: string;
+        subregion_id: string | null;
+      }[] = [];
 
-            return (
-              sub &&
-              !selectedWholeRegions.has(
-                sub.region_id
-              )
-            );
-          })
-          .map((si) => {
-            const sub =
-              subregions.find(
-                (x: any) =>
-                  x.id === si
-              );
+      for (const regionId of regionIds) {
+        lr.push({
+          listing_id: id,
+          region_id: regionId,
+          subregion_id: null,
+        });
+      }
 
-            return {
-              listing_id:
-                id,
-              region_id:
-                sub.region_id,
-              subregion_id:
-                si,
-            };
-          });
+      for (const subId of subIds) {
+        const sub = subregions.find((x: any) => x.id === subId);
 
-      const lr = [
-        ...regionIds.map(
-          (r) => ({
-            listing_id:
-              id,
-            region_id: r,
-            subregion_id:
-              null,
-          })
-        ),
-        ...subLocationRows,
-      ];
+        if (!sub) continue;
+        if (selectedWholeRegions.has(sub.region_id)) continue;
+
+        lr.push({
+          listing_id: id,
+          region_id: sub.region_id,
+          subregion_id: subId,
+        });
+      }
 
       if (lr.length) {
         const { error } =
