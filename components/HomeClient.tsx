@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
+import ImpressionTracker from "@/components/ImpressionTracker";
 import {
   SORTS,
   SIZES,
@@ -819,6 +820,8 @@ const manufacturerOptions = useMemo(
                 compact
               />
             </div>
+
+            <ImpressionTracker listingId={l.id} />
 
             <div className="listing-body">
               <div className="brand">
