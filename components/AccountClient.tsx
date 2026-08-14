@@ -83,93 +83,102 @@ export default function AccountClient({
       <div className="section">
         <h2>המודעות שלי</h2>
 
-        {listings.map((l) => (
-          <div
-            key={l.id}
-            className={
-              "section account-card " + (l.status === "paused" ? "paused" : "")
-            }
-          >
-            <b>
-              {l.manufacturer?.name} · {l.design}
-            </b>{" "}
-            <span className="badge">
-              {l.status === "draft"
-                ? "טיוטה"
-                : l.status === "paused"
-                  ? "מושהית"
-                  : "פעילה"}
-            </span>
+        {listings.length === 0 ? (
+          <p className="muted">אין עדיין מודעות</p>
+        ) : (
+          listings.map((l) => (
+            <div
+              key={l.id}
+              className={
+                "section account-card " +
+                (l.status === "paused" ? "paused" : "")
+              }
+            >
+              <b>
+                {l.manufacturer?.name} · {l.design}
+              </b>{" "}
+              <span className="badge">
+                {l.status === "draft"
+                  ? "טיוטה"
+                  : l.status === "paused"
+                    ? "מושהית"
+                    : "פעילה"}
+              </span>
 
-            <p className="count">
-              חשיפות {l.impressions_count} · צפיות {l.views_count} · מועדפים{" "}
-              {l.favorites_count}
-            </p>
+              <p className="count">
+                חשיפות {l.impressions_count} · צפיות {l.views_count} · מועדפים{" "}
+                {l.favorites_count}
+              </p>
 
-            <div className="toolbar">
-              <Link className="btn" href={`/listing/${l.id}`}>
-                צפייה
-              </Link>
+              <div className="toolbar">
+                <Link className="btn" href={`/listing/${l.id}`}>
+                  צפייה
+                </Link>
 
-              <Link className="btn" href={`/listing/${l.id}/edit`}>
-                עריכה
-              </Link>
+                <Link className="btn" href={`/listing/${l.id}/edit`}>
+                  עריכה
+                </Link>
 
-              {l.status === "active" && (
-                <button
-                  className="btn"
-                  onClick={() => stat(l.id, "paused")}
-                >
-                  השהיה
+                {l.status === "active" && (
+                  <button
+                    className="btn"
+                    onClick={() => stat(l.id, "paused")}
+                  >
+                    השהיה
+                  </button>
+                )}
+
+                {l.status === "paused" && (
+                  <button
+                    className="btn"
+                    onClick={() => stat(l.id, "active")}
+                  >
+                    הפעלה מחדש
+                  </button>
+                )}
+
+                <button className="btn" onClick={() => dup(l)}>
+                  שכפול
                 </button>
-              )}
 
-              {l.status === "paused" && (
                 <button
-                  className="btn"
-                  onClick={() => stat(l.id, "active")}
+                  className="btn danger"
+                  onClick={() => stat(l.id, "deleted")}
                 >
-                  הפעלה מחדש
+                  מחיקה
                 </button>
-              )}
-
-              <button className="btn" onClick={() => dup(l)}>
-                שכפול
-              </button>
-
-              <button
-                className="btn danger"
-                onClick={() => stat(l.id, "deleted")}
-              >
-                מחיקה
-              </button>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <div className="section">
         <h2>החיפושים שלי</h2>
 
-        {searches.map((x) => (
-          <p key={x.id}>
-            <button
-              className="btn"
-              onClick={() => {
-                const raw = JSON.stringify({
-                  ...(x.filters || {}),
-                  sort: x.sort_key,
-                });
+        {searches.length === 0 ? (
+          <p className="muted">אין עדיין חיפושים שמורים</p>
+        ) : (
+          searches.map((x) => (
+            <p key={x.id}>
+              <button
+                className="btn"
+                onClick={() => {
+                  const raw = JSON.stringify({
+                    ...(x.filters || {}),
+                    sort: x.sort_key,
+                  });
 
-                location.href = `/?shared=${encodeURIComponent(
-                  btoa(unescape(encodeURIComponent(raw)))
-                )}`;
-              }}
-            >
-              {x.name}
-            </button>
-          </p>
-        ))}
+                  location.href = `/?shared=${encodeURIComponent(
+                    btoa(unescape(encodeURIComponent(raw)))
+                  )}`;
+                }}
+              >
+                {x.name}
+              </button>
+            </p>
+          ))
+        )}
       </div>
     </>
   );
