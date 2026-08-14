@@ -9,6 +9,7 @@ import {
 } from "@/lib/constants";
 import ViewCounter from "@/components/ViewCounter";
 import ContactBox from "@/components/ContactBox";
+import FavoriteButton from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,19 @@ export default async function Page({
     .single();
 
   if (!l) notFound();
+
+  let initialFavorite = false;
+
+  if (user) {
+    const { data: favorite } = await s
+      .from("favorites")
+      .select("listing_id")
+      .eq("user_id", user.id)
+      .eq("listing_id", id)
+      .maybeSingle();
+
+    initialFavorite = !!favorite;
+  }
 
   const urls: any[] = [];
 
@@ -132,6 +146,12 @@ export default async function Page({
         </p>
 
         <p>{l.price} ₪</p>
+
+        <FavoriteButton
+          listingId={id}
+          userId={user?.id}
+          initialFavorite={initialFavorite}
+        />
 
         <div className="details">
           <div>
