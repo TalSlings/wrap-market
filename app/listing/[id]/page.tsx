@@ -1,17 +1,28 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SIZES, GSM, CONDITIONS, DEFECTS, labelOf } from "@/lib/constants";
+import {
+  SIZES,
+  GSM,
+  CONDITIONS,
+  DEFECTS,
+  labelOf,
+} from "@/lib/constants";
 import ViewCounter from "@/components/ViewCounter";
 import ContactBox from "@/components/ContactBox";
-import FavoriteButton from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
-function externalUrl(value?: string | null) {
+function normalizeExternalUrl(value?: string | null) {
   if (!value) return null;
+
   const trimmed = value.trim();
   if (!trimmed) return null;
-  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
 }
 
 export default async function Page({
@@ -21,37 +32,46 @@ export default async function Page({
 }) {
   const { id } = await params;
   const s = await createClient();
-  const { data: { user } } = await s.auth.getUser();
+
+  const {
+    data: { user },
+  } = await s.auth.getUser();
 
   const { data: l } = await s
     .from("listings")
-    .select(`*,
+    .select(
+      `*,
       manufacturer:manufacturers(name),
-      materials:listing_materials(percentage,material:materials(name,vegan,material_origin)),
-      locations:listing_locations(region:regions(name),subregion:subregions(name)),
-      images:listing_images(storage_path,image_type,position)`)
+      materials:listing_materials(
+        percentage,
+        material:materials(name,vegan,material_origin)
+      ),
+      locations:listing_locations(
+        region:regions(name),
+        subregion:subregions(name)
+      ),
+      images:listing_images(
+        storage_path,
+        image_type,
+        position
+      )`
+    )
     .eq("id", id)
     .single();
 
   if (!l) notFound();
 
-  let initialFavorite = false;
-  if (user) {
-    const { data: favorite } = await s
-      .from("favorites")
-      .select("listing_id")
-      .eq("user_id", user.id)
-      .eq("listing_id", id)
-      .maybeSingle();
-    initialFavorite = !!favorite;
-  }
-
   const urls: any[] = [];
+
   for (const im of l.images || []) {
     const { data } = await s.storage
       .from("listing-images")
       .createSignedUrl(im.storage_path, 3600);
-    urls.push({ ...im, url: data?.signedUrl });
+
+    urls.push({
+      ...im,
+      url: data?.signedUrl,
+    });
   }
 
   const main = urls
@@ -62,36 +82,49 @@ export default async function Page({
     .filter((x) => x.image_type === "defect")
     .sort((a, b) => a.position - b.position);
 
-  const defectKeys = (l.defects || []).filter((x: string) => x !== "none");
-  const moreInfoHref = externalUrl(l.more_info_url);
+  const defectKeys = (l.defects || []).filter(
+    (key: string) => key && key !== "none"
+  );
+
+  const moreInfoHref = normalizeExternalUrl(l.more_info_url);
 
   return (
     <main className="page">
       <ViewCounter id={id} />
 
       <div className="section">
-        {main[0]?.url && <img className="gallery-main" src={main[0].url} alt="" />}
+        {main[0]?.url && (
+          <img
+            className="gallery-main"
+            src={main[0].url}
+            alt=""
+          />
+        )}
+
         <div className="thumbrow">
           {main.slice(1).map((x, i) => (
-            <img className="thumb" key={i} src={x.url} alt="" />
+            <img
+              className="thumb"
+              key={i}
+              src={x.url}
+              alt=""
+            />
           ))}
         </div>
       </div>
 
       <div className="section">
-        <div className="toolbar" style={{ justifyContent: "space-between" }}>
-          <div>
-            <h1 style={{ marginBottom: 4 }}>{l.manufacturer?.name}</h1>
-            <div className="design">{l.design}</div>
-            {l.model && <div className="model">{l.model}</div>}
-          </div>
+        <h1>{l.manufacturer?.name}</h1>
 
-          <FavoriteButton
-            listingId={id}
-            userId={user?.id}
-            initialFavorite={initialFavorite}
-          />
+        <div className="design">
+          {l.design}
         </div>
+
+        {l.model && (
+          <div className="model">
+            {l.model}
+          </div>
+        )}
 
         <p>
           {labelOf(SIZES, l.size)}
@@ -102,7 +135,8 @@ export default async function Page({
 
         <div className="details">
           <div>
-            <b>GSM</b><br />
+            <b>GSM</b>
+            <br />
             {labelOf(GSM, l.gsm)}
           </div>
         </div>
@@ -110,15 +144,22 @@ export default async function Page({
 
       <div className="section">
         <h2>הרכב</h2>
-        {(l.materials || []).map((x: any, i: number) => (
-          <p key={i}>{x.percentage}% {x.material?.name}</p>
-        ))}
+
+        {(l.materials || []).map(
+          (x: any, i: number) => (
+            <p key={i}>
+              {x.percentage}% {x.material?.name}
+            </p>
+          )
+        )}
       </div>
 
       <div className="section">
         <h2>מסירה</h2>
+
         <p>
-          📍 {Array.from(
+          📍{" "}
+          {Array.from(
             new Set(
               (l.locations || [])
                 .map((x: any) =>
@@ -131,7 +172,11 @@ export default async function Page({
           ).join(", ")}
         </p>
 
-        <p>{l.shipping_available ? "🚚 משלוח זמין" : "ללא משלוח"}</p>
+        <p>
+          {l.shipping_available
+            ? "🚚 משלוח זמין"
+            : "ללא משלוח"}
+        </p>
 
         {l.shipping_available && (
           <p className="notice">
@@ -151,9 +196,9 @@ export default async function Page({
         <div className="section">
           <a
             className="btn"
+            href={moreInfoHref}
             target="_blank"
             rel="noopener noreferrer"
-            href={moreInfoHref}
           >
             מידע נוסף על המנשא ↗
           </a>
@@ -162,24 +207,31 @@ export default async function Page({
 
       <div className="section">
         <h2>מצב ופגמים</h2>
-        <p><b>מצב:</b> {labelOf(CONDITIONS, l.condition)}</p>
+
+        <p>
+          <b>מצב המנשא:</b>{" "}
+          {labelOf(CONDITIONS, l.condition)}
+        </p>
 
         {defectKeys.length === 0 ? (
           <p>לא צוינו פגמים ידועים.</p>
         ) : (
           <>
             <div>
-              <b>פגמים שצוינו:</b>
+              <b>פגמים:</b>
+
               <ul>
                 {defectKeys.map((key: string) => (
-                  <li key={key}>{labelOf(DEFECTS, key)}</li>
+                  <li key={key}>
+                    {labelOf(DEFECTS, key)}
+                  </li>
                 ))}
               </ul>
             </div>
 
             {l.defects_description && (
               <div>
-                <b>פירוט:</b>
+                <b>פירוט הפגמים:</b>
                 <p>{l.defects_description}</p>
               </div>
             )}
@@ -188,17 +240,29 @@ export default async function Page({
 
         {defectImages.length > 0 && (
           <div>
-            <b>תמונות פגמים</b>
-            <div className="thumbrow" style={{ marginTop: 8 }}>
+            <b>תמונות הפגמים:</b>
+
+            <div
+              className="thumbrow"
+              style={{ marginTop: 8 }}
+            >
               {defectImages.map((x, i) => (
-                <img className="thumb" key={i} src={x.url} alt="תמונת פגם" />
+                <img
+                  className="thumb"
+                  key={i}
+                  src={x.url}
+                  alt="תמונת פגם"
+                />
               ))}
             </div>
           </div>
         )}
       </div>
 
-      <ContactBox listingId={id} userId={user?.id} />
+      <ContactBox
+        listingId={id}
+        userId={user?.id}
+      />
     </main>
   );
 }
