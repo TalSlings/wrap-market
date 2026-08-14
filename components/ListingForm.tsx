@@ -83,6 +83,12 @@ export default function ListingForm({
     initial?.more_info_url || ""
   );
 
+  const [contactName, setContactName] = useState(initial?.contact_name || "");
+  const [contactEmail, setContactEmail] = useState(initial?.contact_email || "");
+  const [whatsappNumber, setWhatsappNumber] = useState(initial?.whatsapp_number || "");
+  const [contactViaEmail, setContactViaEmail] = useState(initial?.contact_via_email ?? false);
+  const [contactViaWhatsapp, setContactViaWhatsapp] = useState(initial?.contact_via_whatsapp ?? false);
+
   const [selectedColors, setSelectedColors] =
     useState<string[]>(
       initial?.colors || []
@@ -637,6 +643,18 @@ export default function ListingForm({
             "צריך לבחור לפחות אזור אחד"
           );
         }
+
+        if (!contactViaEmail && !contactViaWhatsapp) {
+          throw new Error("צריך לבחור לפחות דרך אחת ליצירת קשר");
+        }
+
+        if (contactViaEmail && !contactEmail.trim()) {
+          throw new Error("סימנת פנייה במייל, אבל לא הזנת כתובת מייל");
+        }
+
+        if (contactViaWhatsapp && !whatsappNumber.trim()) {
+          throw new Error("סימנת פנייה ב־WhatsApp, אבל לא הזנת מספר");
+        }
       }
 
       const payload = {
@@ -665,6 +683,16 @@ export default function ListingForm({
           shipping,
         more_info_url:
           moreInfo || null,
+        contact_name:
+          contactName || null,
+        contact_email:
+          contactEmail || null,
+        whatsapp_number:
+          whatsappNumber || null,
+        contact_via_email:
+          contactViaEmail,
+        contact_via_whatsapp:
+          contactViaWhatsapp,
         colors:
           selectedColors,
         color_patterns:
@@ -1590,6 +1618,63 @@ export default function ListingForm({
             setSelectedLocations
           }
         />
+
+        <div className="field">
+          <label>פרטי קשר למודעה</label>
+          <input
+            className="input"
+            value={contactName}
+            onChange={(e) => setContactName(e.target.value)}
+            placeholder="שם להצגה — אופציונלי"
+          />
+        </div>
+
+        <div className="field">
+          <label>
+            <input
+              type="checkbox"
+              checked={contactViaEmail}
+              onChange={(e) => setContactViaEmail(e.target.checked)}
+            />{" "}
+            לאפשר פנייה במייל
+          </label>
+
+          {contactViaEmail && (
+            <input
+              className="input"
+              type="email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="כתובת מייל ליצירת קשר"
+            />
+          )}
+        </div>
+
+        <div className="field">
+          <label>
+            <input
+              type="checkbox"
+              checked={contactViaWhatsapp}
+              onChange={(e) => setContactViaWhatsapp(e.target.checked)}
+            />{" "}
+            לאפשר פנייה ב־WhatsApp
+          </label>
+
+          {contactViaWhatsapp && (
+            <input
+              className="input"
+              type="tel"
+              inputMode="tel"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              placeholder="מספר טלפון ל־WhatsApp"
+            />
+          )}
+        </div>
+
+        <div className="notice">
+          פרטי הקשר יוצגו רק למשתמשות מחוברות.
+        </div>
 
         <div className="field">
           <label>
