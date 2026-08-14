@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import FavoriteButton from "@/components/FavoriteButton";
 import {
   SORTS,
   SIZES,
@@ -54,6 +55,7 @@ export default function HomeClient({
   regions,
   subregions,
   userId,
+  favoriteIds = [],
   initial,
 }: {
   [k: string]: any;
@@ -89,7 +91,12 @@ export default function HomeClient({
   const [sort, setSort] = useState(initial?.sort || "stable_random");
   const [grid, setGrid] = useState(!!initial?.grid);
 
-  const manufacturerOptions = useMemo(
+  
+  const favoriteSet = useMemo(
+    () => new Set(favoriteIds),
+    [favoriteIds]
+  );
+const manufacturerOptions = useMemo(
     () =>
       manufacturers.map((m: any) => ({
         id: m.id,
@@ -785,6 +792,7 @@ export default function HomeClient({
             key={l.id}
             className="listing"
             href={`/listing/${l.id}`}
+              style={{ position: "relative" }}
           >
             {l.image_url ? (
               <img
@@ -795,6 +803,22 @@ export default function HomeClient({
             ) : (
               <div className="listing-img" />
             )}
+
+            <div
+              style={{
+                position: "absolute",
+                insetInlineEnd: 8,
+                top: 8,
+                zIndex: 2,
+              }}
+            >
+              <FavoriteButton
+                listingId={l.id}
+                userId={userId}
+                initialFavorite={favoriteSet.has(l.id)}
+                compact
+              />
+            </div>
 
             <div className="listing-body">
               <div className="brand">
