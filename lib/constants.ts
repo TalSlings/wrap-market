@@ -3,5 +3,5 @@ export const GSM=[["lte_180","180 או פחות"],["190","190"],["200","200"],["
 export const CONDITIONS=[["unused","לא היה בשימוש"],["lightly_used","היה קצת בשימוש"],["broken_in","מרוכך"],["lightly_worn","מעט בלוי"],["worn","בלוי"]] as const;
 export const DEFECTS=[["none","ללא פגמים ידועים"],["stain","כתם"],["pull","משיכת חוט / Pull"],["broken_thread","חוט שבור"],["hole","חור"],["edge_damage","קצה או מכפלת פגומים"],["repair","תיקון"],["color_change","שינוי צבע"],["other","אחר"]] as const;
 export const COLOR_PATTERNS=[["single_color","צבע יחיד"],["two_color_positive_negative","2 צבעים — דוגמה והנגטיב שלה"],["stripes_ombre_symmetric","פסים או אומברה — סימטרי"],["stripes_ombre_asymmetric","פסים או אומברה — לא סימטרי"],["rainbow","Rainbow / קשת"]] as const;
-export const SORTS=[["stable_random","אקראי יציב"],["price_asc","מחיר: נמוך → גבוה"],["price_desc","מחיר: גבוה → נמוך"],["newest","חדש → ישן"],["oldest","ישן → חדש"],["manufacturer","יצרן: א׳ → ת׳"]] as const;
+export const SORTS=[["stable_random","ברירת מחדל"],["price_asc","מחיר: נמוך → גבוה"],["price_desc","מחיר: גבוה → נמוך"],["newest","חדש → ישן"],["oldest","ישן → חדש"],["manufacturer","יצרן: א׳ → ת׳"]] as const;
 export const labelOf=(items:readonly (readonly [string,string])[],key?:string|null)=>items.find(([k])=>k===key)?.[1]??key??"";
