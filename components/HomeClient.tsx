@@ -107,24 +107,6 @@ export default function HomeClient({
     []
   );
 
-  const colorOptions = useMemo(
-    () =>
-      colors.map((c: any) => ({
-        id: c.key,
-        name: c.label,
-      })),
-    [colors]
-  );
-
-  const colorPatternOptions = useMemo(
-    () =>
-      COLOR_PATTERNS.map(([id, name]) => ({
-        id,
-        name,
-      })),
-    []
-  );
-
   const conditionOptions = useMemo(
     () =>
       CONDITIONS.map(([id, name]) => ({
@@ -535,21 +517,76 @@ export default function HomeClient({
           </label>
         </div>
 
-        <FlatMultiSelect
-          label="צבע"
-          placeholder="כל הצבעים"
-          options={colorOptions}
-          selectedIds={colorKeys}
-          onChange={setColorKeys}
-        />
+        <div className="field">
+          <label>צבע</label>
 
-        <FlatMultiSelect
-          label="תכונות צבע"
-          placeholder="כל תכונות הצבע"
-          options={colorPatternOptions}
-          selectedIds={colorPatterns}
-          onChange={setColorPatterns}
-        />
+          <div className="chips">
+            {colors.map((c: any) => {
+              const active = colorKeys.includes(c.key);
+
+              return (
+                <button
+                  type="button"
+                  key={c.key}
+                  className={"chip " + (active ? "active" : "")}
+                  onClick={() =>
+                    setColorKeys(
+                      active
+                        ? colorKeys.filter((x) => x !== c.key)
+                        : [...colorKeys, c.key]
+                    )
+                  }
+                  title={c.label}
+                  aria-label={c.label}
+                  aria-pressed={active}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    padding: 4,
+                    borderRadius: 999,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 999,
+                      display: "block",
+                      background: c.hex,
+                      border: "1px solid rgba(0,0,0,.18)",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="field">
+          <label>תכונות צבע</label>
+
+          <div className="chips">
+            {COLOR_PATTERNS.map(([k, l]) => (
+              <label className="chip" key={k}>
+                <input
+                  type="checkbox"
+                  checked={colorPatterns.includes(k)}
+                  onChange={(e) =>
+                    setColorPatterns(
+                      e.target.checked
+                        ? [...colorPatterns, k]
+                        : colorPatterns.filter((x) => x !== k)
+                    )
+                  }
+                />{" "}
+                {l}
+              </label>
+            ))}
+          </div>
+        </div>
 
         <FlatMultiSelect
           label="מצב המנשא"
