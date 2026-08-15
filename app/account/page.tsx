@@ -19,6 +19,9 @@ export default async function Page() {
     { data: listings },
     { data: searches },
     { data: favoriteRows },
+    { data: profile },
+    { data: regions },
+    { data: subregions },
   ] = await Promise.all([
     s
       .from("listings")
@@ -49,6 +52,24 @@ export default async function Page() {
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
+
+    s
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+
+    s
+      .from("regions")
+      .select("*")
+      .eq("active", true)
+      .order("sort_order"),
+
+    s
+      .from("subregions")
+      .select("*")
+      .eq("active", true)
+      .order("sort_order"),
   ]);
 
   const favorites = (favoriteRows || [])
@@ -71,9 +92,13 @@ export default async function Page() {
       <h1>האזור שלי</h1>
 
       <AccountClient
+        userId={user.id}
         listings={listings || []}
         searches={searches || []}
         favorites={favorites}
+        profile={profile || null}
+        regions={regions || []}
+        subregions={subregions || []}
         email={user.email || ""}
         provider={provider}
       />
