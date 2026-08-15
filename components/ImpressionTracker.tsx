@@ -8,59 +8,46 @@ export default function ImpressionTracker({
 }: {
   listingId: string;
 }) {
-  const ref = useRef<HTMLSpanElement | null>(null);
+  const markerRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
+    const target = markerRef.current?.parentElement;
+    if (!target) return;
 
-    const key = `impression:${listingId}:${new Date()
-      .toISOString()
-      .slice(0, 10)}`;
-
-    if (sessionStorage.getItem(key)) return;
+    let counted = false;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.some(
-          (entry) =>
-            entry.isIntersecting &&
-            entry.intersectionRatio >= 0.35
-        );
+        const entry = entries[0];
 
-        if (!visible) return;
+        if (
+          !counted &&
+          entry?.isIntersecting &&
+          entry.intersectionRatio >= 0.35
+        ) {
+          counted = true;
 
-        sessionStorage.setItem(key, "1");
+          createClient().rpc(
+            "increment_listing_impression",
+            { p_listing_id: listingId }
+          );
 
-        createClient().rpc(
-          "increment_listing_impression",
-          {
-            p_listing_id: listingId,
-          }
-        );
-
-        observer.disconnect();
+          observer.disconnect();
+        }
       },
-      {
-        threshold: [0.35],
-      }
+      { threshold: [0.35] }
     );
 
-    observer.observe(element);
+    observer.observe(target);
 
     return () => observer.disconnect();
   }, [listingId]);
 
   return (
     <span
-      ref={ref}
+      ref={markerRef}
       aria-hidden="true"
-      style={{
-        position: "absolute",
-        inset: 0,
-        pointerEvents: "none",
-        opacity: 0,
-      }}
+      style={{ display: "none" }}
     />
   );
 }
