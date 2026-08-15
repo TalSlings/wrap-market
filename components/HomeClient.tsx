@@ -579,7 +579,6 @@ export default function HomeClient({
 
         <details
           className="section"
-          defaultOpen={advancedActive}
           style={{ marginTop: 8 }}
         >
           <summary style={{ cursor: "pointer" }}>
