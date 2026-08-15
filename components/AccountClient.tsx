@@ -329,9 +329,6 @@ export default function AccountClient({
                 </span>
 
                 <p className="count">
-                  חשיפות{" "}
-                  {l.impressions_count ?? 0}
-                  {" · "}
                   לחיצות{" "}
                   {l.clicks_count ?? 0}
                   {" · "}
