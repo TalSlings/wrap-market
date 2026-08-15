@@ -101,7 +101,13 @@ export default async function Page({
 
   const moreInfoHref = normalizeExternalUrl(l.more_info_url);
 
-  const locationMap = new Map<string, Set<string>>();
+  const locationMap = new Map<
+    string,
+    {
+      wholeRegion: boolean;
+      subNames: Set<string>;
+    }
+  >();
 
   for (const x of l.locations || []) {
     const regionName = x.region?.name;
@@ -111,21 +117,30 @@ export default async function Page({
     }
 
     if (!locationMap.has(regionName)) {
-      locationMap.set(regionName, new Set<string>());
+      locationMap.set(regionName, {
+        wholeRegion: false,
+        subNames: new Set<string>(),
+      });
     }
 
-    if (x.subregion?.name) {
-      locationMap.get(regionName)!.add(x.subregion.name);
+    const group = locationMap.get(regionName)!;
+
+    if (!x.subregion?.name) {
+      group.wholeRegion = true;
+    } else {
+      group.subNames.add(x.subregion.name);
     }
   }
 
   const locationGroups: {
     regionName: string;
+    wholeRegion: boolean;
     subNames: string[];
   }[] = Array.from(locationMap.entries()).map(
-    ([regionName, subNames]) => ({
+    ([regionName, group]) => ({
       regionName,
-      subNames: Array.from(subNames),
+      wholeRegion: group.wholeRegion,
+      subNames: Array.from(group.subNames),
     })
   );
 
@@ -216,23 +231,26 @@ export default async function Page({
 
         <div>
           {locationGroups.map(
-            ({ regionName, subNames }) => (
+            ({ regionName, wholeRegion, subNames }) => (
               <div
                 key={regionName}
-                style={{ marginBottom: 10 }}
+                style={{ marginBottom: 14 }}
               >
                 <div>
                   📍 <b>{regionName}</b>
                 </div>
 
-                {subNames.length > 0 && (
-                  <div
-                    className="muted"
-                    style={{ marginInlineStart: 24 }}
-                  >
-                    {subNames.join(" · ")}
-                  </div>
-                )}
+                <div
+                  className="muted"
+                  style={{
+                    marginInlineStart: 24,
+                    marginTop: 3,
+                  }}
+                >
+                  {wholeRegion
+                    ? "איסוף מכל האזור"
+                    : subNames.join(" · ")}
+                </div>
               </div>
             )
           )}
