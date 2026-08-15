@@ -379,23 +379,15 @@ export function HierarchicalSingleSelect({
 
             return (
               <div key={parent.id} style={{ padding: "5px 0" }}>
-                <div
-                  style={{
-                    fontWeight: 650,
-                    paddingBottom: 4,
-                  }}
-                >
-                  {parent.name}
-                </div>
-
-                {parent.selectable !== false && (
+                {parent.selectable !== false ? (
                   <label
                     style={{
                       display: "flex",
                       gap: 8,
                       alignItems: "center",
-                      marginInlineStart: 12,
+                      fontWeight: 650,
                       cursor: "pointer",
+                      paddingBottom: 4,
                     }}
                   >
                     <input
@@ -406,6 +398,15 @@ export function HierarchicalSingleSelect({
                     />
                     <span>{parent.name}</span>
                   </label>
+                ) : (
+                  <div
+                    style={{
+                      fontWeight: 650,
+                      paddingBottom: 4,
+                    }}
+                  >
+                    {parent.name}
+                  </div>
                 )}
 
                 {kids.length > 0 && (
