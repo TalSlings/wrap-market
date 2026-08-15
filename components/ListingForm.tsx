@@ -156,6 +156,8 @@ export default function ListingForm({
 
   const [saveDefaultsPrompt, setSaveDefaultsPrompt] = useState(false);
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] =
+    useState<Record<string, string>>({});
   const [saveDefaultsResolver, setSaveDefaultsResolver] =
     useState<((choice: "yes" | "no" | "skip") => void) | null>(null);
 
@@ -711,74 +713,103 @@ export default function ListingForm({
         status ===
         "active"
       ) {
-        const missing: string[] = [];
+        const errors: Record<string, string> = {};
 
         if (!manufacturerId && !newManufacturer.trim()) {
-          missing.push("יצרן");
+          errors.manufacturer =
+            "צריך לבחור יצרן או להוסיף יצרן חדש";
         }
 
         if (!design.trim()) {
-          missing.push("עיצוב");
+          errors.design =
+            "צריך להזין עיצוב";
         }
 
         if (!price || Number(price) <= 0) {
-          missing.push("מחיר");
+          errors.price =
+            "צריך להזין מחיר";
         }
 
         if (!size) {
-          missing.push("מידה");
+          errors.size =
+            "צריך לבחור מידה";
         }
 
         if (!condition) {
-          missing.push("מצב המנשא");
+          errors.condition =
+            "צריך לבחור מצב למנשא";
         }
 
         if (
           !initial &&
           mainImages.length < 1
         ) {
-          missing.push("לפחות תמונה אחת");
+          errors.mainImages =
+            "צריך להוסיף לפחות תמונה ראשית אחת";
         }
 
         if (
           !regionIds.length &&
           !subIds.length
         ) {
-          missing.push("אזור איסוף");
+          errors.locations =
+            "צריך לבחור לפחות אזור איסוף אחד";
         }
 
         if (!contactViaEmail && !contactViaWhatsapp) {
-          missing.push("דרך ליצירת קשר");
+          errors.contactMethod =
+            "צריך לבחור לפחות דרך אחת ליצירת קשר";
         }
 
         if (contactViaEmail && !contactEmail.trim()) {
-          missing.push("כתובת מייל ליצירת קשר");
+          errors.contactEmail =
+            "צריך להזין כתובת מייל";
         }
 
         if (contactViaWhatsapp && !whatsappNumber.trim()) {
-          missing.push("מספר WhatsApp");
-        }
-
-        if (missing.length > 0) {
-          throw new Error(
-            "כדי לפרסם את המודעה צריך להשלים:\n\n• " +
-              missing.join("\n• ")
-          );
+          errors.whatsapp =
+            "צריך להזין מספר WhatsApp";
         }
 
         if (
           !mats.some(
             (x) =>
               x.material_id
-          ) ||
+          )
+        ) {
+          errors.materials =
+            "צריך להוסיף לפחות חומר אחד";
+        } else if (
           Math.abs(
             sum - 100
           ) > 0.001
         ) {
-          throw new Error(
-            "הרכב החומרים צריך לכלול לפחות חומר אחד ולהסתכם ב־100%"
-          );
+          errors.materials =
+            "אחוזי החומרים צריכים להסתכם ב־100%";
         }
+
+        setFieldErrors(errors);
+
+        const firstError =
+          Object.keys(errors)[0];
+
+        if (firstError) {
+          requestAnimationFrame(() => {
+            document
+              .querySelector(
+                `[data-required-field="${firstError}"]`
+              )
+              ?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+          });
+
+          setBusy(false);
+          return;
+        }
+      } else {
+        setFieldErrors({});
       }
 
       const normalizedMoreInfo =
@@ -1004,14 +1035,23 @@ export default function ListingForm({
 
   return (
     <div>
+      <div
+        className="muted"
+        style={{ marginBottom: 12 }}
+      >
+        שדות המסומנים ב־* הם שדות חובה
+      </div>
       <div className="section">
         <h2>
           זהות המנשא
         </h2>
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="manufacturer"
+        >
           <label>
-            יצרן ⓘ
+            יצרן * ⓘ
           </label>
 
           <select
@@ -1092,13 +1132,21 @@ export default function ListingForm({
               {
                 manufacturerMsg
               }
+              {fieldErrors.manufacturer && (
+            <div className="danger">
+              {fieldErrors.manufacturer}
             </div>
           )}
         </div>
+          )}
+        </div>
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="design"
+        >
           <label>
-            עיצוב ⓘ
+            עיצוב * ⓘ
           </label>
 
           <input
@@ -1110,6 +1158,11 @@ export default function ListingForm({
               )
             }
           />
+          {fieldErrors.design && (
+            <div className="danger">
+              {fieldErrors.design}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -1137,9 +1190,12 @@ export default function ListingForm({
           }}
         />
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="size"
+        >
           <label>
-            מידה ⓘ
+            מידה * ⓘ
           </label>
 
           <select
@@ -1166,6 +1222,12 @@ export default function ListingForm({
               )
             )}
           </select>
+
+          {fieldErrors.size && (
+            <div className="danger">
+              {fieldErrors.size}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -1216,6 +1278,19 @@ export default function ListingForm({
         <h2>
           חומרים וצבע
         </h2>
+
+        <div
+          data-required-field="materials"
+          style={{ marginBottom: 8 }}
+        >
+          <b>הרכב חומרים *</b>
+
+          {fieldErrors.materials && (
+            <div className="danger">
+              {fieldErrors.materials}
+            </div>
+          )}
+        </div>
 
         {mats.map(
           (r, i) => (
@@ -1599,9 +1674,12 @@ export default function ListingForm({
           מצב
         </h2>
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="condition"
+        >
           <label>
-            מצב
+            מצב *
           </label>
 
           <select
@@ -1628,6 +1706,12 @@ export default function ListingForm({
               )
             )}
           </select>
+
+          {fieldErrors.condition && (
+            <div className="danger">
+              {fieldErrors.condition}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -1687,9 +1771,12 @@ export default function ListingForm({
           מכירה ומסירה
         </h2>
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="price"
+        >
           <label>
-            מחיר
+            מחיר *
           </label>
 
           <input
@@ -1702,6 +1789,11 @@ export default function ListingForm({
               )
             }
           />
+          {fieldErrors.price && (
+            <div className="danger">
+              {fieldErrors.price}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -1742,8 +1834,9 @@ export default function ListingForm({
           </div>
         </div>
 
+        <div data-required-field="locations">
         <HierarchicalMultiSelect
-          label="אזורים"
+          label="אזורים *"
           placeholder="בחרי אזורים"
           parents={
             regionParents
@@ -1759,14 +1852,30 @@ export default function ListingForm({
           }
         />
 
-        <div className="field">
-          <label>פרטי קשר למודעה</label>
+        {fieldErrors.locations && (
+          <div className="danger">
+            {fieldErrors.locations}
+          </div>
+        )}
+        </div>
+
+        <div
+          className="field"
+          data-required-field="contactMethod"
+        >
+          <label>פרטי קשר למודעה *</label>
           <input
             className="input"
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
             placeholder="שם להצגה — אופציונלי"
           />
+
+          {fieldErrors.contactMethod && (
+            <div className="danger">
+              {fieldErrors.contactMethod}
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -1787,6 +1896,15 @@ export default function ListingForm({
               onChange={(e) => setContactEmail(e.target.value)}
               placeholder="כתובת מייל ליצירת קשר"
             />
+          )}
+
+          {fieldErrors.contactEmail && (
+            <div
+              className="danger"
+              data-required-field="contactEmail"
+            >
+              {fieldErrors.contactEmail}
+            </div>
           )}
         </div>
 
@@ -1809,6 +1927,15 @@ export default function ListingForm({
               onChange={(e) => setWhatsappNumber(e.target.value)}
               placeholder="מספר טלפון ל־WhatsApp"
             />
+          )}
+
+          {fieldErrors.whatsapp && (
+            <div
+              className="danger"
+              data-required-field="whatsapp"
+            >
+              {fieldErrors.whatsapp}
+            </div>
           )}
         </div>
 
@@ -1847,9 +1974,12 @@ export default function ListingForm({
           לפני ההעלאה.
         </div>
 
-        <div className="field">
+        <div
+          className="field"
+          data-required-field="mainImages"
+        >
           <label>
-            תמונות ראשיות — עד 9
+            תמונות ראשיות * — עד 9
           </label>
 
           <input
@@ -1866,6 +1996,11 @@ export default function ListingForm({
               )
             }
           />
+          {fieldErrors.mainImages && (
+            <div className="danger">
+              {fieldErrors.mainImages}
+            </div>
+          )}
         </div>
 
         <div className="field">
