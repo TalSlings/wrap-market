@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 export type TreeParent = {
   id: string;
@@ -344,6 +344,16 @@ export function HierarchicalSingleSelect({
     children.find((x) => x.id === value)?.name ||
     placeholder;
 
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  const choose = (id: string) => {
+    onChange(id);
+
+    if (detailsRef.current) {
+      detailsRef.current.open = false;
+    }
+  };
+
   const radioName = useMemo(
     () => `hierarchical-single-${Math.random().toString(36).slice(2)}`,
     []
@@ -353,7 +363,7 @@ export function HierarchicalSingleSelect({
     <div className="field" style={{ margin: 0 }}>
       {label && <label>{label}</label>}
 
-      <details style={boxStyle}>
+      <details ref={detailsRef} style={boxStyle}>
         <DropdownSummary>{selectedName}</DropdownSummary>
 
         <div
@@ -392,7 +402,7 @@ export function HierarchicalSingleSelect({
                       type="radio"
                       name={radioName}
                       checked={value === parent.id}
-                      onChange={() => onChange(parent.id)}
+                      onChange={() => choose(parent.id)}
                     />
                     <span>{parent.name}</span>
                   </label>
@@ -421,7 +431,7 @@ export function HierarchicalSingleSelect({
                           type="radio"
                           name={radioName}
                           checked={value === child.id}
-                          onChange={() => onChange(child.id)}
+                          onChange={() => choose(child.id)}
                         />
                         <span>{child.name}</span>
                       </label>
