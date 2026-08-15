@@ -101,6 +101,29 @@ export default async function Page({
 
   const moreInfoHref = normalizeExternalUrl(l.more_info_url);
 
+  const locationGroups = Array.from(
+    (l.locations || []).reduce(
+      (map: Map<string, Set<string>>, x: any) => {
+        const regionName = x.region?.name;
+        if (!regionName) return map;
+
+        if (!map.has(regionName)) {
+          map.set(regionName, new Set<string>());
+        }
+
+        if (x.subregion?.name) {
+          map.get(regionName)!.add(x.subregion.name);
+        }
+
+        return map;
+      },
+      new Map<string, Set<string>>()
+    )
+  ).map(([regionName, subNames]) => ({
+    regionName,
+    subNames: Array.from(subNames),
+  }));
+
   return (
     <main className="page">
       <div className="section">
@@ -125,17 +148,35 @@ export default async function Page({
       </div>
 
       <div className="section">
-        <h1>{l.manufacturer?.name}</h1>
+        <div
+          className="toolbar"
+          style={{
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <div>
+            <h1 style={{ marginTop: 0 }}>
+              {l.manufacturer?.name}
+            </h1>
 
-        <div className="design">
-          {l.design}
-        </div>
+            <div className="design">
+              {l.design}
+            </div>
 
-        {l.model && (
-          <div className="model">
-            {l.model}
+            {l.model && (
+              <div className="model">
+                {l.model}
+              </div>
+            )}
           </div>
-        )}
+
+          <FavoriteButton
+            listingId={id}
+            userId={user?.id}
+            initialFavorite={initialFavorite}
+          />
+        </div>
 
         <p>
           {labelOf(SIZES, l.size)}
@@ -143,12 +184,6 @@ export default async function Page({
         </p>
 
         <p>{l.price} ₪</p>
-
-        <FavoriteButton
-          listingId={id}
-          userId={user?.id}
-          initialFavorite={initialFavorite}
-        />
 
         <div className="details">
           <div>
@@ -174,20 +209,29 @@ export default async function Page({
       <div className="section">
         <h2>מסירה</h2>
 
-        <p>
-          📍{" "}
-          {Array.from(
-            new Set(
-              (l.locations || [])
-                .map((x: any) =>
-                  x.subregion?.name
-                    ? `${x.region?.name} · ${x.subregion?.name}`
-                    : x.region?.name
-                )
-                .filter(Boolean)
+        <div>
+          {locationGroups.map(
+            ({ regionName, subNames }) => (
+              <div
+                key={regionName}
+                style={{ marginBottom: 10 }}
+              >
+                <div>
+                  📍 <b>{regionName}</b>
+                </div>
+
+                {subNames.length > 0 && (
+                  <div
+                    className="muted"
+                    style={{ marginInlineStart: 24 }}
+                  >
+                    {subNames.join(" · ")}
+                  </div>
+                )}
+              </div>
             )
-          ).join(", ")}
-        </p>
+          )}
+        </div>
 
         <p>
           {l.shipping_available
