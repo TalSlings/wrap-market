@@ -17,6 +17,7 @@ import {
   FlatMultiSelect,
   HierarchicalMultiSelect,
 } from "@/components/HierarchicalSelect";
+import { createClient } from "@/lib/supabase/client";
 
 const rank: any = {
   lte_180: 180,
@@ -92,12 +93,12 @@ export default function HomeClient({
   const [sort, setSort] = useState(initial?.sort || "stable_random");
   const [grid, setGrid] = useState(!!initial?.grid);
 
-  
   const favoriteSet = useMemo(
     () => new Set(favoriteIds),
     [favoriteIds]
   );
-const manufacturerOptions = useMemo(
+
+  const manufacturerOptions = useMemo(
     () =>
       manufacturers.map((m: any) => ({
         id: m.id,
@@ -109,6 +110,15 @@ const manufacturerOptions = useMemo(
   const sizeOptions = useMemo(
     () =>
       SIZES.map(([id, name]) => ({
+        id,
+        name,
+      })),
+    []
+  );
+
+  const patternOptions = useMemo(
+    () =>
+      COLOR_PATTERNS.map(([id, name]) => ({
         id,
         name,
       })),
@@ -221,6 +231,18 @@ const manufacturerOptions = useMemo(
     setPriceMax("");
   };
 
+  const advancedActive =
+    !!q ||
+    colorKeys.length > 0 ||
+    colorPatterns.length > 0 ||
+    conditions.length > 0 ||
+    defectFilters.length > 0 ||
+    !!gmin ||
+    !!gmax ||
+    unknown === false ||
+    priceMin !== "" ||
+    priceMax !== "";
+
   const out = useMemo(() => {
     let x = listings.filter((l: any) => {
       const text =
@@ -248,7 +270,9 @@ const manufacturerOptions = useMemo(
 
       if (
         colorKeys.length &&
-        !(l.colors || []).some((c: string) => colorKeys.includes(c))
+        !(l.colors || []).some((c: string) =>
+          colorKeys.includes(c)
+        )
       ) {
         return false;
       }
@@ -311,7 +335,6 @@ const manufacturerOptions = useMemo(
           if (!unknown) return false;
         } else {
           const r = rank[l.gsm] || 0;
-
           if (gmin && r < (rank[gmin] || 0)) return false;
           if (gmax && r > (rank[gmax] || 999)) return false;
         }
@@ -363,7 +386,6 @@ const manufacturerOptions = useMemo(
       );
     } else {
       const d = new Date().toISOString().slice(0, 10);
-
       x.sort(
         (a: any, b: any) =>
           hash(a.id + d) -
@@ -403,11 +425,7 @@ const manufacturerOptions = useMemo(
     const name = prompt("שם לחיפוש");
     if (!name) return;
 
-    const { createClient } = await import(
-      "@/lib/supabase/client"
-    );
-
-    await createClient()
+    const { error } = await createClient()
       .from("saved_searches")
       .insert({
         user_id: userId,
@@ -434,7 +452,12 @@ const manufacturerOptions = useMemo(
         sort_key: sort,
       });
 
-    alert("נשמר");
+    if (error) {
+      alert(`לא הצלחנו לשמור את החיפוש: ${error.message}`);
+      return;
+    }
+
+    alert("החיפוש נשמר");
   };
 
   const share = () => {
@@ -473,6 +496,30 @@ const manufacturerOptions = useMemo(
     alert("הקישור הועתק");
   };
 
+  async function openListing(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    listingId: string
+  ) {
+    if (
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    ) {
+      return;
+    }
+
+    e.preventDefault();
+
+    await createClient().rpc(
+      "increment_listing_click",
+      { p_listing_id: listingId }
+    );
+
+    location.href = `/listing/${listingId}`;
+  }
+
   return (
     <main className="page">
       <div className="filters">
@@ -506,9 +553,7 @@ const manufacturerOptions = useMemo(
             <input
               type="checkbox"
               checked={vegan}
-              onChange={(e) =>
-                setVegan(e.target.checked)
-              }
+              onChange={(e) => setVegan(e.target.checked)}
             />{" "}
             רק טבעוני
           </label>
@@ -517,100 +562,11 @@ const manufacturerOptions = useMemo(
             <input
               type="checkbox"
               checked={natural}
-              onChange={(e) =>
-                setNatural(e.target.checked)
-              }
+              onChange={(e) => setNatural(e.target.checked)}
             />{" "}
             רק חומרים טבעיים
           </label>
         </div>
-
-        <div className="field">
-          <label>צבע</label>
-
-          <div className="chips">
-            {colors.map((c: any) => {
-              const active = colorKeys.includes(c.key);
-
-              return (
-                <button
-                  type="button"
-                  key={c.key}
-                  className={"chip " + (active ? "active" : "")}
-                  onClick={() =>
-                    setColorKeys(
-                      active
-                        ? colorKeys.filter((x) => x !== c.key)
-                        : [...colorKeys, c.key]
-                    )
-                  }
-                  title={c.label}
-                  aria-label={c.label}
-                  aria-pressed={active}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    padding: 4,
-                    borderRadius: 999,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: 999,
-                      display: "block",
-                      background: c.hex,
-                      border: "1px solid rgba(0,0,0,.18)",
-                    }}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="field">
-          <label>תכונות צבע</label>
-
-          <div className="chips">
-            {COLOR_PATTERNS.map(([k, l]) => (
-              <label className="chip" key={k}>
-                <input
-                  type="checkbox"
-                  checked={colorPatterns.includes(k)}
-                  onChange={(e) =>
-                    setColorPatterns(
-                      e.target.checked
-                        ? [...colorPatterns, k]
-                        : colorPatterns.filter((x) => x !== k)
-                    )
-                  }
-                />{" "}
-                {l}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <FlatMultiSelect
-          label="מצב המנשא"
-          placeholder="כל המצבים"
-          options={conditionOptions}
-          selectedIds={conditions}
-          onChange={setConditions}
-        />
-
-        <FlatMultiSelect
-          label="פגמים"
-          placeholder="כל סוגי הפגמים"
-          options={defectOptions}
-          selectedIds={defectFilters}
-          onChange={setDefectFilters}
-        />
 
         <HierarchicalMultiSelect
           label="אזורים"
@@ -621,107 +577,169 @@ const manufacturerOptions = useMemo(
           onChange={setSelectedLocations}
         />
 
-        <div className="field">
-          <label>מחיר</label>
+        <details
+          className="section"
+          defaultOpen={advancedActive}
+          style={{ marginTop: 8 }}
+        >
+          <summary style={{ cursor: "pointer" }}>
+            <b>חיפוש מתקדם</b>
+            {advancedActive ? " · פעיל" : ""}
+          </summary>
 
-          <div className="toolbar">
-            <input
-              className="input"
-              inputMode="numeric"
-              placeholder="מ־"
-              value={priceMin}
-              onChange={(e) =>
-                setPriceMin(e.target.value)
-              }
+          <div style={{ paddingTop: 12 }}>
+            <div className="field">
+              <label>חיפוש חופשי</label>
+              <input
+                className="input"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="יצרן, עיצוב, מודל..."
+              />
+            </div>
+
+            <div className="field">
+              <label>מחיר</label>
+              <div className="toolbar">
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  placeholder="מ־"
+                  value={priceMin}
+                  onChange={(e) => setPriceMin(e.target.value)}
+                />
+                <input
+                  className="input"
+                  inputMode="numeric"
+                  placeholder="עד־"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="field">
+              <label>GSM</label>
+              <div className="toolbar">
+                <select
+                  className="select"
+                  value={gmin}
+                  onChange={(e) => setGmin(e.target.value)}
+                >
+                  <option value="">מ־הכול</option>
+                  {GSM.filter(([k]) => k !== "unknown").map(
+                    ([k, l]) => (
+                      <option key={k} value={k}>
+                        {l}
+                      </option>
+                    )
+                  )}
+                </select>
+
+                <select
+                  className="select"
+                  value={gmax}
+                  onChange={(e) => setGmax(e.target.value)}
+                >
+                  <option value="">עד הכול</option>
+                  {GSM.filter(([k]) => k !== "unknown").map(
+                    ([k, l]) => (
+                      <option key={k} value={k}>
+                        {l}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={unknown}
+                  onChange={(e) => setUnknown(e.target.checked)}
+                />{" "}
+                לכלול גם GSM לא ידוע
+              </label>
+            </div>
+
+            <div className="field">
+              <label>צבע</label>
+              <div className="chips">
+                {colors.map((c: any) => {
+                  const active = colorKeys.includes(c.key);
+
+                  return (
+                    <button
+                      type="button"
+                      key={c.key}
+                      className={
+                        "chip " +
+                        (active ? "active" : "")
+                      }
+                      onClick={() =>
+                        setColorKeys(
+                          active
+                            ? colorKeys.filter(
+                                (x) => x !== c.key
+                              )
+                            : [...colorKeys, c.key]
+                        )
+                      }
+                      title={c.label}
+                      aria-label={c.label}
+                      aria-pressed={active}
+                      style={{
+                        width: 34,
+                        height: 34,
+                        padding: 4,
+                        borderRadius: 999,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 999,
+                          display: "block",
+                          background: c.hex,
+                          border:
+                            "1px solid rgba(0,0,0,.18)",
+                        }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <FlatMultiSelect
+              label="תכונות צבע"
+              placeholder="כל תכונות הצבע"
+              options={patternOptions}
+              selectedIds={colorPatterns}
+              onChange={setColorPatterns}
             />
 
-            <input
-              className="input"
-              inputMode="numeric"
-              placeholder="עד־"
-              value={priceMax}
-              onChange={(e) =>
-                setPriceMax(e.target.value)
-              }
+            <FlatMultiSelect
+              label="מצב המנשא"
+              placeholder="כל המצבים"
+              options={conditionOptions}
+              selectedIds={conditions}
+              onChange={setConditions}
+            />
+
+            <FlatMultiSelect
+              label="פגמים"
+              placeholder="כל סוגי הפגמים"
+              options={defectOptions}
+              selectedIds={defectFilters}
+              onChange={setDefectFilters}
             />
           </div>
-        </div>
-
-        <div className="field">
-          <label>GSM</label>
-
-          <div className="toolbar">
-            <select
-              className="select"
-              value={gmin}
-              onChange={(e) =>
-                setGmin(e.target.value)
-              }
-            >
-              <option value="">
-                מ־הכול
-              </option>
-
-              {GSM.filter(
-                ([k]) => k !== "unknown"
-              ).map(([k, l]) => (
-                <option
-                  key={k}
-                  value={k}
-                >
-                  {l}
-                </option>
-              ))}
-            </select>
-
-            <select
-              className="select"
-              value={gmax}
-              onChange={(e) =>
-                setGmax(e.target.value)
-              }
-            >
-              <option value="">
-                עד הכול
-              </option>
-
-              {GSM.filter(
-                ([k]) => k !== "unknown"
-              ).map(([k, l]) => (
-                <option
-                  key={k}
-                  value={k}
-                >
-                  {l}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <label>
-            <input
-              type="checkbox"
-              checked={unknown}
-              onChange={(e) =>
-                setUnknown(e.target.checked)
-              }
-            />{" "}
-            לכלול גם GSM לא ידוע
-          </label>
-        </div>
-
-        <div className="field">
-          <label>חיפוש חופשי</label>
-
-          <input
-            className="input"
-            value={q}
-            onChange={(e) =>
-              setQ(e.target.value)
-            }
-            placeholder="יצרן, עיצוב, מודל..."
-          />
-        </div>
+        </details>
 
         <div className="toolbar">
           <button
@@ -741,15 +759,10 @@ const manufacturerOptions = useMemo(
           className="select"
           style={{ width: "auto" }}
           value={sort}
-          onChange={(e) =>
-            setSort(e.target.value)
-          }
+          onChange={(e) => setSort(e.target.value)}
         >
           {SORTS.map(([k, l]) => (
-            <option
-              key={k}
-              value={k}
-            >
+            <option key={k} value={k}>
               {l}
             </option>
           ))}
@@ -757,43 +770,28 @@ const manufacturerOptions = useMemo(
 
         <button
           className="btn"
-          onClick={() =>
-            setGrid(!grid)
-          }
+          onClick={() => setGrid(!grid)}
         >
-          {grid
-            ? "☰ רשימה"
-            : "▦ גריד"}
+          {grid ? "☰ רשימה" : "▦ גריד"}
         </button>
 
-        <button
-          className="btn"
-          onClick={save}
-        >
+        <button className="btn" onClick={save}>
           שמרי חיפוש
         </button>
 
-        <button
-          className="btn"
-          onClick={share}
-        >
+        <button className="btn" onClick={share}>
           שתפי
         </button>
       </div>
 
-      <div
-        className={
-          grid
-            ? "grid-mode"
-            : ""
-        }
-      >
+      <div className={grid ? "grid-mode" : ""}>
         {out.map((l: any) => (
           <Link
             key={l.id}
             className="listing"
             href={`/listing/${l.id}`}
-              style={{ position: "relative" }}
+            onClick={(e) => openListing(e, l.id)}
+            style={{ position: "relative" }}
           >
             {l.image_url ? (
               <img
@@ -839,57 +837,42 @@ const manufacturerOptions = useMemo(
               )}
 
               <div className="meta">
-                {labelOf(SIZES, l.size)} ·{" "}
-                {l.price} ₪
+                {labelOf(SIZES, l.size)} · {l.price} ₪
               </div>
 
               <div className="materials">
                 {(l.materials || [])
                   .slice(0, 3)
-                  .map(
-                    (
-                      m: any,
-                      i: number
-                    ) => (
-                      <div key={i}>
-                        {m.percentage}%{" "}
-                        {m.material?.name}
-                      </div>
-                    )
-                  )}
+                  .map((m: any, i: number) => (
+                    <div key={i}>
+                      {m.percentage}% {m.material?.name}
+                    </div>
+                  ))}
 
-                {(l.materials || []).length >
-                  3 && <div>…</div>}
+                {(l.materials || []).length > 3 && (
+                  <div>…</div>
+                )}
               </div>
 
               <div className="location">
-                📍{" "}
-                {l.locations?.[0]?.region
-                  ?.name || ""}
-                {(l.locations || []).length >
-                1
+                📍 {l.locations?.[0]?.region?.name || ""}
+                {(l.locations || []).length > 1
                   ? " +1"
                   : ""}
               </div>
 
               <div className="icons">
-                {l.shipping_available && (
-                  <span>🚚</span>
-                )}
+                {l.shipping_available && <span>🚚</span>}
 
-                {(l.materials || []).length >
-                  0 &&
+                {(l.materials || []).length > 0 &&
                   (l.materials || []).every(
-                    (m: any) =>
-                      m.material?.vegan
+                    (m: any) => m.material?.vegan
                   ) && <span>🌿</span>}
 
-                {(l.materials || []).length >
-                  0 &&
+                {(l.materials || []).length > 0 &&
                   (l.materials || []).every(
                     (m: any) =>
-                      m.material
-                        ?.material_origin ===
+                      m.material?.material_origin ===
                       "natural"
                   ) && <span>🍃</span>}
               </div>
