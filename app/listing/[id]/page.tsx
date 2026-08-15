@@ -101,28 +101,33 @@ export default async function Page({
 
   const moreInfoHref = normalizeExternalUrl(l.more_info_url);
 
-  const locationGroups = Array.from(
-    (l.locations || []).reduce(
-      (map: Map<string, Set<string>>, x: any) => {
-        const regionName = x.region?.name;
-        if (!regionName) return map;
+  const locationMap = new Map<string, Set<string>>();
 
-        if (!map.has(regionName)) {
-          map.set(regionName, new Set<string>());
-        }
+  for (const x of l.locations || []) {
+    const regionName = x.region?.name;
 
-        if (x.subregion?.name) {
-          map.get(regionName)!.add(x.subregion.name);
-        }
+    if (!regionName) {
+      continue;
+    }
 
-        return map;
-      },
-      new Map<string, Set<string>>()
-    )
-  ).map(([regionName, subNames]) => ({
-    regionName,
-    subNames: Array.from(subNames),
-  }));
+    if (!locationMap.has(regionName)) {
+      locationMap.set(regionName, new Set<string>());
+    }
+
+    if (x.subregion?.name) {
+      locationMap.get(regionName)!.add(x.subregion.name);
+    }
+  }
+
+  const locationGroups: {
+    regionName: string;
+    subNames: string[];
+  }[] = Array.from(locationMap.entries()).map(
+    ([regionName, subNames]) => ({
+      regionName,
+      subNames: Array.from(subNames),
+    })
+  );
 
   return (
     <main className="page">
