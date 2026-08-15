@@ -151,6 +151,9 @@ export default function ListingForm({
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [savedProfile, setSavedProfile] = useState<any | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(!!initial);
+
   const toggle = (a: string[], v: string) =>
     a.includes(v)
       ? a.filter((x) => x !== v)
@@ -256,26 +259,36 @@ export default function ListingForm({
   useEffect(() => {
     if (initial) return;
 
-    try {
-      const x = JSON.parse(
-        sessionStorage.getItem(
-          "wrap-market-last-publish"
-        ) || "{}"
-      );
+    let cancelled = false;
 
-      if (x.shipping !== undefined) {
-        setShipping(x.shipping);
-      }
+    s
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
 
-      if (x.regionIds) {
-        setRegionIds(x.regionIds);
-      }
+        setSavedProfile(data || null);
 
-      if (x.subIds) {
-        setSubIds(x.subIds);
-      }
-    } catch {}
-  }, [initial]);
+        if (data) {
+          setContactName(data.display_name || "");
+          setContactEmail(data.contact_email || "");
+          setWhatsappNumber(data.whatsapp_number || "");
+          setContactViaEmail(data.contact_via_email ?? false);
+          setContactViaWhatsapp(data.contact_via_whatsapp ?? false);
+          setShipping(data.shipping_available ?? true);
+          setRegionIds(data.region_ids || []);
+          setSubIds(data.subregion_ids || []);
+        }
+
+        setProfileLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initial, userId]);
 
   const toggleDef = (
     v: string
@@ -569,6 +582,88 @@ export default function ListingForm({
     }
   }
 
+  function normalizeExternalUrl(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const withProtocol = /^https?:\/\//i.test(trimmed)
+      ? trimmed
+      : `https://${trimmed}`;
+
+    try {
+      const parsed = new URL(withProtocol);
+
+      if (!parsed.hostname || !parsed.hostname.includes(".")) {
+        throw new Error();
+      }
+
+      return parsed.toString();
+    } catch {
+      throw new Error(
+        "הקישור למידע נוסף אינו כתובת תקינה"
+      );
+    }
+  }
+
+  function currentProfileValues() {
+    return {
+      display_name: contactName.trim() || null,
+      contact_email: contactEmail.trim() || null,
+      whatsapp_number: whatsappNumber.trim() || null,
+      contact_via_email: contactViaEmail,
+      contact_via_whatsapp: contactViaWhatsapp,
+      region_ids: regionIds,
+      subregion_ids: subIds,
+      shipping_available: shipping,
+    };
+  }
+
+  function profileDiffers() {
+    const current = currentProfileValues();
+
+    if (!savedProfile) return true;
+
+    const sorted = (x: string[] = []) => [...x].sort().join("|");
+
+    return (
+      (savedProfile.display_name || null) !== current.display_name ||
+      (savedProfile.contact_email || null) !== current.contact_email ||
+      (savedProfile.whatsapp_number || null) !== current.whatsapp_number ||
+      !!savedProfile.contact_via_email !== current.contact_via_email ||
+      !!savedProfile.contact_via_whatsapp !== current.contact_via_whatsapp ||
+      sorted(savedProfile.region_ids || []) !== sorted(current.region_ids) ||
+      sorted(savedProfile.subregion_ids || []) !== sorted(current.subregion_ids) ||
+      !!savedProfile.shipping_available !== current.shipping_available
+    );
+  }
+
+  async function maybeSaveDefaults() {
+    if (!profileLoaded || !profileDiffers()) return;
+
+    const yes = window.confirm(
+      "לשמור את פרטי הקשר, האזורים והמשלוח האלה כברירת מחדל למודעות הבאות?"
+    );
+
+    if (!yes) return;
+
+    const values = currentProfileValues();
+
+    const { error } = await s
+      .from("user_profiles")
+      .upsert(
+        {
+          user_id: userId,
+          ...values,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+    if (!error) {
+      setSavedProfile(values);
+    }
+  }
+
   async function save(
     status:
       | "draft"
@@ -657,6 +752,9 @@ export default function ListingForm({
         }
       }
 
+      const normalizedMoreInfo =
+        normalizeExternalUrl(moreInfo);
+
       const payload = {
         owner_id: userId,
         manufacturer_id:
@@ -682,7 +780,7 @@ export default function ListingForm({
         shipping_available:
           shipping,
         more_info_url:
-          moreInfo || null,
+          normalizedMoreInfo,
         contact_name:
           contactName || null,
         contact_email:
@@ -854,14 +952,9 @@ export default function ListingForm({
         );
       }
 
-      sessionStorage.setItem(
-        "wrap-market-last-publish",
-        JSON.stringify({
-          shipping,
-          regionIds,
-          subIds,
-        })
-      );
+      if (!initial && status === "active") {
+        await maybeSaveDefaults();
+      }
 
       location.href =
         status === "active"
