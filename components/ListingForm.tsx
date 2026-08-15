@@ -155,6 +155,7 @@ export default function ListingForm({
   const [profileLoaded, setProfileLoaded] = useState(!!initial);
 
   const [saveDefaultsPrompt, setSaveDefaultsPrompt] = useState(false);
+  const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
   const [saveDefaultsResolver, setSaveDefaultsResolver] =
     useState<((choice: "yes" | "no" | "skip") => void) | null>(null);
 
@@ -710,24 +711,58 @@ export default function ListingForm({
         status ===
         "active"
       ) {
-        if (
-          !design ||
-          !price ||
-          !size ||
-          !condition
-        ) {
-          throw new Error(
-            "חסרים שדות חובה"
-          );
+        const missing: string[] = [];
+
+        if (!manufacturerId && !newManufacturer.trim()) {
+          missing.push("יצרן");
+        }
+
+        if (!design.trim()) {
+          missing.push("עיצוב");
+        }
+
+        if (!price || Number(price) <= 0) {
+          missing.push("מחיר");
+        }
+
+        if (!size) {
+          missing.push("מידה");
+        }
+
+        if (!condition) {
+          missing.push("מצב המנשא");
         }
 
         if (
           !initial &&
-          mainImages.length <
-            1
+          mainImages.length < 1
         ) {
+          missing.push("לפחות תמונה אחת");
+        }
+
+        if (
+          !regionIds.length &&
+          !subIds.length
+        ) {
+          missing.push("אזור איסוף");
+        }
+
+        if (!contactViaEmail && !contactViaWhatsapp) {
+          missing.push("דרך ליצירת קשר");
+        }
+
+        if (contactViaEmail && !contactEmail.trim()) {
+          missing.push("כתובת מייל ליצירת קשר");
+        }
+
+        if (contactViaWhatsapp && !whatsappNumber.trim()) {
+          missing.push("מספר WhatsApp");
+        }
+
+        if (missing.length > 0) {
           throw new Error(
-            "צריך לפחות תמונה אחת"
+            "כדי לפרסם את המודעה צריך להשלים:\n\n• " +
+              missing.join("\n• ")
           );
         }
 
@@ -741,29 +776,8 @@ export default function ListingForm({
           ) > 0.001
         ) {
           throw new Error(
-            "הרכב החומרים צריך להסתכם ב־100%"
+            "הרכב החומרים צריך לכלול לפחות חומר אחד ולהסתכם ב־100%"
           );
-        }
-
-        if (
-          !regionIds.length &&
-          !subIds.length
-        ) {
-          throw new Error(
-            "צריך לבחור לפחות אזור אחד"
-          );
-        }
-
-        if (!contactViaEmail && !contactViaWhatsapp) {
-          throw new Error("צריך לבחור לפחות דרך אחת ליצירת קשר");
-        }
-
-        if (contactViaEmail && !contactEmail.trim()) {
-          throw new Error("סימנת פנייה במייל, אבל לא הזנת כתובת מייל");
-        }
-
-        if (contactViaWhatsapp && !whatsappNumber.trim()) {
-          throw new Error("סימנת פנייה ב־WhatsApp, אבל לא הזנת מספר");
         }
       }
 
@@ -971,10 +985,13 @@ export default function ListingForm({
         await maybeSaveDefaults();
       }
 
-      location.href =
-        status === "active"
-          ? `/listing/${id}`
-          : "/account";
+      if (status === "active") {
+        setBusy(false);
+        setPublishedListingId(id);
+        return;
+      }
+
+      location.href = "/account";
     } catch (e: any) {
       setMsg(
         e.message ||
@@ -1952,6 +1969,68 @@ export default function ListingForm({
                 onClick={() => answerSaveDefaults("skip")}
               >
                 דלגי
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {publishedListingId && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.35)",
+            zIndex: 1200,
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            className="section"
+            style={{
+              width: "min(520px, 100%)",
+              margin: 0,
+            }}
+          >
+            <h2>המודעה פורסמה</h2>
+
+            <p>
+              מה תרצי לעשות עכשיו?
+            </p>
+
+            <div className="toolbar">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  location.href = `/listing/${publishedListingId}`;
+                }}
+              >
+                צפייה במודעה
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  location.href = "/new";
+                }}
+              >
+                פרסום מודעה נוספת
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  location.href = "/account";
+                }}
+              >
+                לאזור שלי
               </button>
             </div>
           </div>
