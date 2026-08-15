@@ -7,7 +7,6 @@ import {
   DEFECTS,
   labelOf,
 } from "@/lib/constants";
-import ViewCounter from "@/components/ViewCounter";
 import ContactBox from "@/components/ContactBox";
 import FavoriteButton from "@/components/FavoriteButton";
 
@@ -104,8 +103,6 @@ export default async function Page({
 
   return (
     <main className="page">
-      <ViewCounter id={id} />
-
       <div className="section">
         {main[0]?.url && (
           <img
