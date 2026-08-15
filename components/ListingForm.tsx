@@ -154,6 +154,10 @@ export default function ListingForm({
   const [savedProfile, setSavedProfile] = useState<any | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(!!initial);
 
+  const [saveDefaultsPrompt, setSaveDefaultsPrompt] = useState(false);
+  const [saveDefaultsResolver, setSaveDefaultsResolver] =
+    useState<((choice: "yes" | "no" | "skip") => void) | null>(null);
+
   const toggle = (a: string[], v: string) =>
     a.includes(v)
       ? a.filter((x) => x !== v)
@@ -637,14 +641,25 @@ export default function ListingForm({
     );
   }
 
+  function askSaveDefaults() {
+    return new Promise<"yes" | "no" | "skip">((resolve) => {
+      setSaveDefaultsResolver(() => resolve);
+      setSaveDefaultsPrompt(true);
+    });
+  }
+
+  function answerSaveDefaults(choice: "yes" | "no" | "skip") {
+    saveDefaultsResolver?.(choice);
+    setSaveDefaultsPrompt(false);
+    setSaveDefaultsResolver(null);
+  }
+
   async function maybeSaveDefaults() {
     if (!profileLoaded || !profileDiffers()) return;
 
-    const yes = window.confirm(
-      "לשמור את פרטי הקשר, האזורים והמשלוח האלה כברירת מחדל למודעות הבאות?"
-    );
+    const choice = await askSaveDefaults();
 
-    if (!yes) return;
+    if (choice !== "yes") return;
 
     const values = currentProfileValues();
 
@@ -1328,13 +1343,28 @@ export default function ListingForm({
               padding: 14,
             }}
           >
-            <h3
+            <div
+              className="toolbar"
               style={{
-                marginTop: 0,
+                justifyContent: "space-between",
+                marginBottom: 12,
               }}
             >
-              חומר חדש
-            </h3>
+              <h3 style={{ margin: 0 }}>
+                חומר חדש
+              </h3>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setShowNewMaterial(false);
+                  setMaterialMsg("");
+                }}
+              >
+                סגירה
+              </button>
+            </div>
 
             <div className="field">
               <label>
@@ -1872,6 +1902,62 @@ export default function ListingForm({
             : "פרסום מודעה"}
         </button>
       </div>
+      {saveDefaultsPrompt && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.35)",
+            zIndex: 1000,
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            className="section"
+            style={{
+              width: "min(520px, 100%)",
+              margin: 0,
+            }}
+          >
+            <h2>לשמור למודעות הבאות?</h2>
+
+            <p>
+              לשמור את פרטי הקשר, האזורים והמשלוח האלה כברירת מחדל למודעות הבאות?
+            </p>
+
+            <div className="toolbar">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => answerSaveDefaults("yes")}
+              >
+                כן
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => answerSaveDefaults("no")}
+              >
+                לא
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => answerSaveDefaults("skip")}
+              >
+                דלגי
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
