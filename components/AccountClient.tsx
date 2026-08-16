@@ -21,6 +21,7 @@ export default function AccountClient({
   subregions,
   email,
   provider,
+  isAdmin,
 }: {
   userId: string;
   listings: any[];
@@ -31,6 +32,7 @@ export default function AccountClient({
   subregions: any[];
   email: string;
   provider: string;
+  isAdmin: boolean;
 }) {
   const s = createClient();
 
@@ -499,7 +501,10 @@ export default function AccountClient({
 
             <div
               className="toolbar"
-              style={{ marginTop: 12 }}
+              style={{
+                marginTop: 12,
+                flexWrap: "wrap",
+              }}
             >
               <button
                 className="btn"
@@ -507,6 +512,15 @@ export default function AccountClient({
               >
                 התנתקות
               </button>
+
+              {isAdmin && (
+                <Link
+                  className="btn primary"
+                  href="/admin"
+                >
+                  אזור מנהלות
+                </Link>
+              )}
             </div>
           </div>
 
