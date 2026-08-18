@@ -5,24 +5,43 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 type Tab =
+  | "attention"
   | "listings"
   | "manufacturers"
   | "materials"
+  | "notes"
   | "colors"
   | "regions";
 
-function AddedByUser({ row }: { row: any }) {
-  if (!row?.created_by) return null;
+type Placement = "search" | "listing" | "form";
 
-  return (
-    <span
-      className="badge"
-      title="הפריט נוסף דרך האתר על־ידי משתמשת"
-    >
-      נוסף ע״י משתמשת
-    </span>
-  );
-}
+const NOTE_SECTIONS = [
+  ["manufacturer", "יצרן"],
+  ["design", "עיצוב"],
+  ["model", "מודל"],
+  ["size", "מידה"],
+  ["materials", "חומרים"],
+  ["colors", "צבעים"],
+  ["color_patterns", "תכונות / מבנה צבע"],
+  ["gsm", "GSM"],
+  ["condition", "מצב המנשא"],
+  ["defects", "פגמים"],
+  ["price", "מחיר"],
+  ["locations", "אזורים / מסירה"],
+  ["shipping", "משלוח"],
+  ["contact", "פרטי קשר"],
+  ["more_info_url", "מידע נוסף / קישור"],
+  ["description", "תיאור חופשי"],
+] as const;
+
+const PLACEMENTS: {
+  key: Placement;
+  label: string;
+}[] = [
+  { key: "search", label: "שורת חיפוש / סינון" },
+  { key: "listing", label: "דף מנשא" },
+  { key: "form", label: "הוספה / עריכת מודעה" },
+];
 
 function statusLabel(status?: string | null) {
   if (status === "active") return "פעיל";
@@ -30,28 +49,39 @@ function statusLabel(status?: string | null) {
   if (status === "paused") return "מושהה";
   if (status === "hidden") return "מוסתר";
   if (status === "merged") return "אוחד";
-  if (status === "pending") return "ממתין";
   return status || "—";
 }
 
+function reviewLabel(row: any) {
+  if (!row?.created_by) return null;
+
+  return row.reviewed_at
+    ? "נבדק"
+    : "דורש טיפול";
+}
+
 export default function AdminClient({
+  userId,
   listings: initialListings,
   manufacturers: initialManufacturers,
   materials: initialMaterials,
   colors: initialColors,
   regions: initialRegions,
   subregions: initialSubregions,
+  notes: initialNotes,
 }: {
+  userId: string;
   listings: any[];
   manufacturers: any[];
   materials: any[];
   colors: any[];
   regions: any[];
   subregions: any[];
+  notes: any[];
 }) {
   const s = createClient();
 
-  const [tab, setTab] = useState<Tab>("listings");
+  const [tab, setTab] = useState<Tab>("attention");
   const [q, setQ] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -62,6 +92,17 @@ export default function AdminClient({
   const [colors, setColors] = useState(initialColors);
   const [regions, setRegions] = useState(initialRegions);
   const [subregions, setSubregions] = useState(initialSubregions);
+  const [notes, setNotes] = useState(initialNotes);
+
+  const [manufacturerMerge, setManufacturerMerge] =
+    useState<Record<string, string>>({});
+  const [materialMerge, setMaterialMerge] =
+    useState<Record<string, string>>({});
+
+  const [noteSection, setNoteSection] =
+    useState<string>("color_patterns");
+  const [notePlacement, setNotePlacement] =
+    useState<Placement>("form");
 
   const [newManufacturer, setNewManufacturer] = useState("");
   const [newMaterial, setNewMaterial] = useState("");
@@ -70,65 +111,121 @@ export default function AdminClient({
   const [newSubregion, setNewSubregion] = useState("");
   const [newSubregionParent, setNewSubregionParent] = useState("");
 
-  const tabs: { key: Tab; label: string }[] = [
-    { key: "listings", label: "מודעות" },
-    { key: "manufacturers", label: "יצרנים" },
-    { key: "materials", label: "חומרים" },
-    { key: "colors", label: "צבעים" },
-    { key: "regions", label: "אזורים" },
+  const attentionManufacturers = useMemo(
+    () =>
+      manufacturers.filter(
+        (x: any) => x.created_by && !x.reviewed_at
+      ),
+    [manufacturers]
+  );
+
+  const attentionMaterials = useMemo(
+    () =>
+      materials.filter(
+        (x: any) => x.created_by && !x.reviewed_at
+      ),
+    [materials]
+  );
+
+  const attentionCount =
+    attentionManufacturers.length +
+    attentionMaterials.length;
+
+  const tabs: {
+    key: Tab;
+    label: string;
+  }[] = [
+    {
+      key: "attention",
+      label: `דורש טיפול${attentionCount ? ` (${attentionCount})` : ""}`,
+    },
+    { key: "listings", label: `מודעות (${listings.length})` },
+    {
+      key: "manufacturers",
+      label: `יצרנים (${manufacturers.length})`,
+    },
+    {
+      key: "materials",
+      label: `חומרים (${materials.length})`,
+    },
+    { key: "notes", label: "הערות והנחיות" },
+    { key: "colors", label: `צבעים (${colors.length})` },
+    { key: "regions", label: `אזורים (${regions.length})` },
   ];
 
   const notify = (text: string) => {
     setMsg(text);
-    window.setTimeout(() => setMsg(""), 2500);
+    window.setTimeout(() => setMsg(""), 3000);
   };
 
-  const filteredListings = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return listings;
+  const activeManufacturers = manufacturers.filter(
+    (x: any) => x.status === "active"
+  );
 
-    return listings.filter((l: any) =>
-      `${l.manufacturer?.name || ""} ${l.design || ""} ${
-        l.model || ""
-      } ${l.status || ""}`
+  const activeMaterials = materials.filter(
+    (x: any) => x.status === "active"
+  );
+
+  const filtered = (rows: any[]) => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return rows;
+
+    return rows.filter((x: any) =>
+      JSON.stringify(x)
         .toLowerCase()
         .includes(needle)
     );
-  }, [listings, q]);
+  };
 
-  const filteredManufacturers = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return manufacturers;
+  async function review(
+    table: "manufacturers" | "materials",
+    id: string
+  ) {
+    const reviewed_at = new Date().toISOString();
 
-    return manufacturers.filter((x: any) =>
-      `${x.name || ""} ${x.status || ""}`
-        .toLowerCase()
-        .includes(needle)
-    );
-  }, [manufacturers, q]);
+    const { error } = await s
+      .from(table)
+      .update({ reviewed_at })
+      .eq("id", id);
 
-  const filteredMaterials = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    if (!needle) return materials;
+    if (error) {
+      notify(error.message);
+      return;
+    }
 
-    return materials.filter((x: any) =>
-      `${x.name || ""} ${x.status || ""} ${
-        x.material_origin || ""
-      }`
-        .toLowerCase()
-        .includes(needle)
-    );
-  }, [materials, q]);
+    if (table === "manufacturers") {
+      setManufacturers((rows) =>
+        rows.map((x) =>
+          x.id === id ? { ...x, reviewed_at } : x
+        )
+      );
+    } else {
+      setMaterials((rows) =>
+        rows.map((x) =>
+          x.id === id ? { ...x, reviewed_at } : x
+        )
+      );
+    }
 
-  async function updateListingStatus(id: string, status: string) {
+    notify("סומן כנבדק");
+  }
+
+  async function updateListingStatus(
+    id: string,
+    status: string
+  ) {
     const { error } = await s
       .from("listings")
       .update({
         status,
         paused_at:
-          status === "paused" ? new Date().toISOString() : null,
+          status === "paused"
+            ? new Date().toISOString()
+            : null,
         deleted_at:
-          status === "deleted" ? new Date().toISOString() : null,
+          status === "deleted"
+            ? new Date().toISOString()
+            : null,
       })
       .eq("id", id);
 
@@ -140,107 +237,72 @@ export default function AdminClient({
     setListings((rows) =>
       status === "deleted"
         ? rows.filter((x) => x.id !== id)
-        : rows.map((x) => (x.id === id ? { ...x, status } : x))
+        : rows.map((x) =>
+            x.id === id ? { ...x, status } : x
+          )
     );
-
-    notify("המודעה עודכנה");
   }
 
-  async function renameManufacturer(id: string, currentName: string) {
+  async function updateManufacturer(
+    id: string,
+    patch: Record<string, any>
+  ) {
+    const { error } = await s
+      .from("manufacturers")
+      .update({
+        ...patch,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setManufacturers((rows) =>
+      rows.map((x) =>
+        x.id === id ? { ...x, ...patch } : x
+      )
+    );
+  }
+
+  async function renameManufacturer(
+    id: string,
+    currentName: string
+  ) {
     const name = prompt("שם היצרן", currentName)?.trim();
     if (!name || name === currentName) return;
 
-    const { error } = await s
-      .from("manufacturers")
-      .update({
-        name,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    if (error) {
-      notify(error.message);
-      return;
-    }
-
-    setManufacturers((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, name } : x))
-    );
-    notify("שם היצרן עודכן");
-  }
-
-  async function manufacturerStatus(id: string, status: string) {
-    const { error } = await s
-      .from("manufacturers")
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    if (error) {
-      notify(error.message);
-      return;
-    }
-
-    setManufacturers((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, status } : x))
-    );
-    notify("היצרן עודכן");
-  }
-
-  async function addManufacturer() {
-    const name = newManufacturer.trim();
-    if (!name) return;
-
-    const { data, error } = await s
-      .from("manufacturers")
-      .insert({ name, status: "active" })
-      .select("*")
-      .single();
-
-    if (error) {
-      notify(error.message);
-      return;
-    }
-
-    setManufacturers((rows) =>
-      [...rows, data].sort((a, b) =>
-        a.name.localeCompare(b.name, "he")
-      )
-    );
-    setNewManufacturer("");
-    notify("היצרן נוסף");
+    await updateManufacturer(id, { name });
   }
 
   async function mergeManufacturer(fromId: string) {
-    const options = manufacturers.filter(
-      (x: any) => x.id !== fromId && x.status === "active"
-    );
-
-    const targetName = prompt(
-      "לאיזה יצרן לאחד? כתבי את השם המדויק:\n\n" +
-        options
-          .slice(0, 30)
-          .map((x: any) => x.name)
-          .join("\n")
-    )?.trim();
-
-    if (!targetName) return;
-
-    const target = options.find(
-      (x: any) => x.name.toLowerCase() === targetName.toLowerCase()
-    );
-
-    if (!target) {
-      notify("לא נמצא יצרן בשם הזה");
+    const targetId = manufacturerMerge[fromId];
+    if (!targetId) {
+      notify("בחרי יצרן שאליו מאחדים");
       return;
     }
 
-    const { error } = await s.rpc("admin_merge_manufacturer", {
-      p_from_id: fromId,
-      p_into_id: target.id,
-    });
+    const target = manufacturers.find(
+      (x: any) => x.id === targetId
+    );
+
+    if (
+      !confirm(
+        `לאחד את כל המודעות לתוך "${target?.name}"?`
+      )
+    ) {
+      return;
+    }
+
+    const { error } = await s.rpc(
+      "admin_merge_manufacturer",
+      {
+        p_from_id: fromId,
+        p_into_id: targetId,
+      }
+    );
 
     if (error) {
       notify(error.message);
@@ -253,7 +315,7 @@ export default function AdminClient({
           ? {
               ...x,
               status: "merged",
-              merged_into_id: target.id,
+              reviewed_at: new Date().toISOString(),
             }
           : x
       )
@@ -264,8 +326,10 @@ export default function AdminClient({
         x.manufacturer_id === fromId
           ? {
               ...x,
-              manufacturer_id: target.id,
-              manufacturer: { name: target.name },
+              manufacturer_id: targetId,
+              manufacturer: {
+                name: target?.name,
+              },
             }
           : x
       )
@@ -274,7 +338,10 @@ export default function AdminClient({
     notify("היצרנים אוחדו");
   }
 
-  async function updateMaterial(id: string, patch: Record<string, any>) {
+  async function updateMaterial(
+    id: string,
+    patch: Record<string, any>
+  ) {
     const { error } = await s
       .from("materials")
       .update(patch)
@@ -286,15 +353,90 @@ export default function AdminClient({
     }
 
     setMaterials((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, ...patch } : x))
+      rows.map((x) =>
+        x.id === id ? { ...x, ...patch } : x
+      )
     );
-    notify("החומר עודכן");
   }
 
-  async function renameMaterial(id: string, currentName: string) {
+  async function renameMaterial(
+    id: string,
+    currentName: string
+  ) {
     const name = prompt("שם החומר", currentName)?.trim();
     if (!name || name === currentName) return;
+
     await updateMaterial(id, { name });
+  }
+
+  async function mergeMaterial(fromId: string) {
+    const targetId = materialMerge[fromId];
+    if (!targetId) {
+      notify("בחרי חומר שאליו מאחדים");
+      return;
+    }
+
+    const target = materials.find(
+      (x: any) => x.id === targetId
+    );
+
+    if (
+      !confirm(
+        `לאחד את החומר לתוך "${target?.name}"? אחוזים במודעות קיימות יחוברו במקרה הצורך.`
+      )
+    ) {
+      return;
+    }
+
+    const { error } = await s.rpc(
+      "admin_merge_material",
+      {
+        p_from_id: fromId,
+        p_into_id: targetId,
+      }
+    );
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setMaterials((rows) =>
+      rows.map((x) =>
+        x.id === fromId
+          ? {
+              ...x,
+              status: "hidden",
+              reviewed_at: new Date().toISOString(),
+            }
+          : x
+      )
+    );
+
+    notify("החומרים אוחדו");
+  }
+
+  async function addManufacturer() {
+    const name = newManufacturer.trim();
+    if (!name) return;
+
+    const { data, error } = await s
+      .from("manufacturers")
+      .insert({
+        name,
+        status: "active",
+        reviewed_at: new Date().toISOString(),
+      })
+      .select("*")
+      .single();
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setManufacturers((rows) => [...rows, data]);
+    setNewManufacturer("");
   }
 
   async function addMaterial() {
@@ -305,11 +447,13 @@ export default function AdminClient({
       .from("materials")
       .insert({
         name,
-        parent_material_id: newMaterialParent || null,
+        parent_material_id:
+          newMaterialParent || null,
         status: "active",
         vegan: true,
         material_origin: "natural",
         is_selectable: true,
+        reviewed_at: new Date().toISOString(),
       })
       .select("*")
       .single();
@@ -322,41 +466,176 @@ export default function AdminClient({
     setMaterials((rows) => [...rows, data]);
     setNewMaterial("");
     setNewMaterialParent("");
-    notify("החומר נוסף");
   }
 
-  async function updateColor(id: string, patch: Record<string, any>) {
-    const { error } = await s.from("colors").update(patch).eq("id", id);
+  function noteFor(
+    sectionKey: string,
+    placement: Placement
+  ) {
+    const existing = notes.find(
+      (x: any) =>
+        x.section_key === sectionKey &&
+        x.placement === placement
+    );
+
+    const label =
+      NOTE_SECTIONS.find(([key]) => key === sectionKey)?.[1] ||
+      sectionKey;
+
+    return (
+      existing || {
+        section_key: sectionKey,
+        section_label: label,
+        placement,
+        content: "",
+        is_visible: false,
+        image_1_path: null,
+        image_2_path: null,
+      }
+    );
+  }
+
+  const currentNote = noteFor(
+    noteSection,
+    notePlacement
+  );
+
+  function updateCurrentNote(patch: Record<string, any>) {
+    setNotes((rows) => {
+      const index = rows.findIndex(
+        (x: any) =>
+          x.section_key === noteSection &&
+          x.placement === notePlacement
+      );
+
+      const next = {
+        ...currentNote,
+        ...patch,
+      };
+
+      if (index < 0) {
+        return [...rows, next];
+      }
+
+      return rows.map((x, i) =>
+        i === index ? next : x
+      );
+    });
+  }
+
+  async function saveCurrentNote() {
+    const note = noteFor(
+      noteSection,
+      notePlacement
+    );
+
+    const { data, error } = await s
+      .from("help_notes")
+      .upsert(
+        {
+          section_key: note.section_key,
+          section_label: note.section_label,
+          placement: note.placement,
+          content: note.content || null,
+          is_visible: !!note.is_visible,
+          image_1_path: note.image_1_path || null,
+          image_2_path: note.image_2_path || null,
+          updated_at: new Date().toISOString(),
+          updated_by: userId,
+        },
+        {
+          onConflict: "section_key,placement",
+        }
+      )
+      .select("*")
+      .single();
 
     if (error) {
       notify(error.message);
       return;
     }
 
-    setColors((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, ...patch } : x))
-    );
+    setNotes((rows) => {
+      const without = rows.filter(
+        (x: any) =>
+          !(
+            x.section_key === data.section_key &&
+            x.placement === data.placement
+          )
+      );
+
+      return [...without, data];
+    });
+
+    notify("ההערה נשמרה");
   }
 
-  async function updateRegion(id: string, patch: Record<string, any>) {
-    const { error } = await s.from("regions").update(patch).eq("id", id);
+  async function uploadNoteImage(
+    file: File,
+    slot: 1 | 2
+  ) {
+    const safeName = file.name.replace(
+      /[^a-zA-Z0-9._-]/g,
+      "_"
+    );
+
+    const path =
+      `${noteSection}/${notePlacement}/` +
+      `${Date.now()}-${slot}-${safeName}`;
+
+    const { error } = await s.storage
+      .from("help-images")
+      .upload(path, file, {
+        upsert: false,
+      });
 
     if (error) {
       notify(error.message);
       return;
     }
 
-    setRegions((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, ...patch } : x))
+    updateCurrentNote(
+      slot === 1
+        ? { image_1_path: path }
+        : { image_2_path: path }
     );
+
+    notify("התמונה הועלתה; שמרי את ההערה");
   }
 
-  async function updateSubregion(
+  function imageUrl(path?: string | null) {
+    if (!path) return null;
+
+    return s.storage
+      .from("help-images")
+      .getPublicUrl(path).data.publicUrl;
+  }
+
+  async function updateColor(
     id: string,
     patch: Record<string, any>
   ) {
     const { error } = await s
-      .from("subregions")
+      .from("colors")
+      .update(patch)
+      .eq("id", id);
+
+    if (!error) {
+      setColors((rows) =>
+        rows.map((x) =>
+          x.id === id ? { ...x, ...patch } : x
+        )
+      );
+    }
+  }
+
+  async function updateRegion(
+    table: "regions" | "subregions",
+    id: string,
+    patch: Record<string, any>
+  ) {
+    const { error } = await s
+      .from(table)
       .update(patch)
       .eq("id", id);
 
@@ -365,25 +644,37 @@ export default function AdminClient({
       return;
     }
 
-    setSubregions((rows) =>
-      rows.map((x) => (x.id === id ? { ...x, ...patch } : x))
-    );
+    if (table === "regions") {
+      setRegions((rows) =>
+        rows.map((x) =>
+          x.id === id ? { ...x, ...patch } : x
+        )
+      );
+    } else {
+      setSubregions((rows) =>
+        rows.map((x) =>
+          x.id === id ? { ...x, ...patch } : x
+        )
+      );
+    }
   }
 
   async function addRegion() {
     const name = newRegion.trim();
     if (!name) return;
 
-    const nextSort =
-      Math.max(0, ...regions.map((x: any) => Number(x.sort_order || 0))) +
-      1;
-
     const { data, error } = await s
       .from("regions")
       .insert({
         name,
         active: true,
-        sort_order: nextSort,
+        sort_order:
+          Math.max(
+            0,
+            ...regions.map((x: any) =>
+              Number(x.sort_order || 0)
+            )
+          ) + 1,
       })
       .select("*")
       .single();
@@ -395,7 +686,6 @@ export default function AdminClient({
 
     setRegions((rows) => [...rows, data]);
     setNewRegion("");
-    notify("האזור נוסף");
   }
 
   async function addSubregion() {
@@ -403,13 +693,9 @@ export default function AdminClient({
     if (!name || !newSubregionParent) return;
 
     const siblings = subregions.filter(
-      (x: any) => x.region_id === newSubregionParent
+      (x: any) =>
+        x.region_id === newSubregionParent
     );
-    const nextSort =
-      Math.max(
-        0,
-        ...siblings.map((x: any) => Number(x.sort_order || 0))
-      ) + 1;
 
     const { data, error } = await s
       .from("subregions")
@@ -417,7 +703,13 @@ export default function AdminClient({
         name,
         region_id: newSubregionParent,
         active: true,
-        sort_order: nextSort,
+        sort_order:
+          Math.max(
+            0,
+            ...siblings.map((x: any) =>
+              Number(x.sort_order || 0)
+            )
+          ) + 1,
       })
       .select("*")
       .single();
@@ -429,17 +721,296 @@ export default function AdminClient({
 
     setSubregions((rows) => [...rows, data]);
     setNewSubregion("");
-    notify("תת־האזור נוסף");
+  }
+
+  function CatalogRow({
+    type,
+    row,
+  }: {
+    type: "manufacturer" | "material";
+    row: any;
+  }) {
+    const isManufacturer =
+      type === "manufacturer";
+
+    const mergeOptions = isManufacturer
+      ? activeManufacturers.filter(
+          (x: any) => x.id !== row.id
+        )
+      : activeMaterials.filter(
+          (x: any) => x.id !== row.id
+        );
+
+    const mergeValue = isManufacturer
+      ? manufacturerMerge[row.id] || ""
+      : materialMerge[row.id] || "";
+
+    return (
+      <div className="section account-card">
+        <div
+          className="toolbar"
+          style={{ flexWrap: "wrap" }}
+        >
+          <b>{row.name}</b>
+
+          <span className="badge">
+            {statusLabel(row.status)}
+          </span>
+
+          {reviewLabel(row) && (
+            <span className="badge">
+              {reviewLabel(row)}
+            </span>
+          )}
+        </div>
+
+        {!isManufacturer && (
+          <div className="muted">
+            {row.parent_material_id
+              ? `תחת: ${
+                  materials.find(
+                    (x: any) =>
+                      x.id === row.parent_material_id
+                  )?.name || "לא ידוע"
+                }`
+              : "חומר־אב"}
+          </div>
+        )}
+
+        <div
+          className="toolbar"
+          style={{
+            marginTop: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <button
+            className="btn"
+            onClick={() =>
+              isManufacturer
+                ? renameManufacturer(
+                    row.id,
+                    row.name
+                  )
+                : renameMaterial(
+                    row.id,
+                    row.name
+                  )
+            }
+          >
+            שינוי שם
+          </button>
+
+          {!row.reviewed_at &&
+            row.created_by && (
+              <button
+                className="btn primary"
+                onClick={() =>
+                  review(
+                    isManufacturer
+                      ? "manufacturers"
+                      : "materials",
+                    row.id
+                  )
+                }
+              >
+                אישור כנבדק
+              </button>
+            )}
+
+          {!isManufacturer && (
+            <>
+              <select
+                className="select"
+                value={
+                  row.parent_material_id || ""
+                }
+                onChange={(e) =>
+                  updateMaterial(row.id, {
+                    parent_material_id:
+                      e.target.value || null,
+                  })
+                }
+              >
+                <option value="">
+                  ללא חומר־אב
+                </option>
+
+                {materials
+                  .filter(
+                    (x: any) =>
+                      !x.parent_material_id &&
+                      x.id !== row.id
+                  )
+                  .map((x: any) => (
+                    <option
+                      key={x.id}
+                      value={x.id}
+                    >
+                      {x.name}
+                    </option>
+                  ))}
+              </select>
+
+              <select
+                className="select"
+                value={
+                  row.material_origin ||
+                  "natural"
+                }
+                onChange={(e) =>
+                  updateMaterial(row.id, {
+                    material_origin:
+                      e.target.value,
+                  })
+                }
+              >
+                <option value="natural">
+                  טבעי
+                </option>
+                <option value="manmade">
+                  מלאכותי
+                </option>
+                <option value="synthetic">
+                  סינתטי
+                </option>
+              </select>
+
+              <label className="chip">
+                <input
+                  type="checkbox"
+                  checked={!!row.vegan}
+                  onChange={(e) =>
+                    updateMaterial(row.id, {
+                      vegan:
+                        e.target.checked,
+                    })
+                  }
+                />{" "}
+                טבעוני
+              </label>
+
+              <label className="chip">
+                <input
+                  type="checkbox"
+                  checked={
+                    row.is_selectable !==
+                    false
+                  }
+                  onChange={(e) =>
+                    updateMaterial(row.id, {
+                      is_selectable:
+                        e.target.checked,
+                    })
+                  }
+                />{" "}
+                ניתן לבחירה
+              </label>
+            </>
+          )}
+
+          <select
+            className="select"
+            value={mergeValue}
+            onChange={(e) => {
+              if (isManufacturer) {
+                setManufacturerMerge(
+                  (old) => ({
+                    ...old,
+                    [row.id]:
+                      e.target.value,
+                  })
+                );
+              } else {
+                setMaterialMerge(
+                  (old) => ({
+                    ...old,
+                    [row.id]:
+                      e.target.value,
+                  })
+                );
+              }
+            }}
+          >
+            <option value="">
+              איחוד לתוך...
+            </option>
+
+            {mergeOptions.map(
+              (x: any) => (
+                <option
+                  key={x.id}
+                  value={x.id}
+                >
+                  {x.name}
+                </option>
+              )
+            )}
+          </select>
+
+          <button
+            className="btn"
+            disabled={!mergeValue}
+            onClick={() =>
+              isManufacturer
+                ? mergeManufacturer(row.id)
+                : mergeMaterial(row.id)
+            }
+          >
+            איחוד
+          </button>
+
+          <button
+            className="btn"
+            onClick={() =>
+              isManufacturer
+                ? updateManufacturer(
+                    row.id,
+                    {
+                      status:
+                        row.status ===
+                        "active"
+                          ? "hidden"
+                          : "active",
+                    }
+                  )
+                : updateMaterial(
+                    row.id,
+                    {
+                      status:
+                        row.status ===
+                        "active"
+                          ? "hidden"
+                          : "active",
+                    }
+                  )
+            }
+          >
+            {row.status === "active"
+              ? "הסתרה"
+              : "הפעלה"}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="toolbar" style={{ flexWrap: "wrap" }}>
+      <div
+        className="toolbar"
+        style={{ flexWrap: "wrap" }}
+      >
         {tabs.map((x) => (
           <button
             type="button"
             key={x.key}
-            className={"btn " + (tab === x.key ? "primary" : "")}
+            className={
+              "btn " +
+              (tab === x.key
+                ? "primary"
+                : "")
+            }
             onClick={() => {
               setTab(x.key);
               setQ("");
@@ -450,79 +1021,161 @@ export default function AdminClient({
         ))}
       </div>
 
-      {msg && <div className="notice">{msg}</div>}
+      {msg && (
+        <div className="notice">
+          {msg}
+        </div>
+      )}
 
-      <div className="field">
-        <label>חיפוש</label>
-        <input
-          className="input"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="חיפוש בתוך הטאב..."
-        />
-      </div>
+      {tab !== "notes" &&
+        tab !== "attention" && (
+          <div className="field">
+            <label>חיפוש</label>
+            <input
+              className="input"
+              value={q}
+              onChange={(e) =>
+                setQ(e.target.value)
+              }
+              placeholder="חיפוש בתוך הטאב..."
+            />
+          </div>
+        )}
+
+      {tab === "attention" && (
+        <div className="section">
+          <h2>דורש טיפול</h2>
+
+          {attentionCount === 0 ? (
+            <p className="muted">
+              אין כרגע פריטים שממתינים לבדיקה.
+            </p>
+          ) : (
+            <>
+              {attentionManufacturers.length >
+                0 && (
+                <>
+                  <h3>
+                    יצרנים שנוספו ע״י
+                    משתמשות
+                  </h3>
+
+                  {attentionManufacturers.map(
+                    (x: any) => (
+                      <CatalogRow
+                        key={x.id}
+                        type="manufacturer"
+                        row={x}
+                      />
+                    )
+                  )}
+                </>
+              )}
+
+              {attentionMaterials.length >
+                0 && (
+                <>
+                  <h3>
+                    חומרים שנוספו ע״י
+                    משתמשות
+                  </h3>
+
+                  {attentionMaterials.map(
+                    (x: any) => (
+                      <CatalogRow
+                        key={x.id}
+                        type="material"
+                        row={x}
+                      />
+                    )
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {tab === "listings" && (
         <div className="section">
           <h2>מודעות</h2>
 
-          {filteredListings.map((l: any) => (
-            <div className="section account-card" key={l.id}>
-              <div>
-                <b>
-                  {l.manufacturer?.name} · {l.design}
-                </b>
-                {l.model && <> · {l.model}</>}
-              </div>
+          {filtered(listings).map(
+            (l: any) => (
+              <div
+                className="section account-card"
+                key={l.id}
+              >
+                <div>
+                  <b>
+                    {l.manufacturer?.name} ·{" "}
+                    {l.design}
+                  </b>
+                  {l.model && (
+                    <> · {l.model}</>
+                  )}
+                </div>
 
-              <div className="muted">
-                {l.price} ₪ · {statusLabel(l.status)}
-              </div>
+                <div className="muted">
+                  {l.price} ₪ ·{" "}
+                  {statusLabel(l.status)}
+                </div>
 
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <Link className="btn" href={`/listing/${l.id}`}>
-                  צפייה
-                </Link>
-
-                <Link className="btn" href={`/listing/${l.id}/edit`}>
-                  עריכה
-                </Link>
-
-                {l.status !== "active" && (
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      updateListingStatus(l.id, "active")
-                    }
-                  >
-                    הפעלה
-                  </button>
-                )}
-
-                {l.status === "active" && (
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      updateListingStatus(l.id, "paused")
-                    }
-                  >
-                    השהיה
-                  </button>
-                )}
-
-                <button
-                  className="btn danger"
-                  onClick={() => {
-                    if (confirm("להסיר את המודעה מהלוח?")) {
-                      updateListingStatus(l.id, "deleted");
-                    }
-                  }}
+                <div
+                  className="toolbar"
+                  style={{ marginTop: 8 }}
                 >
-                  הסרה
-                </button>
+                  <Link
+                    className="btn"
+                    href={`/listing/${l.id}`}
+                  >
+                    צפייה
+                  </Link>
+
+                  <Link
+                    className="btn"
+                    href={`/listing/${l.id}/edit`}
+                  >
+                    עריכה
+                  </Link>
+
+                  <button
+                    className="btn"
+                    onClick={() =>
+                      updateListingStatus(
+                        l.id,
+                        l.status === "active"
+                          ? "paused"
+                          : "active"
+                      )
+                    }
+                  >
+                    {l.status === "active"
+                      ? "השהיה"
+                      : "הפעלה"}
+                  </button>
+
+                  <button
+                    className="btn danger"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "להסיר את המודעה?"
+                        )
+                      ) {
+                        updateListingStatus(
+                          l.id,
+                          "deleted"
+                        );
+                      }
+                    }}
+                  >
+                    הסרה
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
 
@@ -534,59 +1187,31 @@ export default function AdminClient({
             <input
               className="input"
               value={newManufacturer}
-              onChange={(e) => setNewManufacturer(e.target.value)}
+              onChange={(e) =>
+                setNewManufacturer(
+                  e.target.value
+                )
+              }
               placeholder="יצרן חדש"
             />
-            <button className="btn primary" onClick={addManufacturer}>
+
+            <button
+              className="btn primary"
+              onClick={addManufacturer}
+            >
               הוספה
             </button>
           </div>
 
-          {filteredManufacturers.map((x: any) => (
-            <div className="section account-card" key={x.id}>
-              <div className="toolbar">
-                <b>{x.name}</b>
-                <span className="badge">{statusLabel(x.status)}</span>
-                <AddedByUser row={x} />
-              </div>
-
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <button
-                  className="btn"
-                  onClick={() => renameManufacturer(x.id, x.name)}
-                >
-                  שינוי שם
-                </button>
-
-                {x.status !== "active" && (
-                  <button
-                    className="btn"
-                    onClick={() => manufacturerStatus(x.id, "active")}
-                  >
-                    אישור / הפעלה
-                  </button>
-                )}
-
-                {x.status === "active" && (
-                  <button
-                    className="btn"
-                    onClick={() => manufacturerStatus(x.id, "hidden")}
-                  >
-                    הסתרה
-                  </button>
-                )}
-
-                {x.status !== "merged" && (
-                  <button
-                    className="btn"
-                    onClick={() => mergeManufacturer(x.id)}
-                  >
-                    איחוד לתוך יצרן אחר
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+          {filtered(manufacturers).map(
+            (x: any) => (
+              <CatalogRow
+                key={x.id}
+                type="manufacturer"
+                row={x}
+              />
+            )
+          )}
         </div>
       )}
 
@@ -594,144 +1219,250 @@ export default function AdminClient({
         <div className="section">
           <h2>חומרים</h2>
 
-          <div className="toolbar">
+          <div
+            className="toolbar"
+            style={{ flexWrap: "wrap" }}
+          >
             <input
               className="input"
               value={newMaterial}
-              onChange={(e) => setNewMaterial(e.target.value)}
+              onChange={(e) =>
+                setNewMaterial(
+                  e.target.value
+                )
+              }
               placeholder="חומר חדש"
             />
 
             <select
               className="select"
               value={newMaterialParent}
-              onChange={(e) => setNewMaterialParent(e.target.value)}
+              onChange={(e) =>
+                setNewMaterialParent(
+                  e.target.value
+                )
+              }
             >
-              <option value="">ללא חומר־אב</option>
+              <option value="">
+                ללא חומר־אב
+              </option>
+
               {materials
-                .filter((x: any) => !x.parent_material_id)
+                .filter(
+                  (x: any) =>
+                    !x.parent_material_id
+                )
                 .map((x: any) => (
-                  <option value={x.id} key={x.id}>
+                  <option
+                    key={x.id}
+                    value={x.id}
+                  >
                     {x.name}
                   </option>
                 ))}
             </select>
 
-            <button className="btn primary" onClick={addMaterial}>
+            <button
+              className="btn primary"
+              onClick={addMaterial}
+            >
               הוספה
             </button>
           </div>
 
-          {filteredMaterials.map((x: any) => (
-            <div className="section account-card" key={x.id}>
-              <div className="toolbar">
-                <b>{x.name}</b>
-                <span className="badge">{statusLabel(x.status)}</span>
-                <AddedByUser row={x} />
-              </div>
+          {filtered(materials).map(
+            (x: any) => (
+              <CatalogRow
+                key={x.id}
+                type="material"
+                row={x}
+              />
+            )
+          )}
+        </div>
+      )}
 
-              <div className="muted">
-                {x.parent_material_id
-                  ? `תחת: ${
-                      materials.find(
-                        (p: any) => p.id === x.parent_material_id
-                      )?.name || "לא ידוע"
-                    }`
-                  : "חומר־אב"}
-              </div>
+      {tab === "notes" && (
+        <div className="section">
+          <h2>הערות והנחיות</h2>
 
-              <div className="toolbar" style={{ marginTop: 8 }}>
-                <button
-                  className="btn"
-                  onClick={() => renameMaterial(x.id, x.name)}
-                >
-                  שינוי שם
-                </button>
+          <p className="muted">
+            לכל סעיף אפשר לשמור נוסח
+            נפרד לכל מקום שבו הוא מופיע.
+          </p>
 
-                <select
-                  className="select"
-                  value={x.parent_material_id || ""}
-                  onChange={(e) =>
-                    updateMaterial(x.id, {
-                      parent_material_id: e.target.value || null,
-                    })
-                  }
-                >
-                  <option value="">ללא חומר־אב</option>
-                  {materials
-                    .filter(
-                      (p: any) =>
-                        !p.parent_material_id && p.id !== x.id
-                    )
-                    .map((p: any) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                </select>
-
-                <select
-                  className="select"
-                  value={x.material_origin || ""}
-                  onChange={(e) =>
-                    updateMaterial(x.id, {
-                      material_origin: e.target.value,
-                    })
-                  }
-                >
-                  <option value="natural">טבעי</option>
-                  <option value="manmade">מלאכותי</option>
-                  <option value="synthetic">סינתטי</option>
-                </select>
-
-                <label className="chip">
-                  <input
-                    type="checkbox"
-                    checked={!!x.vegan}
-                    onChange={(e) =>
-                      updateMaterial(x.id, {
-                        vegan: e.target.checked,
-                      })
-                    }
-                  />{" "}
-                  טבעוני
-                </label>
-
-                <label className="chip">
-                  <input
-                    type="checkbox"
-                    checked={x.is_selectable !== false}
-                    onChange={(e) =>
-                      updateMaterial(x.id, {
-                        is_selectable: e.target.checked,
-                      })
-                    }
-                  />{" "}
-                  ניתן לבחירה
-                </label>
-
-                {x.status !== "active" ? (
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      updateMaterial(x.id, { status: "active" })
-                    }
+          <div
+            className="toolbar"
+            style={{ flexWrap: "wrap" }}
+          >
+            <select
+              className="select"
+              value={noteSection}
+              onChange={(e) =>
+                setNoteSection(
+                  e.target.value
+                )
+              }
+            >
+              {NOTE_SECTIONS.map(
+                ([key, label]) => (
+                  <option
+                    key={key}
+                    value={key}
                   >
-                    אישור / הפעלה
-                  </button>
-                ) : (
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      updateMaterial(x.id, { status: "hidden" })
-                    }
+                    {label}
+                  </option>
+                )
+              )}
+            </select>
+
+            <select
+              className="select"
+              value={notePlacement}
+              onChange={(e) =>
+                setNotePlacement(
+                  e.target
+                    .value as Placement
+                )
+              }
+            >
+              {PLACEMENTS.map((x) => (
+                <option
+                  key={x.key}
+                  value={x.key}
+                >
+                  {x.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label>
+              <input
+                type="checkbox"
+                checked={
+                  !!currentNote.is_visible
+                }
+                onChange={(e) =>
+                  updateCurrentNote({
+                    is_visible:
+                      e.target.checked,
+                  })
+                }
+              />{" "}
+              להציג את ההערה
+            </label>
+          </div>
+
+          <div className="field">
+            <label>תוכן ההערה</label>
+
+            <textarea
+              className="input"
+              rows={7}
+              value={
+                currentNote.content || ""
+              }
+              onChange={(e) =>
+                updateCurrentNote({
+                  content:
+                    e.target.value,
+                })
+              }
+              placeholder="כתבי כאן את ההסבר שיוצג למשתמשת..."
+            />
+          </div>
+
+          <div className="field">
+            <label>
+              תמונות דוגמה — עד שתיים
+            </label>
+
+            <div
+              className="toolbar"
+              style={{ flexWrap: "wrap" }}
+            >
+              {[1, 2].map((slot) => {
+                const path =
+                  slot === 1
+                    ? currentNote.image_1_path
+                    : currentNote.image_2_path;
+
+                const url =
+                  imageUrl(path);
+
+                return (
+                  <div
+                    key={slot}
+                    className="section"
                   >
-                    הסתרה
-                  </button>
-                )}
-              </div>
+                    {url && (
+                      <img
+                        src={url}
+                        alt=""
+                        style={{
+                          maxWidth: 220,
+                          maxHeight: 160,
+                          objectFit:
+                            "contain",
+                          display: "block",
+                          marginBottom: 8,
+                        }}
+                      />
+                    )}
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file =
+                          e.target
+                            .files?.[0];
+
+                        if (file) {
+                          uploadNoteImage(
+                            file,
+                            slot as 1 | 2
+                          );
+                        }
+                      }}
+                    />
+
+                    {path && (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() =>
+                          updateCurrentNote(
+                            slot === 1
+                              ? {
+                                  image_1_path:
+                                    null,
+                                }
+                              : {
+                                  image_2_path:
+                                    null,
+                                }
+                          )
+                        }
+                      >
+                        הסרה מההערה
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          </div>
+
+          <button
+            type="button"
+            className="btn primary"
+            onClick={saveCurrentNote}
+          >
+            שמירת ההערה
+          </button>
         </div>
       )}
 
@@ -740,23 +1471,29 @@ export default function AdminClient({
           <h2>צבעים</h2>
 
           {colors.map((x: any) => (
-            <div className="section account-card" key={x.id}>
-              <div className="toolbar">
+            <div
+              className="section account-card"
+              key={x.id}
+            >
+              <div
+                className="toolbar"
+                style={{
+                  flexWrap: "wrap",
+                }}
+              >
                 <span
-                  aria-hidden="true"
                   style={{
                     width: 28,
                     height: 28,
                     borderRadius: 999,
-                    display: "inline-block",
+                    display:
+                      "inline-block",
                     background: x.hex,
-                    border: "1px solid rgba(0,0,0,.2)",
+                    border:
+                      "1px solid rgba(0,0,0,.2)",
                   }}
                 />
-                <b>{x.label}</b>
-              </div>
 
-              <div className="toolbar" style={{ marginTop: 8 }}>
                 <input
                   className="input"
                   value={x.label || ""}
@@ -764,13 +1501,20 @@ export default function AdminClient({
                     setColors((rows) =>
                       rows.map((r) =>
                         r.id === x.id
-                          ? { ...r, label: e.target.value }
+                          ? {
+                              ...r,
+                              label:
+                                e.target
+                                  .value,
+                            }
                           : r
                       )
                     )
                   }
                   onBlur={() =>
-                    updateColor(x.id, { label: x.label })
+                    updateColor(x.id, {
+                      label: x.label,
+                    })
                   }
                 />
 
@@ -781,12 +1525,21 @@ export default function AdminClient({
                     setColors((rows) =>
                       rows.map((r) =>
                         r.id === x.id
-                          ? { ...r, hex: e.target.value }
+                          ? {
+                              ...r,
+                              hex:
+                                e.target
+                                  .value,
+                            }
                           : r
                       )
                     )
                   }
-                  onBlur={() => updateColor(x.id, { hex: x.hex })}
+                  onBlur={() =>
+                    updateColor(x.id, {
+                      hex: x.hex,
+                    })
+                  }
                 />
 
                 <label className="chip">
@@ -795,7 +1548,9 @@ export default function AdminClient({
                     checked={!!x.active}
                     onChange={(e) =>
                       updateColor(x.id, {
-                        active: e.target.checked,
+                        active:
+                          e.target
+                            .checked,
                       })
                     }
                   />{" "}
@@ -811,48 +1566,90 @@ export default function AdminClient({
         <div className="section">
           <h2>אזורים</h2>
 
-          <div className="toolbar">
+          <div
+            className="toolbar"
+            style={{ flexWrap: "wrap" }}
+          >
             <input
               className="input"
               value={newRegion}
-              onChange={(e) => setNewRegion(e.target.value)}
+              onChange={(e) =>
+                setNewRegion(
+                  e.target.value
+                )
+              }
               placeholder="אזור־גג חדש"
             />
 
-            <button className="btn primary" onClick={addRegion}>
+            <button
+              className="btn primary"
+              onClick={addRegion}
+            >
               הוספת אזור
             </button>
           </div>
 
-          <div className="toolbar">
+          <div
+            className="toolbar"
+            style={{ flexWrap: "wrap" }}
+          >
             <input
               className="input"
               value={newSubregion}
-              onChange={(e) => setNewSubregion(e.target.value)}
+              onChange={(e) =>
+                setNewSubregion(
+                  e.target.value
+                )
+              }
               placeholder="תת־אזור חדש"
             />
 
             <select
               className="select"
-              value={newSubregionParent}
-              onChange={(e) => setNewSubregionParent(e.target.value)}
+              value={
+                newSubregionParent
+              }
+              onChange={(e) =>
+                setNewSubregionParent(
+                  e.target.value
+                )
+              }
             >
-              <option value="">בחרי אזור־גג</option>
-              {regions.map((x: any) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
+              <option value="">
+                בחרי אזור־גג
+              </option>
+
+              {regions.map(
+                (x: any) => (
+                  <option
+                    key={x.id}
+                    value={x.id}
+                  >
+                    {x.name}
+                  </option>
+                )
+              )}
             </select>
 
-            <button className="btn primary" onClick={addSubregion}>
+            <button
+              className="btn primary"
+              onClick={addSubregion}
+            >
               הוספת תת־אזור
             </button>
           </div>
 
           {regions.map((r: any) => (
-            <div className="section account-card" key={r.id}>
-              <div className="toolbar">
+            <div
+              className="section account-card"
+              key={r.id}
+            >
+              <div
+                className="toolbar"
+                style={{
+                  flexWrap: "wrap",
+                }}
+              >
                 <input
                   className="input"
                   value={r.name || ""}
@@ -860,13 +1657,22 @@ export default function AdminClient({
                     setRegions((rows) =>
                       rows.map((x) =>
                         x.id === r.id
-                          ? { ...x, name: e.target.value }
+                          ? {
+                              ...x,
+                              name:
+                                e.target
+                                  .value,
+                            }
                           : x
                       )
                     )
                   }
                   onBlur={() =>
-                    updateRegion(r.id, { name: r.name })
+                    updateRegion(
+                      "regions",
+                      r.id,
+                      { name: r.name }
+                    )
                   }
                 />
 
@@ -875,49 +1681,89 @@ export default function AdminClient({
                     type="checkbox"
                     checked={!!r.active}
                     onChange={(e) =>
-                      updateRegion(r.id, {
-                        active: e.target.checked,
-                      })
+                      updateRegion(
+                        "regions",
+                        r.id,
+                        {
+                          active:
+                            e.target
+                              .checked,
+                        }
+                      )
                     }
                   />{" "}
                   פעיל
                 </label>
               </div>
 
-              <div style={{ marginInlineStart: 22 }}>
+              <div
+                style={{
+                  marginInlineStart: 22,
+                }}
+              >
                 {subregions
-                  .filter((x: any) => x.region_id === r.id)
+                  .filter(
+                    (x: any) =>
+                      x.region_id === r.id
+                  )
                   .map((x: any) => (
                     <div
                       key={x.id}
                       className="toolbar"
-                      style={{ marginTop: 8 }}
+                      style={{
+                        marginTop: 8,
+                      }}
                     >
                       <input
                         className="input"
-                        value={x.name || ""}
+                        value={
+                          x.name || ""
+                        }
                         onChange={(e) =>
-                          setSubregions((rows) =>
-                            rows.map((z) =>
-                              z.id === x.id
-                                ? { ...z, name: e.target.value }
-                                : z
-                            )
+                          setSubregions(
+                            (rows) =>
+                              rows.map(
+                                (z) =>
+                                  z.id ===
+                                  x.id
+                                    ? {
+                                        ...z,
+                                        name:
+                                          e
+                                            .target
+                                            .value,
+                                      }
+                                    : z
+                              )
                           )
                         }
                         onBlur={() =>
-                          updateSubregion(x.id, { name: x.name })
+                          updateRegion(
+                            "subregions",
+                            x.id,
+                            {
+                              name: x.name,
+                            }
+                          )
                         }
                       />
 
                       <label className="chip">
                         <input
                           type="checkbox"
-                          checked={!!x.active}
+                          checked={
+                            !!x.active
+                          }
                           onChange={(e) =>
-                            updateSubregion(x.id, {
-                              active: e.target.checked,
-                            })
+                            updateRegion(
+                              "subregions",
+                              x.id,
+                              {
+                                active:
+                                  e.target
+                                    .checked,
+                              }
+                            )
                           }
                         />{" "}
                         פעיל
