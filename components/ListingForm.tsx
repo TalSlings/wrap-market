@@ -453,6 +453,7 @@ export default function ListingForm({
         newMaterialOrigin,
       is_selectable: true,
       status: "active",
+      created_by: userId,
     };
 
     const { data, error } =
