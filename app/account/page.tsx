@@ -23,6 +23,7 @@ export default async function Page() {
     { data: regions },
     { data: subregions },
     { data: adminRow },
+    { data: sellerProfile },
   ] = await Promise.all([
     s
       .from("listings")
@@ -77,6 +78,12 @@ export default async function Page() {
       .select("user_id")
       .eq("user_id", user.id)
       .maybeSingle(),
+
+    s
+      .from("public_seller_profiles")
+      .select("public_seller_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ]);
 
   const favorites = (favoriteRows || [])
@@ -109,6 +116,9 @@ export default async function Page() {
         email={user.email || ""}
         provider={provider}
         isAdmin={!!adminRow}
+        sellerPublicId={
+          sellerProfile?.public_seller_id || null
+        }
       />
     </main>
   );
