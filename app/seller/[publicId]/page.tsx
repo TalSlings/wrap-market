@@ -50,14 +50,17 @@ export default async function SellerPage({
     listings = data || [];
   }
 
-  const order = new Map(
-    ids.map((id: string, i: number) => [id, i])
+  const order = new Map<string, number>(
+    ids.map(
+      (id: string, i: number) =>
+        [id, i] as [string, number]
+    )
   );
 
   listings.sort(
     (a, b) =>
-      (order.get(a.id) ?? 9999) -
-      (order.get(b.id) ?? 9999)
+      (order.get(String(a.id)) ?? 9999) -
+      (order.get(String(b.id)) ?? 9999)
   );
 
   const enriched: any[] = [];
