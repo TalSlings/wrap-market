@@ -33,6 +33,7 @@ export default async function AdminPage() {
     { data: regions },
     { data: subregions },
     { data: notes },
+    { data: sellers },
   ] = await Promise.all([
     s
       .from("listings")
@@ -43,36 +44,13 @@ export default async function AdminPage() {
       .neq("status", "deleted")
       .order("updated_at", { ascending: false }),
 
-    s
-      .from("manufacturers")
-      .select("*")
-      .order("name"),
-
-    s
-      .from("materials")
-      .select("*")
-      .order("name"),
-
-    s
-      .from("colors")
-      .select("*")
-      .order("sort_order"),
-
-    s
-      .from("regions")
-      .select("*")
-      .order("sort_order"),
-
-    s
-      .from("subregions")
-      .select("*")
-      .order("sort_order"),
-
-    s
-      .from("help_notes")
-      .select("*")
-      .order("section_label")
-      .order("placement"),
+    s.from("manufacturers").select("*").order("name"),
+    s.from("materials").select("*").order("name"),
+    s.from("colors").select("*").order("sort_order"),
+    s.from("regions").select("*").order("sort_order"),
+    s.from("subregions").select("*").order("sort_order"),
+    s.from("help_notes").select("*").order("section_label").order("placement"),
+    s.rpc("admin_list_sellers"),
   ]);
 
   return (
@@ -88,6 +66,7 @@ export default async function AdminPage() {
         regions={regions || []}
         subregions={subregions || []}
         notes={notes || []}
+        sellers={sellers || []}
       />
     </main>
   );
