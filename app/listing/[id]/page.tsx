@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   SIZES,
@@ -73,6 +74,15 @@ export default async function Page({
 
     initialFavorite = !!favorite;
   }
+
+  const { data: sellerRows } = await s.rpc(
+    "get_listing_seller_public_profile",
+    {
+      p_listing_id: id,
+    }
+  );
+
+  const seller = sellerRows?.[0] || null;
 
   const urls: any[] = [];
 
@@ -342,6 +352,23 @@ export default async function Page({
           </div>
         )}
       </div>
+
+      {seller?.public_seller_id && (
+        <div className="section">
+          <h2>
+            {seller.display_name
+              ? `עוד מהמדף של ${seller.display_name}`
+              : "עוד מהמדף הזה"}
+          </h2>
+
+          <Link
+            className="btn"
+            href={`/seller/${seller.public_seller_id}`}
+          >
+            לכל המנשאים במדף
+          </Link>
+        </div>
+      )}
 
       <ContactBox
         listingId={id}
