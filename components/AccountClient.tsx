@@ -22,6 +22,7 @@ export default function AccountClient({
   email,
   provider,
   isAdmin,
+  sellerPublicId,
 }: {
   userId: string;
   listings: any[];
@@ -33,6 +34,7 @@ export default function AccountClient({
   email: string;
   provider: string;
   isAdmin: boolean;
+  sellerPublicId: string | null;
 }) {
   const s = createClient();
 
@@ -109,6 +111,26 @@ export default function AccountClient({
   const logout = async () => {
     await s.auth.signOut();
     location.href = "/login";
+  };
+
+  const shareShelf = async () => {
+    if (!sellerPublicId) return;
+
+    const url =
+      `${location.origin}/seller/${sellerPublicId}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "המדף שלי",
+          url,
+        });
+        return;
+      } catch {}
+    }
+
+    await navigator.clipboard.writeText(url);
+    alert("הקישור למדף הועתק");
   };
 
   const saveProfile = async () => {
@@ -512,6 +534,25 @@ export default function AccountClient({
               >
                 התנתקות
               </button>
+
+              {sellerPublicId && (
+                <>
+                  <Link
+                    className="btn"
+                    href={`/seller/${sellerPublicId}`}
+                  >
+                    המדף שלי
+                  </Link>
+
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={shareShelf}
+                  >
+                    שיתוף המדף
+                  </button>
+                </>
+              )}
 
               {isAdmin && (
                 <Link
