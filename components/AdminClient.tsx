@@ -9,6 +9,7 @@ type Tab =
   | "listings"
   | "manufacturers"
   | "materials"
+  | "users"
   | "notes"
   | "colors"
   | "regions";
@@ -69,6 +70,7 @@ export default function AdminClient({
   regions: initialRegions,
   subregions: initialSubregions,
   notes: initialNotes,
+  sellers: initialSellers,
 }: {
   userId: string;
   listings: any[];
@@ -78,6 +80,7 @@ export default function AdminClient({
   regions: any[];
   subregions: any[];
   notes: any[];
+  sellers: any[];
 }) {
   const s = createClient();
 
@@ -93,6 +96,7 @@ export default function AdminClient({
   const [regions, setRegions] = useState(initialRegions);
   const [subregions, setSubregions] = useState(initialSubregions);
   const [notes, setNotes] = useState(initialNotes);
+  const [sellers, setSellers] = useState(initialSellers);
 
   const [manufacturerMerge, setManufacturerMerge] =
     useState<Record<string, string>>({});
@@ -147,6 +151,10 @@ export default function AdminClient({
     {
       key: "materials",
       label: `חומרים (${materials.length})`,
+    },
+    {
+      key: "users",
+      label: `משתמשות (${sellers.length})`,
     },
     { key: "notes", label: "הערות והנחיות" },
     { key: "colors", label: `צבעים (${colors.length})` },
@@ -609,6 +617,101 @@ export default function AdminClient({
     return s.storage
       .from("help-images")
       .getPublicUrl(path).data.publicUrl;
+  }
+
+  async function setSellerSuspended(
+    userIdToChange: string,
+    suspended: boolean
+  ) {
+    const { error } = await s.rpc(
+      "admin_set_user_suspended",
+      {
+        p_user_id: userIdToChange,
+        p_suspended: suspended,
+      }
+    );
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setSellers((rows) =>
+      rows.map((x: any) =>
+        x.user_id === userIdToChange
+          ? { ...x, is_suspended: suspended }
+          : x
+      )
+    );
+  }
+
+  async function pauseSellerListings(
+    userIdToPause: string
+  ) {
+    if (
+      !confirm(
+        "להשהות עכשיו את כל המודעות הפעילות של המשתמשת?"
+      )
+    ) {
+      return;
+    }
+
+    const { data, error } = await s.rpc(
+      "admin_pause_user_listings",
+      {
+        p_user_id: userIdToPause,
+      }
+    );
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setListings((rows) =>
+      rows.map((x: any) =>
+        x.owner_id === userIdToPause &&
+        x.status === "active"
+          ? { ...x, status: "paused" }
+          : x
+      )
+    );
+
+    setSellers((rows) =>
+      rows.map((x: any) =>
+        x.user_id === userIdToPause
+          ? { ...x, active_listing_count: 0 }
+          : x
+      )
+    );
+
+    notify(`הושהו ${Number(data || 0)} מודעות`);
+  }
+
+  async function setSellerAdmin(
+    userIdToChange: string,
+    makeAdmin: boolean
+  ) {
+    const { error } = await s.rpc(
+      "admin_set_admin",
+      {
+        p_user_id: userIdToChange,
+        p_is_admin: makeAdmin,
+      }
+    );
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setSellers((rows) =>
+      rows.map((x: any) =>
+        x.user_id === userIdToChange
+          ? { ...x, is_admin: makeAdmin }
+          : x
+      )
+    );
   }
 
   async function updateColor(
@@ -1278,6 +1381,159 @@ export default function AdminClient({
                 row={x}
               />
             )
+          )}
+        </div>
+      )}
+
+      {tab === "users" && (
+        <div className="section">
+          <h2>משתמשות</h2>
+
+          <p className="muted">
+            מוצג רק מידע שנחוץ לניהול הלוח:
+            כינוי, המדף והמודעות. אין כאן מיילים.
+          </p>
+
+          {filtered(sellers).map(
+            (seller: any) => {
+              const sellerListings =
+                listings.filter(
+                  (l: any) =>
+                    l.owner_id === seller.user_id
+                );
+
+              return (
+                <div
+                  key={seller.user_id}
+                  className="section account-card"
+                >
+                  <div
+                    className="toolbar"
+                    style={{ flexWrap: "wrap" }}
+                  >
+                    <b>
+                      {seller.display_name ||
+                        "משתמשת ללא כינוי"}
+                    </b>
+
+                    {seller.is_suspended && (
+                      <span className="badge">
+                        מושהית
+                      </span>
+                    )}
+
+                    {seller.is_admin && (
+                      <span className="badge">
+                        מנהלת
+                      </span>
+                    )}
+
+                    <span className="muted">
+                      {seller.active_listing_count} פעילות ·{" "}
+                      {seller.total_listing_count} סה״כ
+                    </span>
+                  </div>
+
+                  <div
+                    className="toolbar"
+                    style={{
+                      marginTop: 8,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Link
+                      className="btn"
+                      href={`/seller/${seller.public_seller_id}`}
+                    >
+                      צפייה במדף
+                    </Link>
+
+                    <button
+                      type="button"
+                      className={
+                        seller.is_suspended
+                          ? "btn"
+                          : "btn danger"
+                      }
+                      disabled={seller.user_id === userId}
+                      onClick={() =>
+                        setSellerSuspended(
+                          seller.user_id,
+                          !seller.is_suspended
+                        )
+                      }
+                    >
+                      {seller.is_suspended
+                        ? "ביטול השהיה"
+                        : "השהיית משתמשת"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn danger"
+                      onClick={() =>
+                        pauseSellerListings(
+                          seller.user_id
+                        )
+                      }
+                    >
+                      השהיית כל המודעות
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={
+                        seller.user_id === userId &&
+                        seller.is_admin
+                      }
+                      onClick={() =>
+                        setSellerAdmin(
+                          seller.user_id,
+                          !seller.is_admin
+                        )
+                      }
+                    >
+                      {seller.is_admin
+                        ? "הסרת הרשאת מנהלת"
+                        : "הפיכה למנהלת"}
+                    </button>
+                  </div>
+
+                  {sellerListings.length > 0 && (
+                    <div style={{ marginTop: 12 }}>
+                      {sellerListings.map(
+                        (l: any) => (
+                          <div
+                            key={l.id}
+                            className="toolbar"
+                            style={{
+                              marginTop: 6,
+                              justifyContent:
+                                "space-between",
+                            }}
+                          >
+                            <Link
+                              href={`/listing/${l.id}`}
+                            >
+                              {l.manufacturer?.name} ·{" "}
+                              {l.design}
+                              {l.model
+                                ? ` · ${l.model}`
+                                : ""}
+                            </Link>
+
+                            <span className="badge">
+                              {statusLabel(l.status)}
+                            </span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
           )}
         </div>
       )}
