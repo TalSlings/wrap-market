@@ -67,6 +67,15 @@ export function FlatMultiSelect({
   onChange: (ids: string[]) => void;
 }) {
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  const closeWithEscape = (e: React.KeyboardEvent<HTMLDetailsElement>) => {
+    if (e.key !== "Escape" || !detailsRef.current?.open) return;
+
+    e.preventDefault();
+    detailsRef.current.open = false;
+    detailsRef.current.querySelector("summary")?.focus();
+  };
 
   const toggle = (id: string) => {
     const next = new Set(selected);
@@ -92,7 +101,11 @@ export function FlatMultiSelect({
     <div className="field">
       {label && <label>{label}</label>}
 
-      <details style={boxStyle}>
+      <details
+        ref={detailsRef}
+        style={boxStyle}
+        onKeyDown={closeWithEscape}
+      >
         <DropdownSummary>{summary}</DropdownSummary>
 
         <div
@@ -145,6 +158,15 @@ export function HierarchicalMultiSelect({
   onChange: (ids: string[]) => void;
 }) {
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  const closeWithEscape = (e: React.KeyboardEvent<HTMLDetailsElement>) => {
+    if (e.key !== "Escape" || !detailsRef.current?.open) return;
+
+    e.preventDefault();
+    detailsRef.current.open = false;
+    detailsRef.current.querySelector("summary")?.focus();
+  };
 
   const childMap = useMemo(() => {
     const map = new Map<string, TreeChild[]>();
@@ -221,7 +243,11 @@ export function HierarchicalMultiSelect({
     <div className="field">
       {label && <label>{label}</label>}
 
-      <details style={boxStyle}>
+      <details
+        ref={detailsRef}
+        style={boxStyle}
+        onKeyDown={closeWithEscape}
+      >
         <DropdownSummary>{summary}</DropdownSummary>
 
         <div
@@ -346,6 +372,14 @@ export function HierarchicalSingleSelect({
 
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
+  const closeWithEscape = (e: React.KeyboardEvent<HTMLDetailsElement>) => {
+    if (e.key !== "Escape" || !detailsRef.current?.open) return;
+
+    e.preventDefault();
+    detailsRef.current.open = false;
+    detailsRef.current.querySelector("summary")?.focus();
+  };
+
   const choose = (id: string) => {
     onChange(id);
 
@@ -354,16 +388,16 @@ export function HierarchicalSingleSelect({
     }
   };
 
-  const radioName = useMemo(
-    () => `hierarchical-single-${Math.random().toString(36).slice(2)}`,
-    []
-  );
 
   return (
     <div className="field" style={{ margin: 0 }}>
       {label && <label>{label}</label>}
 
-      <details ref={detailsRef} style={boxStyle}>
+      <details
+        ref={detailsRef}
+        style={boxStyle}
+        onKeyDown={closeWithEscape}
+      >
         <DropdownSummary>{selectedName}</DropdownSummary>
 
         <div
@@ -379,34 +413,32 @@ export function HierarchicalSingleSelect({
 
             return (
               <div key={parent.id} style={{ padding: "5px 0" }}>
-                {parent.selectable !== false ? (
-                  <label
+                <div
+                  style={{
+                    fontWeight: 650,
+                    paddingBottom: 4,
+                  }}
+                >
+                  {parent.name}
+                </div>
+
+                {parent.selectable !== false && (
+                  <button
+                    type="button"
+                    className="btn"
+                    aria-pressed={value === parent.id}
+                    onClick={() => choose(parent.id)}
                     style={{
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                      fontWeight: 650,
-                      cursor: "pointer",
-                      paddingBottom: 4,
+                      display: "block",
+                      width: "100%",
+                      textAlign: "start",
+                      marginInlineStart: 12,
+                      marginBottom: 4,
                     }}
                   >
-                    <input
-                      type="radio"
-                      name={radioName}
-                      checked={value === parent.id}
-                      onChange={() => choose(parent.id)}
-                    />
-                    <span>{parent.name}</span>
-                  </label>
-                ) : (
-                  <div
-                    style={{
-                      fontWeight: 650,
-                      paddingBottom: 4,
-                    }}
-                  >
+                    {value === parent.id ? "✓ " : ""}
                     {parent.name}
-                  </div>
+                  </button>
                 )}
 
                 {kids.length > 0 && (
@@ -419,23 +451,21 @@ export function HierarchicalSingleSelect({
                     }}
                   >
                     {kids.map((child) => (
-                      <label
+                      <button
                         key={child.id}
+                        type="button"
+                        className="btn"
+                        aria-pressed={value === child.id}
+                        onClick={() => choose(child.id)}
                         style={{
-                          display: "flex",
-                          gap: 8,
-                          alignItems: "center",
-                          cursor: "pointer",
+                          display: "block",
+                          width: "100%",
+                          textAlign: "start",
                         }}
                       >
-                        <input
-                          type="radio"
-                          name={radioName}
-                          checked={value === child.id}
-                          onChange={() => choose(child.id)}
-                        />
-                        <span>{child.name}</span>
-                      </label>
+                        {value === child.id ? "✓ " : ""}
+                        {child.name}
+                      </button>
                     ))}
                   </div>
                 )}
