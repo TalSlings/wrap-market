@@ -25,6 +25,7 @@ export default async function Page() {
     { data: adminRow },
     { data: sellerProfile },
     { data: isSuspended },
+    { data: settings },
   ] = await Promise.all([
     s
       .from("listings")
@@ -87,6 +88,12 @@ export default async function Page() {
       .maybeSingle(),
 
     s.rpc("current_user_is_suspended"),
+
+    s
+      .from("site_settings")
+      .select("allow_incomplete_listings")
+      .eq("singleton", true)
+      .maybeSingle(),
   ]);
 
   const favorites = (favoriteRows || [])
@@ -123,6 +130,9 @@ export default async function Page() {
           sellerProfile?.public_seller_id || null
         }
         isSuspended={!!isSuspended}
+        allowIncomplete={
+          !!settings?.allow_incomplete_listings
+        }
       />
     </main>
   );
