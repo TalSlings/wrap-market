@@ -393,6 +393,15 @@ export default function HomeClient({
       );
     }
 
+    // Partial listings always appear after complete listings,
+    // regardless of the selected sort. JS sort is stable, so
+    // the chosen ordering is preserved inside each group.
+    x.sort(
+      (a: any, b: any) =>
+        Number(a.status === "incomplete") -
+        Number(b.status === "incomplete")
+    );
+
     return x;
   }, [
     listings,
@@ -796,7 +805,12 @@ export default function HomeClient({
             className="listing"
             href={`/listing/${l.id}`}
             onClick={(e) => openListing(e, l.id)}
-            style={{ position: "relative" }}
+            style={{
+              position: "relative",
+              ...(l.status === "incomplete"
+                ? { borderStyle: "dashed" }
+                : {}),
+            }}
           >
             {l.image_url ? (
               <img
@@ -805,7 +819,44 @@ export default function HomeClient({
                 alt=""
               />
             ) : (
-              <div className="listing-img" />
+              <div
+                className="listing-img"
+                aria-label="אין תמונה"
+                role="img"
+                style={{
+                  position: "relative",
+                  background: "#e5e5e5",
+                  overflow: "hidden",
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    width: "140%",
+                    height: 2,
+                    background: "#555",
+                    top: "50%",
+                    left: "-20%",
+                    transform: "rotate(-32deg)",
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
+            )}
+
+            {l.status === "incomplete" && (
+              <div
+                className="badge"
+                style={{
+                  position: "absolute",
+                  insetInlineStart: 8,
+                  top: 8,
+                  zIndex: 3,
+                }}
+              >
+                מודעה חלקית
+              </div>
             )}
 
             <div
@@ -827,13 +878,17 @@ export default function HomeClient({
             <ImpressionTracker listingId={l.id} />
 
             <div className="listing-body">
-              <div className="brand">
-                {l.manufacturer?.name}
-              </div>
+              {l.manufacturer?.name && (
+                <div className="brand">
+                  {l.manufacturer.name}
+                </div>
+              )}
 
-              <div className="design">
-                {l.design}
-              </div>
+              {l.design && (
+                <div className="design">
+                  {l.design}
+                </div>
+              )}
 
               {l.model && (
                 <div className="model">
@@ -841,9 +896,13 @@ export default function HomeClient({
                 </div>
               )}
 
-              <div className="meta">
-                {labelOf(SIZES, l.size)} · {l.price} ₪
-              </div>
+              {(l.size || Number(l.price) > 0) && (
+                <div className="meta">
+                  {l.size && labelOf(SIZES, l.size)}
+                  {l.size && Number(l.price) > 0 ? " · " : ""}
+                  {Number(l.price) > 0 ? `${l.price} ₪` : ""}
+                </div>
+              )}
 
               <div className="materials">
                 {(l.materials || [])
@@ -859,12 +918,14 @@ export default function HomeClient({
                 )}
               </div>
 
-              <div className="location">
-                📍 {l.locations?.[0]?.region?.name || ""}
-                {(l.locations || []).length > 1
-                  ? " +1"
-                  : ""}
-              </div>
+              {(l.locations || []).length > 0 && (
+                <div className="location">
+                  📍 {l.locations?.[0]?.region?.name || ""}
+                  {(l.locations || []).length > 1
+                    ? " +1"
+                    : ""}
+                </div>
+              )}
 
               <div className="icons">
                 {l.shipping_available && <span>🚚</span>}
