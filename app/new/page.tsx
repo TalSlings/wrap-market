@@ -28,6 +28,7 @@ export default async function Page() {
     { data: colors },
     { data: regions },
     { data: subregions },
+    { data: settings },
   ] = await Promise.all([
     s
       .from("manufacturers")
@@ -60,6 +61,12 @@ export default async function Page() {
       .select("*")
       .eq("active", true)
       .order("sort_order"),
+
+    s
+      .from("site_settings")
+      .select("allow_incomplete_listings")
+      .eq("singleton", true)
+      .maybeSingle(),
   ]);
 
   return (
@@ -73,6 +80,9 @@ export default async function Page() {
         colors={colors || []}
         regions={regions || []}
         subregions={subregions || []}
+        allowIncomplete={
+          !!settings?.allow_incomplete_listings
+        }
       />
     </main>
   );
