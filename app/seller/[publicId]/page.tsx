@@ -40,12 +40,12 @@ export default async function SellerPage({
     const { data } = await s
       .from("listings")
       .select(
-        `id,design,model,price,size,shipping_available,
+        `id,design,model,price,size,shipping_available,status,
         manufacturer:manufacturers(name),
         images:listing_images(storage_path,image_type,position)`
       )
       .in("id", ids)
-      .eq("status", "active");
+      .in("status", ["active", "incomplete"]);
 
     listings = data || [];
   }
@@ -140,17 +140,49 @@ export default async function SellerPage({
                   alt=""
                 />
               ) : (
-                <div className="listing-img" />
+                <div
+                  className="listing-img"
+                  role="img"
+                  aria-label="אין תמונה"
+                  style={{
+                    position: "relative",
+                    background: "#e5e5e5",
+                    overflow: "hidden",
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: "absolute",
+                      width: "140%",
+                      height: 2,
+                      background: "#555",
+                      top: "50%",
+                      left: "-20%",
+                      transform: "rotate(-32deg)",
+                    }}
+                  />
+                </div>
+              )}
+
+              {l.status === "incomplete" && (
+                <span className="badge">
+                  מודעה חלקית
+                </span>
               )}
 
               <div className="listing-body">
-                <div className="brand">
-                  {l.manufacturer?.name}
-                </div>
+                {l.manufacturer?.name && (
+                  <div className="brand">
+                    {l.manufacturer.name}
+                  </div>
+                )}
 
-                <div className="design">
-                  {l.design}
-                </div>
+                {l.design && (
+                  <div className="design">
+                    {l.design}
+                  </div>
+                )}
 
                 {l.model && (
                   <div className="model">
@@ -158,10 +190,13 @@ export default async function SellerPage({
                   </div>
                 )}
 
-                <div className="meta">
-                  {labelOf(SIZES, l.size)} ·{" "}
-                  {l.price} ₪
-                </div>
+                {(l.size || Number(l.price) > 0) && (
+                  <div className="meta">
+                    {l.size && labelOf(SIZES, l.size)}
+                    {l.size && Number(l.price) > 0 ? " · " : ""}
+                    {Number(l.price) > 0 ? `${l.price} ₪` : ""}
+                  </div>
+                )}
 
                 {l.shipping_available && (
                   <div className="muted">
