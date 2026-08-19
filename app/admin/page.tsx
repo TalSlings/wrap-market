@@ -35,6 +35,7 @@ export default async function AdminPage() {
     { data: notes },
     { data: sellers },
     { data: feedbackItems },
+    { data: settings },
   ] = await Promise.all([
     s
       .from("listings")
@@ -57,6 +58,12 @@ export default async function AdminPage() {
       .from("feedback_items")
       .select("*")
       .order("created_at", { ascending: false }),
+
+    s
+      .from("site_settings")
+      .select("allow_incomplete_listings")
+      .eq("singleton", true)
+      .maybeSingle(),
   ]);
 
   return (
@@ -74,6 +81,9 @@ export default async function AdminPage() {
         notes={notes || []}
         sellers={sellers || []}
         feedbackItems={feedbackItems || []}
+        allowIncomplete={
+          !!settings?.allow_incomplete_listings
+        }
       />
     </main>
   );
