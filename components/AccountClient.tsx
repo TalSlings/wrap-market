@@ -24,6 +24,7 @@ export default function AccountClient({
   isAdmin,
   sellerPublicId,
   isSuspended,
+  allowIncomplete,
 }: {
   userId: string;
   listings: any[];
@@ -37,6 +38,7 @@ export default function AccountClient({
   isAdmin: boolean;
   sellerPublicId: string | null;
   isSuspended: boolean;
+  allowIncomplete: boolean;
 }) {
   const s = createClient();
 
@@ -311,6 +313,23 @@ export default function AccountClient({
     },
   ];
 
+  const incompleteListings = allowIncomplete
+    ? listings.filter(
+        (l: any) => l.status === "incomplete"
+      )
+    : [];
+
+  const orderedListings = [...listings].sort(
+    (a: any, b: any) => {
+      if (!allowIncomplete) return 0;
+
+      return (
+        Number(b.status === "incomplete") -
+        Number(a.status === "incomplete")
+      );
+    }
+  );
+
   return (
     <>
       {isSuspended && (
@@ -356,18 +375,39 @@ export default function AccountClient({
         <div className="section">
           <h2>המודעות שלי</h2>
 
+          {allowIncomplete &&
+            incompleteListings.length > 0 && (
+            <div className="notice" style={{ marginBottom: 14 }}>
+              <strong>
+                יש לך {incompleteListings.length}{" "}
+                {incompleteListings.length === 1
+                  ? "מודעה חלקית"
+                  : "מודעות חלקיות"}
+              </strong>
+              <div style={{ marginTop: 4 }}>
+                כדאי להשלים את הפרטים כדי שהמודעות יהיו
+                ברורות יותר ויופיעו לפני מודעות חלקיות
+                בתוצאות החיפוש.
+              </div>
+            </div>
+          )}
+
           {listings.length === 0 ? (
             <p className="muted">
               אין עדיין מודעות
             </p>
           ) : (
-            listings.map((l) => (
+            orderedListings.map((l) => (
               <div
                 key={l.id}
                 className={
                   "section account-card " +
                   (l.status === "paused"
                     ? "paused"
+                    : "") +
+                  (allowIncomplete &&
+                  l.status === "incomplete"
+                    ? " incomplete"
                     : "")
                 }
               >
@@ -378,10 +418,22 @@ export default function AccountClient({
                 <span className="badge">
                   {l.status === "draft"
                     ? "טיוטה"
-                    : l.status === "paused"
-                      ? "מושהית"
-                      : "פעילה"}
+                    : l.status === "incomplete"
+                      ? allowIncomplete
+                        ? "מודעה חלקית"
+                        : "טיוטה"
+                      : l.status === "paused"
+                        ? "מושהית"
+                        : "פעילה"}
                 </span>
+
+                {allowIncomplete &&
+                  l.status === "incomplete" && (
+                  <p className="notice">
+                    המודעה עדיין חלקית. השלמת הפרטים תעזור
+                    לה להיות ברורה וזמינה יותר בחיפוש.
+                  </p>
+                )}
 
                 <p className="count">
                   לחיצות{" "}
@@ -416,7 +468,10 @@ export default function AccountClient({
                       className="btn"
                       href={`/listing/${l.id}/edit`}
                     >
-                      עריכה
+                      {allowIncomplete &&
+                      l.status === "incomplete"
+                        ? "השלמת פרטים"
+                        : "עריכה"}
                     </Link>
                   )}
 
