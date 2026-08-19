@@ -24,6 +24,7 @@ export default function ListingForm({
   regions,
   subregions,
   initial,
+  allowIncomplete = false,
 }: {
   [k: string]: any;
 }) {
@@ -157,6 +158,10 @@ export default function ListingForm({
   const [saveDefaultsPrompt, setSaveDefaultsPrompt] = useState(false);
   const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] =
+    useState<Record<string, string>>({});
+  const [incompletePrompt, setIncompletePrompt] =
+    useState(false);
+  const [incompleteErrors, setIncompleteErrors] =
     useState<Record<string, string>>({});
   const [saveDefaultsResolver, setSaveDefaultsResolver] =
     useState<((choice: "yes" | "no" | "skip") => void) | null>(null);
@@ -683,275 +688,219 @@ export default function ListingForm({
     }
   }
 
+  function requiredFieldErrors(sum: number) {
+    const errors: Record<string, string> = {};
+
+    if (!manufacturerId && !newManufacturer.trim()) {
+      errors.manufacturer =
+        "צריך לבחור יצרן או להוסיף יצרן חדש";
+    }
+
+    if (!design.trim()) {
+      errors.design = "צריך להזין עיצוב";
+    }
+
+    if (!price || Number(price) <= 0) {
+      errors.price = "צריך להזין מחיר";
+    }
+
+    if (!size) {
+      errors.size = "צריך לבחור מידה";
+    }
+
+    if (!condition) {
+      errors.condition = "צריך לבחור מצב למנשא";
+    }
+
+    const hasExistingMainImage =
+      (initial?.images || []).some(
+        (x: any) => x.image_type === "listing"
+      );
+
+    if (
+      mainImages.length < 1 &&
+      !hasExistingMainImage
+    ) {
+      errors.mainImages =
+        "צריך להוסיף לפחות תמונה ראשית אחת";
+    }
+
+    if (!regionIds.length && !subIds.length) {
+      errors.locations =
+        "צריך לבחור לפחות אזור איסוף אחד";
+    }
+
+    if (!contactViaEmail && !contactViaWhatsapp) {
+      errors.contactMethod =
+        "צריך לבחור לפחות דרך אחת ליצירת קשר";
+    }
+
+    if (contactViaEmail && !contactEmail.trim()) {
+      errors.contactEmail =
+        "צריך להזין כתובת מייל";
+    }
+
+    if (contactViaWhatsapp && !whatsappNumber.trim()) {
+      errors.whatsapp =
+        "צריך להזין מספר WhatsApp";
+    }
+
+    if (!mats.some((x) => x.material_id)) {
+      errors.materials =
+        "צריך להוסיף לפחות חומר אחד";
+    } else if (Math.abs(sum - 100) > 0.001) {
+      errors.materials =
+        "אחוזי החומרים צריכים להסתכם ב־100%";
+    }
+
+    return errors;
+  }
+
+  function scrollToFirstRequiredError(
+    errors: Record<string, string>
+  ) {
+    const firstError = Object.keys(errors)[0];
+    if (!firstError) return;
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector(
+          `[data-required-field="${firstError}"]`
+        )
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+    });
+  }
+
   async function save(
-    status:
-      | "draft"
-      | "active"
+    status: "draft" | "active" | "incomplete"
   ) {
     setBusy(true);
     setMsg("");
 
     try {
-      const mid =
-        await ensureManufacturer();
-
       const sum = mats
-        .filter(
-          (x) =>
-            x.material_id
-        )
+        .filter((x) => x.material_id)
         .reduce(
           (a, x) =>
-            a +
-            Number(
-              x.percentage ||
-                0
-            ),
+            a + Number(x.percentage || 0),
           0
         );
 
+      const errors =
+        status === "active"
+          ? requiredFieldErrors(sum)
+          : {};
+
       if (
-        status ===
-        "active"
+        status === "active" &&
+        Object.keys(errors).length > 0
       ) {
-        const errors: Record<string, string> = {};
-
-        if (!manufacturerId && !newManufacturer.trim()) {
-          errors.manufacturer =
-            "צריך לבחור יצרן או להוסיף יצרן חדש";
-        }
-
-        if (!design.trim()) {
-          errors.design =
-            "צריך להזין עיצוב";
-        }
-
-        if (!price || Number(price) <= 0) {
-          errors.price =
-            "צריך להזין מחיר";
-        }
-
-        if (!size) {
-          errors.size =
-            "צריך לבחור מידה";
-        }
-
-        if (!condition) {
-          errors.condition =
-            "צריך לבחור מצב למנשא";
-        }
-
-        if (
-          !initial &&
-          mainImages.length < 1
-        ) {
-          errors.mainImages =
-            "צריך להוסיף לפחות תמונה ראשית אחת";
-        }
-
-        if (
-          !regionIds.length &&
-          !subIds.length
-        ) {
-          errors.locations =
-            "צריך לבחור לפחות אזור איסוף אחד";
-        }
-
-        if (!contactViaEmail && !contactViaWhatsapp) {
-          errors.contactMethod =
-            "צריך לבחור לפחות דרך אחת ליצירת קשר";
-        }
-
-        if (contactViaEmail && !contactEmail.trim()) {
-          errors.contactEmail =
-            "צריך להזין כתובת מייל";
-        }
-
-        if (contactViaWhatsapp && !whatsappNumber.trim()) {
-          errors.whatsapp =
-            "צריך להזין מספר WhatsApp";
-        }
-
-        if (
-          !mats.some(
-            (x) =>
-              x.material_id
-          )
-        ) {
-          errors.materials =
-            "צריך להוסיף לפחות חומר אחד";
-        } else if (
-          Math.abs(
-            sum - 100
-          ) > 0.001
-        ) {
-          errors.materials =
-            "אחוזי החומרים צריכים להסתכם ב־100%";
-        }
-
         setFieldErrors(errors);
 
-        const firstError =
-          Object.keys(errors)[0];
-
-        if (firstError) {
-          requestAnimationFrame(() => {
-            document
-              .querySelector(
-                `[data-required-field="${firstError}"]`
-              )
-              ?.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-              });
-          });
-
-          setBusy(false);
-          return;
+        if (allowIncomplete) {
+          setIncompleteErrors(errors);
+          setIncompletePrompt(true);
+        } else {
+          scrollToFirstRequiredError(errors);
         }
-      } else {
+
+        setBusy(false);
+        return;
+      }
+
+      if (status !== "active") {
         setFieldErrors({});
       }
+
+      const mid =
+        manufacturerId || newManufacturer.trim()
+          ? await ensureManufacturer()
+          : null;
 
       const normalizedMoreInfo =
         normalizeExternalUrl(moreInfo);
 
       const payload = {
         owner_id: userId,
-        manufacturer_id:
-          mid,
+        manufacturer_id: mid,
         design,
-        model:
-          model || null,
-        price: Number(
-          price || 0
-        ),
-        description:
-          description ||
-          null,
+        model: model || null,
+        price: Number(price || 0),
+        description: description || null,
         size,
-        size_note:
-          sizeNote ||
-          null,
+        size_note: sizeNote || null,
         gsm,
         condition,
         defects,
-        defects_description:
-          defDesc || null,
-        shipping_available:
-          shipping,
-        more_info_url:
-          normalizedMoreInfo,
-        contact_name:
-          contactName || null,
-        contact_email:
-          contactEmail || null,
-        whatsapp_number:
-          whatsappNumber || null,
-        contact_via_email:
-          contactViaEmail,
-        contact_via_whatsapp:
-          contactViaWhatsapp,
-        colors:
-          selectedColors,
-        color_patterns:
-          patterns,
+        defects_description: defDesc || null,
+        shipping_available: shipping,
+        more_info_url: normalizedMoreInfo,
+        contact_name: contactName || null,
+        contact_email: contactEmail || null,
+        whatsapp_number: whatsappNumber || null,
+        contact_via_email: contactViaEmail,
+        contact_via_whatsapp: contactViaWhatsapp,
+        colors: selectedColors,
+        color_patterns: patterns,
         status,
       };
 
       let id = initial?.id;
 
       if (id) {
-        const { error } =
-          await s
-            .from(
-              "listings"
-            )
-            .update(
-              payload
-            )
-            .eq(
-              "id",
-              id
-            );
+        const { error } = await s
+          .from("listings")
+          .update(payload)
+          .eq("id", id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         await s
-          .from(
-            "listing_materials"
-          )
+          .from("listing_materials")
           .delete()
-          .eq(
-            "listing_id",
-            id
-          );
+          .eq("listing_id", id);
 
         await s
-          .from(
-            "listing_locations"
-          )
+          .from("listing_locations")
           .delete()
-          .eq(
-            "listing_id",
-            id
-          );
+          .eq("listing_id", id);
       } else {
-        const {
-          data,
-          error,
-        } = await s
-          .from(
-            "listings"
-          )
-          .insert(
-            payload
-          )
+        const { data, error } = await s
+          .from("listings")
+          .insert(payload)
           .select("id")
           .single();
 
-        if (error) {
-          throw error;
-        }
-
+        if (error) throw error;
         id = data.id;
       }
 
       const mr = mats
         .filter(
           (x) =>
-            x.material_id
+            x.material_id &&
+            Number(x.percentage || 0) > 0
         )
-        .map(
-          (x, i) => ({
-            listing_id:
-              id,
-            material_id:
-              x.material_id,
-            percentage:
-              Number(
-                x.percentage
-              ),
-            position: i,
-          })
-        );
+        .map((x, i) => ({
+          listing_id: id,
+          material_id: x.material_id,
+          percentage: Number(x.percentage),
+          position: i,
+        }));
 
       if (mr.length) {
-        const { error } =
-          await s
-            .from(
-              "listing_materials"
-            )
-            .insert(mr);
+        const { error } = await s
+          .from("listing_materials")
+          .insert(mr);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
       }
 
-      const selectedWholeRegions = new Set(regionIds);
+      const selectedWholeRegions =
+        new Set(regionIds);
 
       const lr: {
         listing_id: string;
@@ -968,10 +917,18 @@ export default function ListingForm({
       }
 
       for (const subId of subIds) {
-        const sub = subregions.find((x: any) => x.id === subId);
+        const sub = subregions.find(
+          (x: any) => x.id === subId
+        );
 
         if (!sub) continue;
-        if (selectedWholeRegions.has(sub.region_id)) continue;
+        if (
+          selectedWholeRegions.has(
+            sub.region_id
+          )
+        ) {
+          continue;
+        }
 
         lr.push({
           listing_id: id,
@@ -981,43 +938,33 @@ export default function ListingForm({
       }
 
       if (lr.length) {
-        const { error } =
-          await s
-            .from(
-              "listing_locations"
-            )
-            .insert(lr);
+        const { error } = await s
+          .from("listing_locations")
+          .insert(lr);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
+      }
+
+      if (mainImages.length) {
+        await upload(id, mainImages, "listing");
+      }
+
+      if (defectImages.length) {
+        await upload(id, defectImages, "defect");
       }
 
       if (
-        mainImages.length
+        !initial &&
+        (status === "active" ||
+          status === "incomplete")
       ) {
-        await upload(
-          id,
-          mainImages,
-          "listing"
-        );
-      }
-
-      if (
-        defectImages.length
-      ) {
-        await upload(
-          id,
-          defectImages,
-          "defect"
-        );
-      }
-
-      if (!initial && status === "active") {
         await maybeSaveDefaults();
       }
 
-      if (status === "active") {
+      if (
+        status === "active" ||
+        status === "incomplete"
+      ) {
         setBusy(false);
         setPublishedListingId(id);
         return;
@@ -1025,11 +972,7 @@ export default function ListingForm({
 
       location.href = "/account";
     } catch (e: any) {
-      setMsg(
-        e.message ||
-          String(e)
-      );
-
+      setMsg(e.message || String(e));
       setBusy(false);
     }
   }
@@ -2082,6 +2025,82 @@ export default function ListingForm({
             : "פרסום מודעה"}
         </button>
       </div>
+      {incompletePrompt && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="incomplete-listing-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.35)",
+            zIndex: 1100,
+            display: "grid",
+            placeItems: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            className="section"
+            style={{
+              width: "min(560px, 100%)",
+              margin: 0,
+            }}
+          >
+            <h2 id="incomplete-listing-title">
+              המודעה עדיין לא מלאה
+            </h2>
+
+            <p>
+              חסרים במודעה פרטים שמוגדרים כשדות חובה.
+              אפשר לחזור ולהשלים אותם, או לפרסם את המודעה
+              כפי שהיא כמודעה חלקית.
+            </p>
+
+            <p className="muted">
+              מודעות חלקיות מוצגות אחרי מודעות מלאות,
+              ולכן צפויות לקבל פחות חשיפה.
+            </p>
+
+            <div className="toolbar" style={{ flexWrap: "wrap" }}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => {
+                  setIncompletePrompt(false);
+                  scrollToFirstRequiredError(
+                    incompleteErrors
+                  );
+                }}
+              >
+                חזרה לעריכה
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setIncompletePrompt(false);
+                  save("incomplete");
+                }}
+              >
+                פרסום מודעה חלקית
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                onClick={() =>
+                  setIncompletePrompt(false)
+                }
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {saveDefaultsPrompt && (
         <div
           role="dialog"
