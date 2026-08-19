@@ -66,6 +66,7 @@ export default async function Home({
         defects,
         shipping_available,
         created_at,
+        status,
         manufacturer:manufacturers(id,name),
         materials:listing_materials(
           material_id,
@@ -169,10 +170,18 @@ export default async function Home({
         3600
       );
 
-    mainImages.forEach((image: any, index: number) => {
+    const signedByPath: Record<string, string> = {};
+
+    for (const item of signedUrls || []) {
+      if (item?.path && item?.signedUrl) {
+        signedByPath[item.path] = item.signedUrl;
+      }
+    }
+
+    for (const image of mainImages) {
       imageUrlByListing[image.listingId] =
-        signedUrls?.[index]?.signedUrl || null;
-    });
+        signedByPath[image.path] || null;
+    }
   }
 
   const enriched = rows.map((l: any) => ({
