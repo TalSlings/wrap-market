@@ -1253,7 +1253,7 @@ export default function ListingForm({
                   "flex",
                 gap: 8,
                 alignItems:
-                  "center",
+                  "flex-start",
                 marginBottom: 8,
               }}
             >
