@@ -505,20 +505,16 @@ export default function AccountClient({
       )}
 
       {tab === "profile" && (
-        <div className="section">
-          <h2>פרטים אישיים</h2>
-
-          <div className="notice">
-            אלה ברירות מחדל למודעות
-            חדשות. תמיד אפשר לשנות
-            אותן בתוך מודעה ספציפית.
-          </div>
-
+        <>
           <div className="section">
-            <strong>מחוברת כ־</strong>
-            <div>{email}</div>
-            <div className="muted">
-              באמצעות {provider}
+            <h2>החשבון שלי</h2>
+
+            <div>
+              <strong>מחוברת כ־</strong>
+              <div>{email}</div>
+              <div className="muted">
+                באמצעות {provider}
+              </div>
             </div>
 
             <div
@@ -535,25 +531,6 @@ export default function AccountClient({
                 התנתקות
               </button>
 
-              {sellerPublicId && (
-                <>
-                  <Link
-                    className="btn"
-                    href={`/seller/${sellerPublicId}`}
-                  >
-                    המדף שלי
-                  </Link>
-
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={shareShelf}
-                  >
-                    שיתוף המדף
-                  </button>
-                </>
-              )}
-
               {isAdmin && (
                 <Link
                   className="btn primary"
@@ -565,124 +542,168 @@ export default function AccountClient({
             </div>
           </div>
 
-          <div className="field">
-            <label>שם להצגה</label>
-            <input
-              className="input"
-              value={displayName}
-              onChange={(e) =>
-                setDisplayName(
-                  e.target.value
-                )
-              }
-            />
-          </div>
+          {sellerPublicId && (
+            <div className="section">
+              <h2>המדף שלי</h2>
 
-          <div className="field">
-            <label>
-              <input
-                type="checkbox"
-                checked={contactViaEmail}
-                onChange={(e) =>
-                  setContactViaEmail(
-                    e.target.checked
-                  )
-                }
-              />{" "}
-              ברירת מחדל: פנייה במייל
-            </label>
+              <p className="muted">
+                כאן נמצאות כל המודעות הפעילות
+                שלך במקום אחד. אפשר לפתוח את
+                המדף או לשתף אותו בקישור אחד.
+              </p>
 
-            {contactViaEmail && (
-              <input
-                className="input"
-                type="email"
-                value={contactEmail}
-                onChange={(e) =>
-                  setContactEmail(
-                    e.target.value
-                  )
-                }
-                placeholder="מייל ליצירת קשר"
-              />
-            )}
-          </div>
+              <div
+                className="toolbar"
+                style={{
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link
+                  className="btn"
+                  href={`/seller/${sellerPublicId}`}
+                >
+                  צפייה במדף
+                </Link>
 
-          <div className="field">
-            <label>
-              <input
-                type="checkbox"
-                checked={
-                  contactViaWhatsapp
-                }
-                onChange={(e) =>
-                  setContactViaWhatsapp(
-                    e.target.checked
-                  )
-                }
-              />{" "}
-              ברירת מחדל: פנייה
-              ב־WhatsApp
-            </label>
-
-            {contactViaWhatsapp && (
-              <input
-                className="input"
-                type="tel"
-                value={whatsappNumber}
-                onChange={(e) =>
-                  setWhatsappNumber(
-                    e.target.value
-                  )
-                }
-                placeholder="מספר WhatsApp"
-              />
-            )}
-          </div>
-
-          <HierarchicalMultiSelect
-            label="אזורי ברירת מחדל"
-            placeholder="בחרי אזורים"
-            parents={regionParents}
-            children={regionChildren}
-            selectedIds={
-              selectedLocations
-            }
-            onChange={
-              setSelectedLocations
-            }
-          />
-
-          <div className="field">
-            <label>
-              <input
-                type="checkbox"
-                checked={
-                  shippingAvailable
-                }
-                onChange={(e) =>
-                  setShippingAvailable(
-                    e.target.checked
-                  )
-                }
-              />{" "}
-              משלוח זמין כברירת מחדל
-            </label>
-          </div>
-
-          {profileMsg && (
-            <div className="notice">
-              {profileMsg}
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={shareShelf}
+                >
+                  שיתוף המדף
+                </button>
+              </div>
             </div>
           )}
 
-          <button
-            type="button"
-            className="btn primary"
-            onClick={saveProfile}
-          >
-            שמירת ברירות מחדל
-          </button>
-        </div>
+          <div className="section">
+            <h2>ברירות מחדל למודעות</h2>
+
+            <p className="muted">
+              הפרטים האלה ימולאו אוטומטית
+              במודעות חדשות. תמיד אפשר לשנות
+              אותם בתוך מודעה ספציפית.
+            </p>
+
+            <div className="field">
+              <label>שם להצגה</label>
+              <input
+                className="input"
+                value={displayName}
+                onChange={(e) =>
+                  setDisplayName(
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={contactViaEmail}
+                  onChange={(e) =>
+                    setContactViaEmail(
+                      e.target.checked
+                    )
+                  }
+                />{" "}
+                ברירת מחדל: פנייה במייל
+              </label>
+
+              {contactViaEmail && (
+                <input
+                  className="input"
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) =>
+                    setContactEmail(
+                      e.target.value
+                    )
+                  }
+                  placeholder="מייל ליצירת קשר"
+                />
+              )}
+            </div>
+
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={
+                    contactViaWhatsapp
+                  }
+                  onChange={(e) =>
+                    setContactViaWhatsapp(
+                      e.target.checked
+                    )
+                  }
+                />{" "}
+                ברירת מחדל: פנייה
+                ב־WhatsApp
+              </label>
+
+              {contactViaWhatsapp && (
+                <input
+                  className="input"
+                  type="tel"
+                  value={whatsappNumber}
+                  onChange={(e) =>
+                    setWhatsappNumber(
+                      e.target.value
+                    )
+                  }
+                  placeholder="מספר WhatsApp"
+                />
+              )}
+            </div>
+
+            <HierarchicalMultiSelect
+              label="אזורי ברירת מחדל"
+              placeholder="בחרי אזורים"
+              parents={regionParents}
+              children={regionChildren}
+              selectedIds={
+                selectedLocations
+              }
+              onChange={
+                setSelectedLocations
+              }
+            />
+
+            <div className="field">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={
+                    shippingAvailable
+                  }
+                  onChange={(e) =>
+                    setShippingAvailable(
+                      e.target.checked
+                    )
+                  }
+                />{" "}
+                משלוח זמין כברירת מחדל
+              </label>
+            </div>
+
+            {profileMsg && (
+              <div className="notice">
+                {profileMsg}
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="btn primary"
+              onClick={saveProfile}
+            >
+              שמירת ברירות מחדל
+            </button>
+          </div>
+        </>
       )}
     </>
   );
