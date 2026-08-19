@@ -1057,6 +1057,7 @@ export default function ListingForm({
 
           <select
             className="select"
+            aria-label="יצרן"
             value={
               manufacturerId
             }
@@ -1097,6 +1098,7 @@ export default function ListingForm({
             >
               <input
                 className="input"
+                aria-label="יצרן חדש"
                 value={
                   newManufacturer
                 }
@@ -1134,7 +1136,7 @@ export default function ListingForm({
                 manufacturerMsg
               }
               {fieldErrors.manufacturer && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.manufacturer}
             </div>
           )}
@@ -1152,6 +1154,7 @@ export default function ListingForm({
 
           <input
             className="input"
+            aria-label="עיצוב"
             value={design}
             onChange={(e) =>
               setDesign(
@@ -1160,7 +1163,7 @@ export default function ListingForm({
             }
           />
           {fieldErrors.design && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.design}
             </div>
           )}
@@ -1173,6 +1176,7 @@ export default function ListingForm({
 
           <input
             className="input"
+            aria-label="מודל"
             value={model}
             onChange={(e) =>
               setModel(
@@ -1201,6 +1205,7 @@ export default function ListingForm({
 
           <select
             className="select"
+            aria-label="מידה"
             value={size}
             onChange={(e) =>
               setSize(
@@ -1225,7 +1230,7 @@ export default function ListingForm({
           </select>
 
           {fieldErrors.size && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.size}
             </div>
           )}
@@ -1238,6 +1243,7 @@ export default function ListingForm({
 
           <input
             className="input"
+            aria-label="הערת מידה"
             value={sizeNote}
             onChange={(e) =>
               setSizeNote(
@@ -1254,6 +1260,7 @@ export default function ListingForm({
 
           <select
             className="select"
+            aria-label="GSM"
             value={gsm}
             onChange={(e) =>
               setGsm(
@@ -1287,7 +1294,7 @@ export default function ListingForm({
           <b>הרכב חומרים *</b>
 
           {fieldErrors.materials && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.materials}
             </div>
           )}
@@ -1343,6 +1350,7 @@ export default function ListingForm({
 
               <input
                 className="input"
+                aria-label={`אחוז ${materialParents.find((x: any) => x.id === r.material_id)?.name || materialChildren.find((x: any) => x.id === r.material_id)?.name || "החומר"}`}
                 style={{
                   width: 90,
                 }}
@@ -1466,6 +1474,7 @@ export default function ListingForm({
 
               <input
                 className="input"
+                aria-label="שם החומר החדש"
                 value={
                   newMaterialName
                 }
@@ -1485,6 +1494,7 @@ export default function ListingForm({
 
               <select
                 className="select"
+                aria-label="קטגוריית אב לחומר החדש"
                 value={
                   newMaterialParent
                 }
@@ -1519,6 +1529,7 @@ export default function ListingForm({
 
               <select
                 className="select"
+                aria-label="סוג החומר החדש"
                 value={
                   newMaterialOrigin
                 }
@@ -1609,6 +1620,7 @@ export default function ListingForm({
                       ? "active"
                       : "")
                   }
+                  aria-pressed={selectedColors.includes(c.key)}
                   onClick={() =>
                     setSelectedColors(
                       toggle(
@@ -1653,6 +1665,7 @@ export default function ListingForm({
                       ? "active"
                       : "")
                   }
+                  aria-pressed={patterns.includes(k)}
                   onClick={() =>
                     setPatterns(
                       toggle(
@@ -1685,6 +1698,7 @@ export default function ListingForm({
 
           <select
             className="select"
+            aria-label="מצב המנשא"
             value={condition}
             onChange={(e) =>
               setCondition(
@@ -1709,7 +1723,7 @@ export default function ListingForm({
           </select>
 
           {fieldErrors.condition && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.condition}
             </div>
           )}
@@ -1734,6 +1748,7 @@ export default function ListingForm({
                       ? "active"
                       : "")
                   }
+                  aria-pressed={defects.includes(k)}
                   onClick={() =>
                     toggleDef(k)
                   }
@@ -1755,6 +1770,7 @@ export default function ListingForm({
 
             <textarea
               className="textarea"
+              aria-label="תיאור פגמים"
               value={defDesc}
               onChange={(e) =>
                 setDefDesc(
@@ -1782,6 +1798,7 @@ export default function ListingForm({
 
           <input
             className="input"
+            aria-label="מחיר"
             inputMode="numeric"
             value={price}
             onChange={(e) =>
@@ -1791,7 +1808,7 @@ export default function ListingForm({
             }
           />
           {fieldErrors.price && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.price}
             </div>
           )}
@@ -1804,6 +1821,7 @@ export default function ListingForm({
 
           <textarea
             className="textarea"
+            aria-label="תיאור המודעה"
             value={description}
             onChange={(e) =>
               setDescription(
@@ -1854,7 +1872,7 @@ export default function ListingForm({
         />
 
         {fieldErrors.locations && (
-          <div className="danger">
+          <div className="danger" role="alert">
             {fieldErrors.locations}
           </div>
         )}
@@ -1867,13 +1885,14 @@ export default function ListingForm({
           <label>פרטי קשר למודעה *</label>
           <input
             className="input"
+            aria-label="שם להצגה בפרטי הקשר"
             value={contactName}
             onChange={(e) => setContactName(e.target.value)}
             placeholder="שם להצגה — אופציונלי"
           />
 
           {fieldErrors.contactMethod && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.contactMethod}
             </div>
           )}
@@ -1893,6 +1912,7 @@ export default function ListingForm({
             <input
               className="input"
               type="email"
+              aria-label="כתובת מייל ליצירת קשר"
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
               placeholder="כתובת מייל ליצירת קשר"
@@ -1924,6 +1944,7 @@ export default function ListingForm({
               className="input"
               type="tel"
               inputMode="tel"
+              aria-label="מספר WhatsApp ליצירת קשר"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
               placeholder="מספר טלפון ל־WhatsApp"
@@ -1952,6 +1973,7 @@ export default function ListingForm({
           <input
             className="input"
             type="url"
+            aria-label="קישור למידע נוסף"
             value={moreInfo}
             onChange={(e) =>
               setMoreInfo(
@@ -1986,6 +2008,7 @@ export default function ListingForm({
           <input
             className="input"
             type="file"
+            aria-label="תמונות ראשיות"
             accept="image/*"
             multiple
             onChange={(e) =>
@@ -1998,7 +2021,7 @@ export default function ListingForm({
             }
           />
           {fieldErrors.mainImages && (
-            <div className="danger">
+            <div className="danger" role="alert">
               {fieldErrors.mainImages}
             </div>
           )}
@@ -2012,6 +2035,7 @@ export default function ListingForm({
           <input
             className="input"
             type="file"
+            aria-label="תמונות פגמים"
             accept="image/*"
             multiple
             onChange={(e) =>
@@ -2027,7 +2051,10 @@ export default function ListingForm({
       </div>
 
       {msg && (
-        <p className="danger">
+        <p
+          className="danger"
+          role="alert"
+        >
           {msg}
         </p>
       )}
