@@ -8,6 +8,12 @@ export default function SiteFooter() {
   const feedbackHref =
     `/feedback?from=${encodeURIComponent(pathname)}`;
 
+  const linkStyle: React.CSSProperties = {
+    textDecoration: "underline",
+    textUnderlineOffset: 3,
+    padding: "4px 6px",
+  };
+
   return (
     <>
       <footer
@@ -19,17 +25,33 @@ export default function SiteFooter() {
       >
         <nav
           aria-label="קישורים כלליים"
-          className="toolbar"
           style={{
+            display: "flex",
             justifyContent: "center",
+            alignItems: "center",
             flexWrap: "wrap",
+            gap: "8px 14px",
           }}
         >
-          <Link href="/accessibility">נגישות</Link>
-          <Link href={feedbackHref}>דיווח והצעות לשיפור</Link>
-          <Link href="/privacy">פרטיות</Link>
-          <Link href="/terms">תנאי שימוש</Link>
-          <Link href="/safety">בטיחות</Link>
+          <Link href="/accessibility" style={linkStyle}>
+            נגישות
+          </Link>
+
+          <Link href={feedbackHref} style={linkStyle}>
+            דיווח והצעות לשיפור
+          </Link>
+
+          <Link href="/privacy" style={linkStyle}>
+            פרטיות
+          </Link>
+
+          <Link href="/terms" style={linkStyle}>
+            תנאי שימוש
+          </Link>
+
+          <Link href="/safety" style={linkStyle}>
+            בטיחות
+          </Link>
         </nav>
       </footer>
 
