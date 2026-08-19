@@ -56,6 +56,12 @@ export default function SiteFooter() {
       </footer>
 
       <style jsx global>{`
+        .footer-link {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          padding: 4px 6px;
+        }
+
         :focus-visible {
           outline: 3px solid var(--focus-color, #4f3bb8);
           outline-offset: 3px;
