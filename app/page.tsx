@@ -122,64 +122,53 @@ export default async function Home({
       .select("listing_id")
       .eq("user_id", user.id);
 
-    favoriteIds = (favorites || []).map(
-      (x: any) => x.listing_id
-    );
+    favoriteIds = (favorites || []).map((x: any) => x.listing_id);
   }
 
   const rows = listings || [];
 
-  const mainImages = rows
-    .map((l: any) => {
-      const image = (l.images || [])
-        .filter(
-          (x: any) =>
-            x.image_type === "listing"
-        )
-        .sort(
-          (a: any, b: any) =>
-            Number(a.position || 0) -
-            Number(b.position || 0)
-        )[0];
+  const mainImages: any[] = [];
 
-      return image
-        ? {
-            listingId: l.id,
-            path: image.storage_path,
-          }
-        : null;
-    })
-    .filter(Boolean) as {
-      listingId: string;
-      path: string;
-    }[];
+  for (const l of rows) {
+    const im = (l.images || [])
+      .filter((x: any) => x.image_type === "listing")
+      .sort(
+        (a: any, b: any) =>
+          Number(a.position || 0) -
+          Number(b.position || 0)
+      )[0];
 
-  const imageUrlByListing = new Map<
+    if (im) {
+      mainImages.push({
+        listingId: l.id,
+        path: im.storage_path,
+      });
+    }
+  }
+
+  const imageUrlByListing: Record<
     string,
     string | null
-  >();
+  > = {};
 
   if (mainImages.length > 0) {
     const { data: signedUrls } = await s.storage
       .from("listing-images")
       .createSignedUrls(
-        mainImages.map((x) => x.path),
+        mainImages.map((x: any) => x.path),
         3600
       );
 
-    mainImages.forEach((image, index) => {
-      imageUrlByListing.set(
-        image.listingId,
-        signedUrls?.[index]?.signedUrl ||
-          null
-      );
+    mainImages.forEach((image: any, index: number) => {
+      imageUrlByListing[image.listingId] =
+        signedUrls?.[index]?.signedUrl || null;
     });
   }
 
   const enriched = rows.map((l: any) => ({
     ...l,
     image_url:
-      imageUrlByListing.get(l.id) || null,
+      imageUrlByListing[l.id] || null,
   }));
 
   return (
@@ -195,3 +184,4 @@ export default async function Home({
       initial={initial}
     />
   );
+}
