@@ -23,6 +23,7 @@ export default function AccountClient({
   provider,
   isAdmin,
   sellerPublicId,
+  isSuspended,
 }: {
   userId: string;
   listings: any[];
@@ -35,6 +36,7 @@ export default function AccountClient({
   provider: string;
   isAdmin: boolean;
   sellerPublicId: string | null;
+  isSuspended: boolean;
 }) {
   const s = createClient();
 
@@ -192,6 +194,13 @@ export default function AccountClient({
     id: string,
     status: string
   ) => {
+    if (isSuspended) {
+      alert(
+        "החשבון שלך מושהה כרגע ולכן אי אפשר לשנות את מצב המודעות."
+      );
+      return;
+    }
+
     await s
       .from("listings")
       .update({
@@ -211,6 +220,13 @@ export default function AccountClient({
   };
 
   const dup = async (l: any) => {
+    if (isSuspended) {
+      alert(
+        "החשבון שלך מושהה כרגע ולכן אי אפשר לשכפל מודעות."
+      );
+      return;
+    }
+
     const c = {
       owner_id: l.owner_id,
       manufacturer_id:
@@ -297,6 +313,21 @@ export default function AccountClient({
 
   return (
     <>
+      {isSuspended && (
+        <div
+          className="notice"
+          role="status"
+          style={{ marginBottom: 16 }}
+        >
+          <strong>החשבון שלך מושהה כרגע.</strong>
+          <div style={{ marginTop: 4 }}>
+            אפשר להמשיך לצפות במודעות ובמדף שלך, אבל אי אפשר
+            לפרסם מודעות חדשות, לערוך מודעות קיימות, לשכפל
+            מודעות או להפעיל טיוטות ומודעות מושהות.
+          </div>
+        </div>
+      )}
+
       <div
         className="toolbar"
         style={{
@@ -368,12 +399,26 @@ export default function AccountClient({
                     צפייה
                   </Link>
 
-                  <Link
-                    className="btn"
-                    href={`/listing/${l.id}/edit`}
-                  >
-                    עריכה
-                  </Link>
+                  {isSuspended ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() =>
+                        alert(
+                          "החשבון שלך מושהה כרגע ולכן אי אפשר לערוך מודעות."
+                        )
+                      }
+                    >
+                      עריכה
+                    </button>
+                  ) : (
+                    <Link
+                      className="btn"
+                      href={`/listing/${l.id}/edit`}
+                    >
+                      עריכה
+                    </Link>
+                  )}
 
                   {l.status ===
                     "active" && (
