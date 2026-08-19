@@ -425,19 +425,51 @@ export function HierarchicalSingleSelect({
                 {parent.selectable !== false && (
                   <button
                     type="button"
-                    className="btn"
                     aria-pressed={value === parent.id}
                     onClick={() => choose(parent.id)}
                     style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "start",
+                      appearance: "none",
+                      WebkitAppearance: "none",
+                      border: 0,
+                      background: "transparent",
+                      padding: "3px 0",
+                      margin: 0,
                       marginInlineStart: 12,
-                      marginBottom: 4,
+                      width: "calc(100% - 12px)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      textAlign: "start",
+                      font: "inherit",
+                      color: "inherit",
+                      cursor: "pointer",
                     }}
                   >
-                    {value === parent.id ? "✓ " : ""}
-                    {parent.name}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        border: "1px solid currentColor",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flex: "0 0 16px",
+                      }}
+                    >
+                      {value === parent.id && (
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            background: "currentColor",
+                          }}
+                        />
+                      )}
+                    </span>
+                    <span>{parent.name}</span>
                   </button>
                 )}
 
@@ -454,17 +486,50 @@ export function HierarchicalSingleSelect({
                       <button
                         key={child.id}
                         type="button"
-                        className="btn"
                         aria-pressed={value === child.id}
                         onClick={() => choose(child.id)}
                         style={{
-                          display: "block",
+                          appearance: "none",
+                          WebkitAppearance: "none",
+                          border: 0,
+                          background: "transparent",
+                          padding: "3px 0",
+                          margin: 0,
                           width: "100%",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
                           textAlign: "start",
+                          font: "inherit",
+                          color: "inherit",
+                          cursor: "pointer",
                         }}
                       >
-                        {value === child.id ? "✓ " : ""}
-                        {child.name}
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: "50%",
+                            border: "1px solid currentColor",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flex: "0 0 16px",
+                          }}
+                        >
+                          {value === child.id && (
+                            <span
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: "currentColor",
+                              }}
+                            />
+                          )}
+                        </span>
+                        <span>{child.name}</span>
                       </button>
                     ))}
                   </div>
