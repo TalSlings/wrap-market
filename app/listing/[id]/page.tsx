@@ -157,12 +157,37 @@ export default async function Page({
   return (
     <main className="page">
       <div className="section">
-        {main[0]?.url && (
+        {main[0]?.url ? (
           <img
             className="gallery-main"
             src={main[0].url}
             alt=""
           />
+        ) : (
+          <div
+            className="gallery-main"
+            role="img"
+            aria-label="אין תמונה"
+            style={{
+              position: "relative",
+              background: "#e5e5e5",
+              overflow: "hidden",
+              minHeight: 320,
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                width: "140%",
+                height: 2,
+                background: "#555",
+                top: "50%",
+                left: "-20%",
+                transform: "rotate(-32deg)",
+              }}
+            />
+          </div>
         )}
 
         <div className="thumbrow">
@@ -177,6 +202,15 @@ export default async function Page({
         </div>
       </div>
 
+      {l.status === "incomplete" && (
+        <div className="section notice">
+          <strong>מודעה חלקית</strong>
+          <div style={{ marginTop: 4 }}>
+            המודעה פורסמה לפני שכל הפרטים הושלמו.
+          </div>
+        </div>
+      )}
+
       <div className="section">
         <div
           className="toolbar"
@@ -186,13 +220,28 @@ export default async function Page({
           }}
         >
           <div>
+            {l.status === "incomplete" && (
+              <div
+                className="badge"
+                style={{
+                  display: "inline-block",
+                  marginBottom: 8,
+                }}
+              >
+                מודעה חלקית
+              </div>
+            )}
+
             <h1 style={{ marginTop: 0 }}>
-              {l.manufacturer?.name}
+              {l.manufacturer?.name ||
+                (l.design ? l.design : "מודעה חלקית")}
             </h1>
 
-            <div className="design">
-              {l.design}
-            </div>
+            {l.manufacturer?.name && l.design && (
+              <div className="design">
+                {l.design}
+              </div>
+            )}
 
             {l.model && (
               <div className="model">
@@ -208,35 +257,45 @@ export default async function Page({
           />
         </div>
 
-        <p>
-          {labelOf(SIZES, l.size)}
-          {l.size_note && ` · ${l.size_note}`}
-        </p>
+        {l.size && (
+          <p>
+            {labelOf(SIZES, l.size)}
+            {l.size_note && ` · ${l.size_note}`}
+          </p>
+        )}
 
-        <p>{l.price} ₪</p>
+        {Number(l.price) > 0 && (
+          <p>{l.price} ₪</p>
+        )}
 
-        <div className="details">
-          <div>
-            <b>GSM</b>
-            <br />
-            {labelOf(GSM, l.gsm)}
+        {l.gsm && l.gsm !== "unknown" && (
+          <div className="details">
+            <div>
+              <b>GSM</b>
+              <br />
+              {labelOf(GSM, l.gsm)}
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div className="section">
-        <h2>הרכב</h2>
-
-        {(l.materials || []).map(
-          (x: any, i: number) => (
-            <p key={i}>
-              {x.percentage}% {x.material?.name}
-            </p>
-          )
         )}
       </div>
 
-      <div className="section">
+      {(l.materials || []).length > 0 && (
+        <div className="section">
+          <h2>הרכב</h2>
+
+          {(l.materials || []).map(
+            (x: any, i: number) => (
+              <p key={i}>
+                {x.percentage}% {x.material?.name}
+              </p>
+            )
+          )}
+        </div>
+      )}
+
+      {(locationGroups.length > 0 ||
+        l.shipping_available) && (
+        <div className="section">
         <h2>מסירה</h2>
 
         <div>
@@ -277,7 +336,8 @@ export default async function Page({
             דמי משלוח על חשבון הקונה אלא אם צוין אחרת.
           </p>
         )}
-      </div>
+        </div>
+      )}
 
       {l.description && (
         <div className="section">
@@ -299,13 +359,19 @@ export default async function Page({
         </div>
       )}
 
-      <div className="section">
+      {(l.condition ||
+        defectKeys.length > 0 ||
+        l.defects_description ||
+        defectImages.length > 0) && (
+        <div className="section">
         <h2>מצב ופגמים</h2>
 
-        <p>
-          <b>מצב המנשא:</b>{" "}
-          {labelOf(CONDITIONS, l.condition)}
-        </p>
+        {l.condition && (
+          <p>
+            <b>מצב המנשא:</b>{" "}
+            {labelOf(CONDITIONS, l.condition)}
+          </p>
+        )}
 
         {defectKeys.length === 0 ? (
           <p>לא צוינו פגמים ידועים.</p>
@@ -351,7 +417,8 @@ export default async function Page({
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {seller?.public_seller_id && (
         <div className="section">
