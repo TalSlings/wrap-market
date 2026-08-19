@@ -20,6 +20,22 @@ const boxStyle = {
   background: "var(--surface, white)",
 } as const;
 
+function closeOtherFilterDropdowns(
+  current: HTMLDetailsElement | null
+) {
+  if (!current?.open) return;
+
+  document
+    .querySelectorAll<HTMLDetailsElement>(
+      'details[data-filter-dropdown="true"][open]'
+    )
+    .forEach((details) => {
+      if (details !== current) {
+        details.open = false;
+      }
+    });
+}
+
 function DropdownSummary({
   children,
 }: {
@@ -103,7 +119,11 @@ export function FlatMultiSelect({
 
       <details
         ref={detailsRef}
+        data-filter-dropdown="true"
         style={boxStyle}
+        onToggle={() =>
+          closeOtherFilterDropdowns(detailsRef.current)
+        }
         onKeyDown={closeWithEscape}
       >
         <DropdownSummary>{summary}</DropdownSummary>
@@ -245,7 +265,11 @@ export function HierarchicalMultiSelect({
 
       <details
         ref={detailsRef}
+        data-filter-dropdown="true"
         style={boxStyle}
+        onToggle={() =>
+          closeOtherFilterDropdowns(detailsRef.current)
+        }
         onKeyDown={closeWithEscape}
       >
         <DropdownSummary>{summary}</DropdownSummary>
@@ -395,7 +419,11 @@ export function HierarchicalSingleSelect({
 
       <details
         ref={detailsRef}
+        data-filter-dropdown="true"
         style={boxStyle}
+        onToggle={() =>
+          closeOtherFilterDropdowns(detailsRef.current)
+        }
         onKeyDown={closeWithEscape}
       >
         <DropdownSummary>{selectedName}</DropdownSummary>
