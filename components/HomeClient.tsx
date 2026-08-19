@@ -591,6 +591,7 @@ export default function HomeClient({
               <label>חיפוש חופשי</label>
               <input
                 className="input"
+                aria-label="חיפוש חופשי"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="יצרן, עיצוב, מודל..."
@@ -602,6 +603,7 @@ export default function HomeClient({
               <div className="toolbar">
                 <input
                   className="input"
+                  aria-label="מחיר מינימום"
                   inputMode="numeric"
                   placeholder="מ־"
                   value={priceMin}
@@ -609,6 +611,7 @@ export default function HomeClient({
                 />
                 <input
                   className="input"
+                  aria-label="מחיר מקסימום"
                   inputMode="numeric"
                   placeholder="עד־"
                   value={priceMax}
@@ -622,6 +625,7 @@ export default function HomeClient({
               <div className="toolbar">
                 <select
                   className="select"
+                  aria-label="GSM מינימום"
                   value={gmin}
                   onChange={(e) => setGmin(e.target.value)}
                 >
@@ -637,6 +641,7 @@ export default function HomeClient({
 
                 <select
                   className="select"
+                  aria-label="GSM מקסימום"
                   value={gmax}
                   onChange={(e) => setGmax(e.target.value)}
                 >
@@ -756,6 +761,7 @@ export default function HomeClient({
 
         <select
           className="select"
+          aria-label="מיון המודעות"
           style={{ width: "auto" }}
           value={sort}
           onChange={(e) => setSort(e.target.value)}
