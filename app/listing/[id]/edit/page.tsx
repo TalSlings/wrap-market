@@ -37,13 +37,15 @@ export default async function Page({
     { data: colors },
     { data: regions },
     { data: subregions },
+    { data: settings },
   ] = await Promise.all([
     s
       .from("listings")
       .select(
         `*,
         materials:listing_materials(material_id,percentage),
-        locations:listing_locations(region_id,subregion_id)`
+        locations:listing_locations(region_id,subregion_id),
+        images:listing_images(id,storage_path,image_type,position)`
       )
       .eq("id", id)
       .eq("owner_id", user.id)
@@ -80,6 +82,12 @@ export default async function Page({
       .select("*")
       .eq("active", true)
       .order("sort_order"),
+
+    s
+      .from("site_settings")
+      .select("allow_incomplete_listings")
+      .eq("singleton", true)
+      .maybeSingle(),
   ]);
 
   if (!l) {
@@ -98,6 +106,9 @@ export default async function Page({
         colors={colors || []}
         regions={regions || []}
         subregions={subregions || []}
+        allowIncomplete={
+          !!settings?.allow_incomplete_listings
+        }
       />
     </main>
   );
