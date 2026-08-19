@@ -24,6 +24,7 @@ export default async function Page() {
     { data: subregions },
     { data: adminRow },
     { data: sellerProfile },
+    { data: isSuspended },
   ] = await Promise.all([
     s
       .from("listings")
@@ -84,6 +85,8 @@ export default async function Page() {
       .select("public_seller_id")
       .eq("user_id", user.id)
       .maybeSingle(),
+
+    s.rpc("current_user_is_suspended"),
   ]);
 
   const favorites = (favoriteRows || [])
@@ -119,6 +122,7 @@ export default async function Page() {
         sellerPublicId={
           sellerProfile?.public_seller_id || null
         }
+        isSuspended={!!isSuspended}
       />
     </main>
   );
