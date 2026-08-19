@@ -49,6 +49,7 @@ function statusLabel(status?: string | null) {
   if (status === "active") return "פעיל";
   if (status === "draft") return "טיוטה";
   if (status === "paused") return "מושהה";
+  if (status === "incomplete") return "מודעה חלקית";
   if (status === "hidden") return "מוסתר";
   if (status === "merged") return "אוחד";
   return status || "—";
@@ -73,6 +74,7 @@ export default function AdminClient({
   notes: initialNotes,
   sellers: initialSellers,
   feedbackItems: initialFeedbackItems,
+  allowIncomplete: initialAllowIncomplete,
 }: {
   userId: string;
   listings: any[];
@@ -84,6 +86,7 @@ export default function AdminClient({
   notes: any[];
   sellers: any[];
   feedbackItems: any[];
+  allowIncomplete: boolean;
 }) {
   const s = createClient();
 
@@ -102,6 +105,8 @@ export default function AdminClient({
   const [sellers, setSellers] = useState(initialSellers);
   const [feedbackItems, setFeedbackItems] =
     useState(initialFeedbackItems);
+  const [allowIncomplete, setAllowIncomplete] =
+    useState(initialAllowIncomplete);
 
   const [manufacturerMerge, setManufacturerMerge] =
     useState<Record<string, string>>({});
@@ -751,6 +756,31 @@ export default function AdminClient({
     notify("סטטוס הפנייה עודכן");
   }
 
+  async function toggleIncompleteListings() {
+    const next = !allowIncomplete;
+
+    const { error } = await s
+      .from("site_settings")
+      .update({
+        allow_incomplete_listings: next,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      })
+      .eq("singleton", true);
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setAllowIncomplete(next);
+    notify(
+      next
+        ? "פרסום מודעות חלקיות הופעל"
+        : "פרסום מודעות חלקיות הושבת"
+    );
+  }
+
   async function updateColor(
     id: string,
     patch: Record<string, any>
@@ -1137,6 +1167,31 @@ export default function AdminClient({
 
   return (
     <>
+      <div className="section">
+        <h2>הגדרות הלוח</h2>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={allowIncomplete}
+            onChange={toggleIncompleteListings}
+          />
+          לאפשר פרסום מודעות חלקיות
+        </label>
+
+        <p className="muted" style={{ marginBottom: 0 }}>
+          כשהאפשרות כבויה, מודעות שכבר פורסמו כחלקיות
+          נשמרות במערכת אבל אינן מוצגות לציבור ומתנהגות
+          כמו טיוטות באזור האישי.
+        </p>
+      </div>
+
       <div
         className="toolbar"
         style={{ flexWrap: "wrap" }}
