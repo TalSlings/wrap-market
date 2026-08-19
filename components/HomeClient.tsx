@@ -588,17 +588,6 @@ export default function HomeClient({
 
           <div style={{ paddingTop: 12 }}>
             <div className="field">
-              <label>חיפוש חופשי</label>
-              <input
-                className="input"
-                aria-label="חיפוש חופשי"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="יצרן, עיצוב, מודל..."
-              />
-            </div>
-
-            <div className="field">
               <label>מחיר</label>
               <div className="toolbar">
                 <input
@@ -742,6 +731,17 @@ export default function HomeClient({
               selectedIds={defectFilters}
               onChange={setDefectFilters}
             />
+
+            <div className="field">
+              <label>חיפוש חופשי</label>
+              <input
+                className="input"
+                aria-label="חיפוש חופשי"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="יצרן, עיצוב, מודל..."
+              />
+            </div>
           </div>
         </details>
 
