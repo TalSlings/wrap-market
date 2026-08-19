@@ -10,6 +10,7 @@ type Tab =
   | "manufacturers"
   | "materials"
   | "users"
+  | "feedback"
   | "notes"
   | "colors"
   | "regions";
@@ -71,6 +72,7 @@ export default function AdminClient({
   subregions: initialSubregions,
   notes: initialNotes,
   sellers: initialSellers,
+  feedbackItems: initialFeedbackItems,
 }: {
   userId: string;
   listings: any[];
@@ -81,6 +83,7 @@ export default function AdminClient({
   subregions: any[];
   notes: any[];
   sellers: any[];
+  feedbackItems: any[];
 }) {
   const s = createClient();
 
@@ -97,6 +100,8 @@ export default function AdminClient({
   const [subregions, setSubregions] = useState(initialSubregions);
   const [notes, setNotes] = useState(initialNotes);
   const [sellers, setSellers] = useState(initialSellers);
+  const [feedbackItems, setFeedbackItems] =
+    useState(initialFeedbackItems);
 
   const [manufacturerMerge, setManufacturerMerge] =
     useState<Record<string, string>>({});
@@ -155,6 +160,12 @@ export default function AdminClient({
     {
       key: "users",
       label: `משתמשות (${sellers.length})`,
+    },
+    {
+      key: "feedback",
+      label: `פניות (${
+        feedbackItems.filter((x: any) => x.status !== "done").length
+      })`,
     },
     { key: "notes", label: "הערות והנחיות" },
     { key: "colors", label: `צבעים (${colors.length})` },
@@ -714,6 +725,32 @@ export default function AdminClient({
     );
   }
 
+  async function updateFeedbackStatus(
+    id: string,
+    status: "new" | "in_progress" | "done"
+  ) {
+    const { error } = await s
+      .from("feedback_items")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      notify(error.message);
+      return;
+    }
+
+    setFeedbackItems((rows) =>
+      rows.map((x: any) =>
+        x.id === id ? { ...x, status } : x
+      )
+    );
+
+    notify("סטטוס הפנייה עודכן");
+  }
+
   async function updateColor(
     id: string,
     patch: Record<string, any>
@@ -1125,7 +1162,11 @@ export default function AdminClient({
       </div>
 
       {msg && (
-        <div className="notice">
+        <div
+          className="notice"
+          role="status"
+          aria-live="polite"
+        >
           {msg}
         </div>
       )}
@@ -1534,6 +1575,111 @@ export default function AdminClient({
                 </div>
               );
             }
+          )}
+        </div>
+      )}
+
+      {tab === "feedback" && (
+        <div className="section">
+          <h2>פניות</h2>
+
+          {filtered(feedbackItems).length === 0 ? (
+            <p className="muted">אין פניות להצגה.</p>
+          ) : (
+            filtered(feedbackItems).map((item: any) => (
+              <article
+                key={item.id}
+                className="section account-card"
+              >
+                <div
+                  className="toolbar"
+                  style={{ flexWrap: "wrap" }}
+                >
+                  <b>
+                    {item.category === "accessibility"
+                      ? "נגישות"
+                      : item.category === "feature"
+                        ? "הצעה לשיפור"
+                        : item.category === "bug"
+                          ? "בעיה באתר"
+                          : "אחר"}
+                  </b>
+
+                  <span className="badge">
+                    {item.status === "new"
+                      ? "חדש"
+                      : item.status === "in_progress"
+                        ? "בטיפול"
+                        : "טופל"}
+                  </span>
+                </div>
+
+                <p style={{ whiteSpace: "pre-wrap" }}>
+                  {item.message}
+                </p>
+
+                {item.source_path && (
+                  <p className="muted">
+                    עמוד:{" "}
+                    <span dir="ltr">
+                      {item.source_path}
+                    </span>
+                  </p>
+                )}
+
+                {item.contact_email && (
+                  <p>
+                    <a href={`mailto:${item.contact_email}`}>
+                      {item.contact_email}
+                    </a>
+                  </p>
+                )}
+
+                <div
+                  className="toolbar"
+                  style={{ flexWrap: "wrap" }}
+                >
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() =>
+                      updateFeedbackStatus(
+                        item.id,
+                        "new"
+                      )
+                    }
+                  >
+                    חדש
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() =>
+                      updateFeedbackStatus(
+                        item.id,
+                        "in_progress"
+                      )
+                    }
+                  >
+                    בטיפול
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={() =>
+                      updateFeedbackStatus(
+                        item.id,
+                        "done"
+                      )
+                    }
+                  >
+                    טופל
+                  </button>
+                </div>
+              </article>
+            ))
           )}
         </div>
       )}
