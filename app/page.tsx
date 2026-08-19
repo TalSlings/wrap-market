@@ -31,6 +31,16 @@ export default async function Home({
     data: { user },
   } = await s.auth.getUser();
 
+  const { data: settings } = await s
+    .from("site_settings")
+    .select("allow_incomplete_listings")
+    .eq("singleton", true)
+    .maybeSingle();
+
+  const publicStatuses = settings?.allow_incomplete_listings
+    ? ["active", "incomplete"]
+    : ["active"];
+
   const [
     { data: listings },
     { data: manufacturers },
@@ -79,7 +89,7 @@ export default async function Home({
           position
         )`
       )
-      .eq("status", "active"),
+      .in("status", publicStatuses),
 
     s
       .from("manufacturers")
