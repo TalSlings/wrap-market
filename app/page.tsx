@@ -42,7 +42,20 @@ export default async function Home({
     s
       .from("listings")
       .select(
-        `*,
+        `id,
+        manufacturer_id,
+        design,
+        model,
+        description,
+        size,
+        gsm,
+        price,
+        colors,
+        color_patterns,
+        condition,
+        defects,
+        shipping_available,
+        created_at,
         manufacturer:manufacturers(id,name),
         materials:listing_materials(
           material_id,
@@ -109,31 +122,65 @@ export default async function Home({
       .select("listing_id")
       .eq("user_id", user.id);
 
-    favoriteIds = (favorites || []).map((x: any) => x.listing_id);
+    favoriteIds = (favorites || []).map(
+      (x: any) => x.listing_id
+    );
   }
 
-  const enriched = [] as any[];
+  const rows = listings || [];
 
-  for (const l of listings || []) {
-    const im = (l.images || [])
-      .filter((x: any) => x.image_type === "listing")
-      .sort((a: any, b: any) => a.position - b.position)[0];
+  const mainImages = rows
+    .map((l: any) => {
+      const image = (l.images || [])
+        .filter(
+          (x: any) =>
+            x.image_type === "listing"
+        )
+        .sort(
+          (a: any, b: any) =>
+            Number(a.position || 0) -
+            Number(b.position || 0)
+        )[0];
 
-    let image_url = null;
+      return image
+        ? {
+            listingId: l.id,
+            path: image.storage_path,
+          }
+        : null;
+    })
+    .filter(Boolean) as {
+      listingId: string;
+      path: string;
+    }[];
 
-    if (im) {
-      const { data } = await s.storage
-        .from("listing-images")
-        .createSignedUrl(im.storage_path, 3600);
+  const imageUrlByListing = new Map<
+    string,
+    string | null
+  >();
 
-      image_url = data?.signedUrl || null;
-    }
+  if (mainImages.length > 0) {
+    const { data: signedUrls } = await s.storage
+      .from("listing-images")
+      .createSignedUrls(
+        mainImages.map((x) => x.path),
+        3600
+      );
 
-    enriched.push({
-      ...l,
-      image_url,
+    mainImages.forEach((image, index) => {
+      imageUrlByListing.set(
+        image.listingId,
+        signedUrls?.[index]?.signedUrl ||
+          null
+      );
     });
   }
+
+  const enriched = rows.map((l: any) => ({
+    ...l,
+    image_url:
+      imageUrlByListing.get(l.id) || null,
+  }));
 
   return (
     <HomeClient
@@ -148,4 +195,3 @@ export default async function Home({
       initial={initial}
     />
   );
-}
