@@ -634,6 +634,7 @@ export default function AccountClient({
               <label>שם להצגה</label>
               <input
                 className="input"
+                aria-label="שם להצגה"
                 value={displayName}
                 onChange={(e) =>
                   setDisplayName(
@@ -661,6 +662,7 @@ export default function AccountClient({
                 <input
                   className="input"
                   type="email"
+                  aria-label="מייל ליצירת קשר"
                   value={contactEmail}
                   onChange={(e) =>
                     setContactEmail(
@@ -693,6 +695,7 @@ export default function AccountClient({
                 <input
                   className="input"
                   type="tel"
+                  aria-label="מספר WhatsApp ליצירת קשר"
                   value={whatsappNumber}
                   onChange={(e) =>
                     setWhatsappNumber(
@@ -735,7 +738,11 @@ export default function AccountClient({
             </div>
 
             {profileMsg && (
-              <div className="notice">
+              <div
+                className="notice"
+                role="status"
+                aria-live="polite"
+              >
                 {profileMsg}
               </div>
             )}
@@ -752,4 +759,3 @@ export default function AccountClient({
       )}
     </>
   );
-}
