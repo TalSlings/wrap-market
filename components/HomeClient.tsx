@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
+import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
 import {
   SORTS,
   SIZES,
@@ -532,6 +533,8 @@ export default function HomeClient({
   return (
     <main className="page">
       <div className="filters">
+        <LooseThread className="filters-thread" />
+
         <FlatMultiSelect
           label="יצרן"
           placeholder="כל היצרנים"
@@ -765,7 +768,7 @@ export default function HomeClient({
         </div>
       </div>
 
-      <div className="toolbar">
+      <div className="toolbar results-toolbar">
         <b>{out.length} מודעות</b>
 
         <select
@@ -802,16 +805,16 @@ export default function HomeClient({
         {out.map((l: any) => (
           <Link
             key={l.id}
-            className="listing"
+            className={
+              "listing " +
+              (l.status === "incomplete"
+                ? "incomplete-listing"
+                : "")
+            }
             href={`/listing/${l.id}`}
             onClick={(e) => openListing(e, l.id)}
-            style={{
-              position: "relative",
-              ...(l.status === "incomplete"
-                ? { borderStyle: "dashed" }
-                : {}),
-            }}
           >
+            <WovenCorner />
             {l.image_url ? (
               <img
                 className="listing-img"
@@ -928,19 +931,21 @@ export default function HomeClient({
               )}
 
               <div className="icons">
-                {l.shipping_available && <span>🚚</span>}
-
                 {(l.materials || []).length > 0 &&
                   (l.materials || []).every(
                     (m: any) => m.material?.vegan
-                  ) && <span>🌿</span>}
+                  ) && <FeatureBadge type="vegan" />}
 
                 {(l.materials || []).length > 0 &&
                   (l.materials || []).every(
                     (m: any) =>
                       m.material?.material_origin ===
                       "natural"
-                  ) && <span>🍃</span>}
+                  ) && <FeatureBadge type="natural" />}
+
+                {l.shipping_available && (
+                  <FeatureBadge type="shipping" />
+                )}
               </div>
             </div>
           </Link>
