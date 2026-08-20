@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { WovenCorner } from "@/components/DesignMotifs";
 import { createClient } from "@/lib/supabase/client";
 
 type Tab =
@@ -1302,9 +1303,10 @@ export default function AdminClient({
           {filtered(listings).map(
             (l: any) => (
               <div
-                className="section account-card"
+                className="section account-card listing-management-card"
                 key={l.id}
               >
+                <WovenCorner />
                 <div>
                   <b>
                     {l.manufacturer?.name} ·{" "}
