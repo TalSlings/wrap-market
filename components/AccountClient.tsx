@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { HierarchicalMultiSelect } from "@/components/HierarchicalSelect";
+import { WovenCorner } from "@/components/DesignMotifs";
 
 type Tab =
   | "profile"
@@ -401,7 +402,7 @@ export default function AccountClient({
               <div
                 key={l.id}
                 className={
-                  "section account-card " +
+                  "section account-card listing-management-card " +
                   (l.status === "paused"
                     ? "paused"
                     : "") +
@@ -411,6 +412,7 @@ export default function AccountClient({
                     : "")
                 }
               >
+                <WovenCorner />
                 <b>
                   {l.manufacturer?.name} ·{" "}
                   {l.design}
