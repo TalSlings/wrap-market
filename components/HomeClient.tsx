@@ -533,8 +533,6 @@ export default function HomeClient({
   return (
     <main className="page">
       <div className="filters">
-        <LooseThread className="filters-thread" />
-
         <FlatMultiSelect
           label="יצרן"
           placeholder="כל היצרנים"
@@ -931,21 +929,25 @@ export default function HomeClient({
               )}
 
               <div className="icons">
-                {(l.materials || []).length > 0 &&
-                  (l.materials || []).every(
-                    (m: any) => m.material?.vegan
-                  ) && <FeatureBadge type="vegan" />}
+                <span className="shipping-feature">
+                  {l.shipping_available && (
+                    <FeatureBadge type="shipping" />
+                  )}
+                </span>
 
-                {(l.materials || []).length > 0 &&
-                  (l.materials || []).every(
-                    (m: any) =>
-                      m.material?.material_origin ===
-                      "natural"
-                  ) && <FeatureBadge type="natural" />}
+                <span className="material-features">
+                  {(l.materials || []).length > 0 &&
+                    (l.materials || []).every(
+                      (m: any) => m.material?.vegan
+                    ) && <FeatureBadge type="vegan" />}
 
-                {l.shipping_available && (
-                  <FeatureBadge type="shipping" />
-                )}
+                  {(l.materials || []).length > 0 &&
+                    (l.materials || []).every(
+                      (m: any) =>
+                        m.material?.material_origin ===
+                        "natural"
+                    ) && <FeatureBadge type="natural" />}
+                </span>
               </div>
             </div>
           </Link>
