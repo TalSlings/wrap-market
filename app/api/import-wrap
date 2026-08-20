@@ -1,0 +1,92 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { isAllowedWrapTrackUrl, parseWrapTrackHtml } from "@/lib/wraptrack";
+
+export const runtime = "nodejs";
+
+const MAX_HTML_BYTES = 1_000_000;
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "צריך להתחבר כדי למלא פרטים מקישור" }, { status: 401 });
+  }
+
+  let body: { url?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "בקשה לא תקינה" }, { status: 400 });
+  }
+
+  const url = typeof body.url === "string" ? body.url.trim() : "";
+  if (!isAllowedWrapTrackUrl(url)) {
+    return NextResponse.json(
+      { error: "כרגע אפשר למלא פרטים רק מקישור לדגם ב־WrapTrack" },
+      { status: 400 }
+    );
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      redirect: "error",
+      headers: {
+        Accept: "text/html,application/xhtml+xml",
+        "User-Agent": "wrap-market/1.0 (+listing import)",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: "לא הצלחנו לקרוא את הקישור מ־WrapTrack" },
+        { status: 502 }
+      );
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("text/html")) {
+      return NextResponse.json({ error: "הקישור לא החזיר עמוד מתאים" }, { status: 502 });
+    }
+
+    const declaredLength = Number(response.headers.get("content-length") || 0);
+    if (declaredLength > MAX_HTML_BYTES) {
+      return NextResponse.json({ error: "העמוד גדול מדי לייבוא" }, { status: 502 });
+    }
+
+    const html = await response.text();
+    if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) {
+      return NextResponse.json({ error: "העמוד גדול מדי לייבוא" }, { status: 502 });
+    }
+
+    const data = parseWrapTrackHtml(html);
+    const foundAnything = Boolean(
+      data.manufacturer || data.design || data.model || data.gsm || data.materials?.length
+    );
+
+    if (!foundAnything) {
+      return NextResponse.json(
+        { error: "לא מצאנו בקישור פרטים שאפשר למלא אוטומטית" },
+        { status: 422 }
+      );
+    }
+
+    return NextResponse.json({ data });
+  } catch (error: any) {
+    const timedOut = error?.name === "AbortError";
+    return NextResponse.json(
+      { error: timedOut ? "WrapTrack לא הגיב בזמן" : "לא הצלחנו לקרוא את הקישור" },
+      { status: 502 }
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+}
