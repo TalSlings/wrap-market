@@ -15,8 +15,8 @@ export type TreeChild = {
 };
 
 const boxStyle = {
-  border: "1px solid var(--line)",
-  borderRadius: 10,
+  border: "1px solid #777",
+  borderRadius: "var(--radius)",
   background: "var(--surface, white)",
 } as const;
 
