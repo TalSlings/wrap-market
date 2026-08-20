@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SIZES, labelOf } from "@/lib/constants";
 import ShareShelfButton from "@/components/ShareShelfButton";
+import { FeatureBadge, WovenCorner } from "@/components/DesignMotifs";
 
 export const dynamic = "force-dynamic";
 
@@ -133,6 +134,7 @@ export default async function SellerPage({
               className="listing"
               href={`/listing/${l.id}`}
             >
+              <WovenCorner />
               {l.image_url ? (
                 <img
                   className="listing-img"
@@ -198,11 +200,13 @@ export default async function SellerPage({
                   </div>
                 )}
 
-                {l.shipping_available && (
-                  <div className="muted">
-                    🚚 משלוח זמין
-                  </div>
-                )}
+                <div className="icons">
+                  <span className="shipping-feature">
+                    {l.shipping_available && (
+                      <FeatureBadge type="shipping" />
+                    )}
+                  </span>
+                </div>
               </div>
             </Link>
           ))}
