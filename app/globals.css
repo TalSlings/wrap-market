@@ -7,6 +7,8 @@
   --card:#ffffff;
   --accent:#7d6cd1;
   --soft:#f5f5f5;
+  --filter-bg:#f6f4fd;
+  --filter-slub:rgba(125,108,209,.17);
   --danger:#9f2f3c;
   --radius:7px;
 }
@@ -60,7 +62,27 @@ button{cursor:pointer}
   padding:14px;
   margin-bottom:14px;
 }
-.filters{position:relative}
+
+/* Search is a surface, not another outlined control.
+   Tiny irregular horizontal slubs hint at raw silk. */
+.filters{
+  position:relative;
+  border:0;
+  border-radius:10px;
+  padding:18px;
+  background-color:var(--filter-bg);
+  background-image:
+    repeating-linear-gradient(0deg,
+      transparent 0 17px,
+      var(--filter-slub) 17px 18px,
+      transparent 18px 37px),
+    repeating-linear-gradient(0deg,
+      transparent 0 29px,
+      rgba(125,108,209,.10) 29px 30px,
+      transparent 30px 61px);
+  background-size:31px 100%, 53px 100%;
+  background-position:7px 0, 19px 0;
+}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
 .field label{font-size:14px;font-weight:600}
 .input,.select,.textarea{
@@ -84,9 +106,8 @@ button{cursor:pointer}
 .chip.active{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 
 .results-toolbar{
-  border-bottom:1px solid var(--ink);
-  padding:2px 0 12px;
-  margin-bottom:14px;
+  padding:4px 0 8px;
+  margin-bottom:10px;
   position:relative;
 }
 .results-toolbar .select{border-color:#777}
@@ -112,14 +133,16 @@ button{cursor:pointer}
   border-radius:5px;
 }
 .listing-body{display:flex;flex-direction:column;min-width:0;padding:2px 0}
-.brand{font-weight:500;font-size:13px;letter-spacing:.02em}
-.design{font-size:20px;font-weight:700;line-height:1.2;margin-top:2px}
+.brand{font-weight:700;font-size:15px;letter-spacing:.01em}
+.design{font-size:17px;font-weight:400;line-height:1.3;margin-top:2px}
 .model,.muted,.count{color:var(--muted)}
 .model{font-size:13px;margin-top:2px}
 .meta{font-size:17px;font-weight:700;margin-top:7px}
 .materials,.location{font-size:13px;margin-top:5px}
 .materials{line-height:1.45}
-.icons{display:flex;gap:8px;margin-top:auto;align-items:center;min-height:30px}
+.icons{display:flex;gap:8px;margin-top:auto;align-items:center;min-height:30px;width:100%}
+.shipping-feature{display:inline-flex;align-items:center;margin-inline-end:auto}
+.material-features{display:inline-flex;align-items:center;gap:7px;margin-inline-start:auto}
 .favorite{margin-right:auto;background:none;border:0;font-size:23px}
 .swatches{display:flex;gap:4px}
 .swatch{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.18)}
@@ -139,34 +162,18 @@ button{cursor:pointer}
 .thumb{width:70px;height:70px;object-fit:contain;background:var(--soft);border:1px solid var(--ink);border-radius:5px}
 .details{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-/* Notices: structure instead of yellow UI-kit styling */
+/* Guidance / annotations: compact and deliberately unlike controls */
 .notice{
   position:relative;
   background:#fff;
-  border:1px solid var(--ink);
-  border-radius:var(--radius);
-  padding:12px 14px;
-  font-size:13px;
+  border:1px dashed var(--ink);
+  border-radius:2px;
+  padding:7px 9px;
+  font-size:12.5px;
+  line-height:1.45;
   text-align:right;
 }
-.notice::before{
-  content:"";
-  position:absolute;
-  inset-inline-start:-7px;
-  bottom:-1px;
-  width:14px;
-  height:1px;
-  background:var(--ink);
-}
-.notice::after{
-  content:"";
-  position:absolute;
-  inset-inline-start:0;
-  bottom:-7px;
-  width:1px;
-  height:14px;
-  background:var(--ink);
-}
+.notice strong{font-weight:700}
 .danger{color:var(--danger)}
 
 .badge{
@@ -255,4 +262,26 @@ button{cursor:pointer}
   .grid-mode{grid-template-columns:repeat(2,1fr);gap:9px}
   .grid-mode .listing-img{height:130px}
   .woven-corner{transform:scale(.9);transform-origin:bottom left}
+}
+
+
+/* Large content groups should not look like giant inputs. */
+.account-card{
+  background:var(--soft);
+  border:0;
+  padding:12px;
+}
+.listing-management-card{
+  position:relative;
+  background:#fff;
+  border:1px solid var(--ink);
+  padding:12px;
+  margin-bottom:14px;
+}
+
+/* A dashed textile line is available for secondary textile states. */
+.thread-dashed{
+  border-top:1px dashed var(--ink);
+  height:0;
+  margin:12px 0;
 }
