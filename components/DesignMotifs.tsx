@@ -32,7 +32,7 @@ export function LooseThread({
       preserveAspectRatio="none"
     >
       <path
-        d="M2 22 C58 22 82 22 102 22 C116 22 119 8 130 8 C142 8 145 25 132 26 C120 27 117 17 124 13 C134 7 142 22 157 22 C184 22 215 22 258 22"
+        d="M2 22 H108 C118 22 121 20 124 16 C128 10 136 9 140 14 C144 19 140 25 134 25 C128 25 125 21 126 17 C128 11 136 10 142 16 C147 21 151 22 162 22 H258"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.4"
