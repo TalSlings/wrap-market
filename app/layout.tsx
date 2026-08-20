@@ -2,6 +2,19 @@ import "./globals.css";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SiteFooter from "@/components/SiteFooter";
+import { Noto_Sans_Hebrew, Noto_Sans } from "next/font/google";
+
+const notoHebrew = Noto_Sans_Hebrew({
+  subsets: ["hebrew"],
+  variable: "--font-hebrew",
+  display: "swap",
+});
+
+const notoLatin = Noto_Sans({
+  subsets: ["latin"],
+  variable: "--font-latin",
+  display: "swap",
+});
 
 export const metadata = {
   title: "wrap-market",
@@ -21,7 +34,7 @@ export default async function RootLayout({
 
   return (
     <html lang="he" dir="rtl">
-      <body>
+      <body className={`${notoHebrew.variable} ${notoLatin.variable}`}>
         <div className="shell">
           <header className="header">
             <Link className="logo" href="/">
