@@ -43,29 +43,28 @@ button{cursor:pointer}
   color:var(--ink);
 }
 .logo-lockup{
-  position:relative;
-  display:inline-block;
+  display:inline-flex;
+  align-items:baseline;
+  gap:8px;
   width:max-content;
-  padding-bottom:11px;
-  line-height:.9;
+  line-height:1;
+  white-space:nowrap;
 }
 .logo-lockup > span{display:block}
 .logo-main{
-  font-size:24px;
+  font-size:30px;
   font-weight:800;
   letter-spacing:-.035em;
-  line-height:.92;
+  line-height:1;
 }
 .logo-aside{
-  position:absolute;
-  top:24px;
-  left:-48px;
-  width:max-content;
-  font-size:15.5px;
-  font-weight:550;
+  position:static;
+  width:auto;
+  font-size:18px;
+  font-weight:500;
   letter-spacing:-.01em;
   line-height:1;
-  transform:rotate(-2deg);
+  transform:none;
 }
 .page{padding:16px}
 
@@ -290,13 +289,8 @@ button{cursor:pointer}
 @media (max-width:640px){
   .shell{max-width:none}
   .header{padding:10px 12px;gap:7px}
-  .logo-main{font-size:21px}
-  .logo-lockup{padding-bottom:10px}
-  .logo-aside{
-    top:22px;
-    left:-43px;
-    font-size:14px;
-  }
+  .logo-main{font-size:25px}
+  .logo-aside{font-size:15px}
   .iconbtn{padding:8px 9px;font-size:13px}
   .page{padding:12px}
   .filters,.section{padding:12px}
