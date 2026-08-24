@@ -43,18 +43,30 @@ button{cursor:pointer}
   color:var(--ink);
 }
 .logo-lockup{
-  display:inline-flex;
-  flex-direction:column;
-  align-items:stretch;
+  position:relative;
+  display:inline-block;
   width:max-content;
+  padding-bottom:11px;
   line-height:.9;
 }
 .logo-lockup > span{display:block}
-.logo-small{font-size:11px;font-weight:500;letter-spacing:.01em}
-.logo-main{font-size:24px;font-weight:800;letter-spacing:-.035em;line-height:.92}
-.logo-medium{font-size:14px;font-weight:650;letter-spacing:-.01em}
-.logo-start{text-align:start}
-.logo-end{text-align:end}
+.logo-main{
+  font-size:24px;
+  font-weight:800;
+  letter-spacing:-.035em;
+  line-height:.92;
+}
+.logo-aside{
+  position:absolute;
+  top:19px;
+  right:-42px;
+  width:max-content;
+  font-size:14px;
+  font-weight:550;
+  letter-spacing:-.01em;
+  line-height:1;
+  transform:rotate(-2deg);
+}
 .page{padding:16px}
 
 .btn,.iconbtn{
@@ -279,8 +291,12 @@ button{cursor:pointer}
   .shell{max-width:none}
   .header{padding:10px 12px;gap:7px}
   .logo-main{font-size:21px}
-  .logo-small{font-size:10px}
-  .logo-medium{font-size:12.5px}
+  .logo-lockup{padding-bottom:10px}
+  .logo-aside{
+    top:17px;
+    right:-38px;
+    font-size:12.5px;
+  }
   .iconbtn{padding:8px 9px;font-size:13px}
   .page{padding:12px}
   .filters,.section{padding:12px}
