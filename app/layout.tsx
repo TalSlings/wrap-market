@@ -37,8 +37,12 @@ export default async function RootLayout({
       <body className={`${notoHebrew.variable} ${notoLatin.variable}`}>
         <div className="shell">
           <header className="header">
-            <Link className="logo" href="/">
-              wrap-market
+            <Link className="logo" href="/" aria-label="דף הבית">
+              <span className="logo-lockup" aria-hidden="true">
+                <span className="logo-small logo-start">למכירה</span>
+                <span className="logo-main">רק ארוגים</span>
+                <span className="logo-medium logo-end">וטבעות</span>
+              </span>
             </Link>
 
             <Link className="iconbtn" href="/new">
