@@ -272,7 +272,7 @@ button{cursor:pointer}
 }
 .filters-thread{margin:-3px 0 5px}
 
-.account-card.paused{opacity:.58;background:#ececec}
+.account-card.paused{opacity:.58;background:#fff}
 .material-row{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
 
 @media (max-width:640px){
@@ -295,8 +295,8 @@ button{cursor:pointer}
 
 /* Large content groups should not look like giant inputs. */
 .account-card{
-  background:var(--soft);
-  border:0;
+  background:#fff;
+  border:1px solid var(--ink);
   padding:12px;
 }
 .listing-management-card{
