@@ -544,27 +544,50 @@ export default function AccountClient({
             favorites.map((l) => (
               <div
                 key={l.id}
-                className="section account-card"
+                className="favorite-listing-card"
               >
-                <b>
-                  {l.manufacturer?.name} ·{" "}
-                  {l.design}
-                </b>
+                <WovenCorner />
 
-                {l.model && (
-                  <div className="muted">
-                    {l.model}
-                  </div>
+                {l.image_url ? (
+                  <img
+                    className="favorite-listing-img"
+                    src={l.image_url}
+                    alt=""
+                  />
+                ) : (
+                  <div
+                    className="favorite-listing-img favorite-listing-placeholder"
+                    aria-label="אין תמונה"
+                    role="img"
+                  />
                 )}
 
-                <p>{l.price} ₪</p>
+                <div className="favorite-listing-body">
+                  {l.manufacturer?.name && (
+                    <div className="brand">
+                      {l.manufacturer.name}
+                    </div>
+                  )}
 
-                <Link
-                  className="btn"
-                  href={`/listing/${l.id}`}
-                >
-                  לצפייה במודעה
-                </Link>
+                  {l.design && (
+                    <div className="design">
+                      {l.design}
+                    </div>
+                  )}
+
+                  {Number(l.price) > 0 && (
+                    <div className="meta">
+                      {l.price} ₪
+                    </div>
+                  )}
+
+                  <Link
+                    className="btn favorite-listing-action"
+                    href={`/listing/${l.id}`}
+                  >
+                    לצפייה במודעה
+                  </Link>
+                </div>
               </div>
             ))
           )}
