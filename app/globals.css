@@ -58,10 +58,10 @@ button{cursor:pointer}
 }
 .logo-aside{
   position:absolute;
-  top:19px;
-  right:-42px;
+  top:24px;
+  left:-48px;
   width:max-content;
-  font-size:14px;
+  font-size:15.5px;
   font-weight:550;
   letter-spacing:-.01em;
   line-height:1;
@@ -293,9 +293,9 @@ button{cursor:pointer}
   .logo-main{font-size:21px}
   .logo-lockup{padding-bottom:10px}
   .logo-aside{
-    top:17px;
-    right:-38px;
-    font-size:12.5px;
+    top:22px;
+    left:-43px;
+    font-size:14px;
   }
   .iconbtn{padding:8px 9px;font-size:13px}
   .page{padding:12px}
