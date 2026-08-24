@@ -51,7 +51,12 @@ export default async function Page() {
           model,
           price,
           status,
-          manufacturer:manufacturers(name)
+          manufacturer:manufacturers(name),
+          images:listing_images(
+            storage_path,
+            image_type,
+            position
+          )
         )`
       )
       .eq("user_id", user.id)
@@ -96,13 +101,59 @@ export default async function Page() {
       .maybeSingle(),
   ]);
 
-  const favorites = (favoriteRows || [])
+  const favoriteListings = (favoriteRows || [])
     .map((row: any) => row.listing)
     .filter(
       (listing: any) =>
         listing &&
         listing.status !== "deleted"
     );
+
+  const favoriteMainImages = favoriteListings
+    .map((listing: any) => {
+      const image = (listing.images || [])
+        .filter((x: any) => x.image_type === "listing")
+        .sort(
+          (a: any, b: any) =>
+            Number(a.position || 0) - Number(b.position || 0)
+        )[0];
+
+      return image
+        ? { listingId: listing.id, path: image.storage_path }
+        : null;
+    })
+    .filter(Boolean) as { listingId: string; path: string }[];
+
+  const favoriteImageUrlByListing: Record<string, string> = {};
+
+  if (favoriteMainImages.length > 0) {
+    const { data: signedUrls } = await s.storage
+      .from("listing-images")
+      .createSignedUrls(
+        favoriteMainImages.map((x) => x.path),
+        3600
+      );
+
+    const signedByPath: Record<string, string> = {};
+
+    for (const item of signedUrls || []) {
+      if (item?.path && item?.signedUrl) {
+        signedByPath[item.path] = item.signedUrl;
+      }
+    }
+
+    for (const image of favoriteMainImages) {
+      const signedUrl = signedByPath[image.path];
+      if (signedUrl) {
+        favoriteImageUrlByListing[image.listingId] = signedUrl;
+      }
+    }
+  }
+
+  const favorites = favoriteListings.map((listing: any) => ({
+    ...listing,
+    image_url: favoriteImageUrlByListing[listing.id] || null,
+  }));
 
   const provider =
     user.app_metadata?.provider === "google"
