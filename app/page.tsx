@@ -1,7 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import HomeClient from "@/components/HomeClient";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const query = await searchParams;
+  const isSearchOrSharedView = Object.keys(query).length > 0;
+
+  return {
+    alternates: { canonical: "/" },
+    robots: isSearchOrSharedView
+      ? { index: false, follow: true }
+      : { index: true, follow: true },
+  };
+}
 
 export default async function Home({
   searchParams,
@@ -76,6 +93,7 @@ export default async function Home({
             name,
             parent_material_id,
             vegan,
+            easycare,
             material_origin
           )
         ),
@@ -101,7 +119,7 @@ export default async function Home({
     s
       .from("materials")
       .select(
-        "id,name,parent_material_id,vegan,material_origin,is_selectable,status"
+        "id,name,parent_material_id,vegan,easycare,material_origin,is_selectable,status"
       )
       .eq("status", "active")
       .order("name"),
