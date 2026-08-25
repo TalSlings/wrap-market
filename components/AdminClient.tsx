@@ -476,6 +476,7 @@ export default function AdminClient({
           newMaterialParent || null,
         status: "active",
         vegan: true,
+        easycare: true,
         material_origin: "natural",
         is_selectable: true,
         reviewed_at: new Date().toISOString(),
@@ -1059,6 +1060,19 @@ export default function AdminClient({
                   }
                 />{" "}
                 טבעוני
+              </label>
+
+              <label className="chip">
+                <input
+                  type="checkbox"
+                  checked={row.easycare !== false}
+                  onChange={(e) =>
+                    updateMaterial(row.id, {
+                      easycare: e.target.checked,
+                    })
+                  }
+                />{" "}
+                איזיקייר
               </label>
 
               <label className="chip">
@@ -2236,4 +2250,5 @@ export default function AdminClient({
       )}
     </>
   );
+
 }
