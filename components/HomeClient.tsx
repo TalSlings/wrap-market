@@ -5,7 +5,6 @@ import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
-import { isEasyCareBlend } from "@/lib/materialFeatures";
 import {
   SORTS,
   SIZES,
@@ -322,7 +321,10 @@ export default function HomeClient({
         return false;
       }
 
-      if (easyCare && !isEasyCareBlend(lm, materials)) {
+      if (
+        easyCare &&
+        !lm.every((m: any) => m.material?.easycare)
+      ) {
         return false;
       }
 
@@ -574,7 +576,7 @@ export default function HomeClient({
               checked={vegan}
               onChange={(e) => setVegan(e.target.checked)}
             />{" "}
-            רק טבעוני
+            טבעוני
           </label>
 
           <label className="chip">
@@ -583,7 +585,7 @@ export default function HomeClient({
               checked={natural}
               onChange={(e) => setNatural(e.target.checked)}
             />{" "}
-            רק חומרים טבעיים
+            חומרים טבעיים
           </label>
 
           <label className="chip">
@@ -592,7 +594,7 @@ export default function HomeClient({
               checked={easyCare}
               onChange={(e) => setEasyCare(e.target.checked)}
             />{" "}
-            רק איזיקייר
+            איזיקייר
           </label>
         </div>
 
@@ -966,7 +968,10 @@ export default function HomeClient({
                         "natural"
                     ) && <FeatureBadge type="natural" />}
 
-                  {isEasyCareBlend(l.materials || [], materials) && (
+                  {(l.materials || []).length > 0 &&
+                    (l.materials || []).every(
+                      (m: any) => m.material?.easycare
+                    ) && (
                     <FeatureBadge type="easycare" />
                   )}
                 </span>
