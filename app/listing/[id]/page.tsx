@@ -12,6 +12,7 @@ import ContactBox from "@/components/ContactBox";
 import FavoriteButton from "@/components/FavoriteButton";
 import type { Metadata } from "next";
 import { FeatureBadge } from "@/components/DesignMotifs";
+import ShareButton from "@/components/ShareButton";
 
 export const dynamic = "force-dynamic";
 
@@ -318,11 +319,19 @@ export default async function Page({
             )}
           </div>
 
-          <FavoriteButton
-            listingId={id}
-            userId={user?.id}
-            initialFavorite={initialFavorite}
-          />
+          <div className="toolbar">
+            <ShareButton
+              url={`/listing/${id}`}
+              title={listingTitle(l)}
+              label="שיתוף המודעה"
+              compact
+            />
+            <FavoriteButton
+              listingId={id}
+              userId={user?.id}
+              initialFavorite={initialFavorite}
+            />
+          </div>
         </div>
 
         {l.size && (
