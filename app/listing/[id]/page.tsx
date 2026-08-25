@@ -12,7 +12,6 @@ import ContactBox from "@/components/ContactBox";
 import FavoriteButton from "@/components/FavoriteButton";
 import type { Metadata } from "next";
 import { FeatureBadge } from "@/components/DesignMotifs";
-import { isEasyCareBlend } from "@/lib/materialFeatures";
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +113,7 @@ export default async function Page({
       manufacturer:manufacturers(name),
       materials:listing_materials(
         percentage,
-        material:materials(id,name,parent_material_id,vegan,material_origin)
+        material:materials(id,name,vegan,easycare,material_origin)
       ),
       locations:listing_locations(
         region:regions(name),
@@ -130,10 +129,6 @@ export default async function Page({
     .single();
 
   if (!l) notFound();
-
-  const { data: materialCatalog } = await s
-    .from("materials")
-    .select("id,name,parent_material_id");
 
   let initialFavorite = false;
 
@@ -356,7 +351,9 @@ export default async function Page({
         <div className="section">
           <h2>הרכב</h2>
 
-          {isEasyCareBlend(l.materials || [], materialCatalog || []) && (
+          {(l.materials || []).every(
+            (x: any) => x.material?.easycare
+          ) && (
             <div className="icons" style={{ marginBottom: 8 }}>
               <FeatureBadge type="easycare" />
               <span className="muted">איזיקייר</span>
