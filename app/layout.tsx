@@ -35,11 +35,13 @@ export const metadata: Metadata = {
     description:
       "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
     url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "רק ארוגים (וטבעות)",
     description: "לוח יד שנייה ישראלי למנשאים ארוגים ומנשאי טבעות.",
+    images: ["/opengraph-image"],
   },
 };
 
