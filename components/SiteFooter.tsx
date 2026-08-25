@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ShareButton from "@/components/ShareButton";
 
 export default function SiteFooter() {
   const pathname = usePathname() || "/";
@@ -22,7 +23,14 @@ export default function SiteFooter() {
           padding: "24px 16px 36px",
           borderTop: "1px solid var(--line)",
         }}
-      >
+        >
+          <div style={{ textAlign: "center", marginBottom: 16 }}>
+            <ShareButton
+              url="/"
+              label="שתפו את הלוח"
+              text="לוח יד שנייה למנשאים ארוגים ומנשאי טבעות"
+            />
+          </div>
         <nav
           aria-label="קישורים כלליים"
           style={{
