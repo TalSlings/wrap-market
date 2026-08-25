@@ -725,9 +725,9 @@ export default function ListingForm({
         "צריך להוסיף לפחות תמונה ראשית אחת";
     }
 
-    if (!regionIds.length && !subIds.length) {
+    if (!shipping && !regionIds.length && !subIds.length) {
       errors.locations =
-        "צריך לבחור לפחות אזור איסוף אחד";
+        "צריך לבחור לפחות אזור איסוף אחד או להציע משלוח";
     }
 
     if (!contactViaEmail && !contactViaWhatsapp) {
@@ -1798,7 +1798,7 @@ export default function ListingForm({
 
         <div data-required-field="locations">
         <HierarchicalMultiSelect
-          label="אזורים *"
+          label={shipping ? "אזורי איסוף — אופציונלי" : "אזורי איסוף *"}
           placeholder="בחרי אזורים"
           parents={
             regionParents
@@ -1818,6 +1818,9 @@ export default function ListingForm({
           <div className="danger" role="alert">
             {fieldErrors.locations}
           </div>
+        )}
+        {shipping && !regionIds.length && !subIds.length && (
+          <div className="muted">המודעה תפורסם עם משלוח בלבד.</div>
         )}
         </div>
 
