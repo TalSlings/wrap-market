@@ -78,6 +78,21 @@ button{cursor:pointer}
   transition:background .15s ease,color .15s ease,border-color .15s ease;
 }
 .btn:hover,.iconbtn:hover{background:var(--soft)}
+.share-icon-btn{
+  width:32px;
+  height:32px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--ink);
+  border-radius:50%;
+  background:#fff;
+  font-size:19px;
+  line-height:1;
+  padding:0;
+}
+.share-icon-btn:hover{background:var(--soft)}
+.btn > span + span{margin-inline-start:6px}
 .btn.primary{
   background:var(--accent);
   color:#fff;
@@ -164,6 +179,14 @@ button{cursor:pointer}
   position:relative;
   overflow:visible;
 }
+.listing-share-wrap{position:relative;min-width:0}
+.card-share-action{
+  position:absolute;
+  inset-inline-end:48px;
+  top:8px;
+  z-index:5;
+}
+.grid-mode .listing-share-wrap{min-width:0}
 .listing:hover{border-color:var(--accent)}
 .listing.incomplete-listing{border-style:solid}
 .listing-img{
