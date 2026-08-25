@@ -49,7 +49,15 @@ export default function ShareButton({
       aria-label={compact ? label : undefined}
       title={compact ? label : undefined}
     >
-      <span aria-hidden="true">↗</span>
+      <svg
+        className="share-arrow-icon"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M15 5l5 5-5 5" />
+        <path d="M20 10h-7a7 7 0 0 0-7 7v2c2-3 4.5-4 7-4h2" />
+      </svg>
       {!compact && <span>{copied ? "הקישור הועתק" : label}</span>}
     </button>
   );
