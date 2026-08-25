@@ -5,6 +5,7 @@ import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
+import ShareButton from "@/components/ShareButton";
 import {
   SORTS,
   SIZES,
@@ -821,8 +822,8 @@ export default function HomeClient({
 
       <div className={grid ? "grid-mode" : ""}>
         {out.map((l: any) => (
+          <div className="listing-share-wrap" key={l.id}>
           <Link
-            key={l.id}
             className={
               "listing " +
               (l.status === "incomplete"
@@ -978,6 +979,15 @@ export default function HomeClient({
               </div>
             </div>
           </Link>
+          <div className="card-share-action">
+            <ShareButton
+              url={`/listing/${l.id}`}
+              title={[l.manufacturer?.name, l.design].filter(Boolean).join(" — ")}
+              label="שיתוף המודעה"
+              compact
+            />
+          </div>
+          </div>
         ))}
       </div>
     </main>
