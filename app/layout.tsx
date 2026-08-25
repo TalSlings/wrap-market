@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SiteFooter from "@/components/SiteFooter";
 import { Noto_Sans_Hebrew, Noto_Sans } from "next/font/google";
+import type { Metadata } from "next";
 
 const notoHebrew = Noto_Sans_Hebrew({
   subsets: ["hebrew"],
@@ -16,9 +17,30 @@ const notoLatin = Noto_Sans({
   display: "swap",
 });
 
-export const metadata = {
-  title: "wrap-market",
-  description: "לוח יד שנייה למנשאים ארוגים",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://market.talslings.info"),
+  title: {
+    default: "רק ארוגים (וטבעות) — לוח יד שנייה למנשאים ארוגים",
+    template: "%s | רק ארוגים (וטבעות)",
+  },
+  description:
+    "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
+  applicationName: "רק ארוגים (וטבעות)",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "he_IL",
+    siteName: "רק ארוגים (וטבעות)",
+    title: "רק ארוגים (וטבעות) — לוח יד שנייה למנשאים ארוגים",
+    description:
+      "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "רק ארוגים (וטבעות)",
+    description: "לוח יד שנייה ישראלי למנשאים ארוגים ומנשאי טבעות.",
+  },
 };
 
 export default async function RootLayout({
