@@ -55,8 +55,11 @@ export default function ShareButton({
         aria-hidden="true"
         focusable="false"
       >
-        <path d="M15 5l5 5-5 5" />
-        <path d="M20 10h-7a7 7 0 0 0-7 7v2c2-3 4.5-4 7-4h2" />
+        <circle cx="18" cy="5" r="2.5" />
+        <circle cx="6" cy="12" r="2.5" />
+        <circle cx="18" cy="19" r="2.5" />
+        <path d="m8.2 10.8 7.6-4.4" />
+        <path d="m8.2 13.2 7.6 4.4" />
       </svg>
       {!compact && <span>{copied ? "הקישור הועתק" : label}</span>}
     </button>
