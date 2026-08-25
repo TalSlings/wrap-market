@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { HierarchicalMultiSelect } from "@/components/HierarchicalSelect";
 import { WovenCorner } from "@/components/DesignMotifs";
+import ShareButton from "@/components/ShareButton";
 
 type Tab =
   | "profile"
@@ -277,19 +278,23 @@ export default function AccountClient({
     }
   };
 
-  const openSearch = (x: any) => {
+  const searchPath = (x: any) => {
     const raw = JSON.stringify({
       ...(x.filters || {}),
       sort: x.sort_key,
     });
 
-    location.href = `/?shared=${encodeURIComponent(
+    return `/?shared=${encodeURIComponent(
       btoa(
         unescape(
           encodeURIComponent(raw)
         )
       )
     )}`;
+  };
+
+  const openSearch = (x: any) => {
+    location.href = searchPath(x);
   };
 
   const tabs: {
@@ -453,6 +458,14 @@ export default function AccountClient({
                     צפייה
                   </Link>
 
+                  {["active", "incomplete"].includes(l.status) && (
+                    <ShareButton
+                      url={`/listing/${l.id}`}
+                      title={[l.manufacturer?.name, l.design].filter(Boolean).join(" — ")}
+                      label="שיתוף המודעה"
+                    />
+                  )}
+
                   {isSuspended ? (
                     <button
                       type="button"
@@ -587,6 +600,12 @@ export default function AccountClient({
                   >
                     לצפייה במודעה
                   </Link>
+                  <ShareButton
+                    url={`/listing/${l.id}`}
+                    title={[l.manufacturer?.name, l.design].filter(Boolean).join(" — ")}
+                    label="שיתוף המודעה"
+                    compact
+                  />
                 </div>
               </div>
             ))
@@ -622,6 +641,11 @@ export default function AccountClient({
                   >
                     פתיחת החיפוש
                   </button>
+                  <ShareButton
+                    url={searchPath(x)}
+                    title={x.name || "חיפוש מנשאים שמור"}
+                    label="שיתוף חיפוש"
+                  />
                 </div>
               </div>
             ))
