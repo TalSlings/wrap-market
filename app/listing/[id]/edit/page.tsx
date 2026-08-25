@@ -60,7 +60,7 @@ export default async function Page({
     s
       .from("materials")
       .select(
-        "id,name,parent_material_id,vegan,material_origin,is_selectable"
+        "id,name,parent_material_id,vegan,easycare,material_origin,is_selectable"
       )
       .eq("status", "active")
       .order("name"),
@@ -112,4 +112,3 @@ export default async function Page({
       />
     </main>
   );
-}
