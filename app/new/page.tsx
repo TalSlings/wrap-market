@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ListingForm from "@/components/ListingForm";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "פרסום מודעה", robots: { index: false, follow: false } };
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +42,7 @@ export default async function Page() {
     s
       .from("materials")
       .select(
-        "id,name,parent_material_id,vegan,material_origin,is_selectable"
+        "id,name,parent_material_id,vegan,easycare,material_origin,is_selectable"
       )
       .eq("status", "active")
       .order("name"),
