@@ -566,6 +566,8 @@ export default function AccountClient({
                     className="favorite-listing-img"
                     src={l.image_url}
                     alt=""
+                    width={110}
+                    height={120}
                   />
                 ) : (
                   <div
@@ -594,18 +596,19 @@ export default function AccountClient({
                     </div>
                   )}
 
-                  <Link
-                    className="btn favorite-listing-action"
-                    href={`/listing/${l.id}`}
-                  >
-                    לצפייה במודעה
-                  </Link>
-                  <ShareButton
-                    url={`/listing/${l.id}`}
-                    title={[l.manufacturer?.name, l.design].filter(Boolean).join(" — ")}
-                    label="שיתוף המודעה"
-                    compact
-                  />
+                  <div className="favorite-listing-actions">
+                    <Link
+                      className="btn favorite-listing-action"
+                      href={`/listing/${l.id}`}
+                    >
+                      לצפייה במודעה
+                    </Link>
+                    <ShareButton
+                      url={`/listing/${l.id}`}
+                      title={[l.manufacturer?.name, l.design].filter(Boolean).join(" — ")}
+                      label="שיתוף מודעה"
+                    />
+                  </div>
                 </div>
               </div>
             ))
