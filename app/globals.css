@@ -79,19 +79,28 @@ button{cursor:pointer}
 }
 .btn:hover,.iconbtn:hover{background:var(--soft)}
 .share-icon-btn{
-  width:32px;
-  height:32px;
+  width:38px;
+  height:38px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   border:1px solid var(--ink);
   border-radius:50%;
   background:#fff;
-  font-size:19px;
   line-height:1;
   padding:0;
 }
 .share-icon-btn:hover{background:var(--soft)}
+.share-arrow-icon{
+  width:19px;
+  height:19px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  flex:0 0 auto;
+}
 .btn > span + span{margin-inline-start:6px}
 .btn.primary{
   background:var(--accent);
@@ -182,9 +191,15 @@ button{cursor:pointer}
 .listing-share-wrap{position:relative;min-width:0}
 .card-share-action{
   position:absolute;
-  inset-inline-end:48px;
+  inset-inline-end:54px;
   top:8px;
   z-index:5;
+}
+.listing-primary-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
 }
 .grid-mode .listing-share-wrap{min-width:0}
 .listing:hover{border-color:var(--accent)}
@@ -340,6 +355,42 @@ button{cursor:pointer}
   border:1px solid var(--ink);
   padding:12px;
   margin-bottom:14px;
+}
+.favorite-listing-card{
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr);
+  gap:12px;
+  align-items:stretch;
+  position:relative;
+  background:#fff;
+  border:1px solid var(--ink);
+  border-radius:var(--radius);
+  padding:8px;
+  margin-bottom:12px;
+  min-width:0;
+}
+.favorite-listing-img{
+  display:block;
+  width:110px;
+  height:120px;
+  max-width:110px;
+  object-fit:contain;
+  background:var(--soft);
+  border-radius:5px;
+}
+.favorite-listing-placeholder{position:relative;overflow:hidden}
+.favorite-listing-body{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.favorite-listing-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:auto;
+  padding-top:8px;
 }
 
 /* A dashed textile line is available for secondary textile states. */
