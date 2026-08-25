@@ -1,3 +1,6 @@
+DesignMotifs.tsx
+
+
 "use client";
 
 export function WovenCorner({
@@ -46,7 +49,7 @@ export function LooseThread({
 export function FeatureBadge({
   type,
 }: {
-  type: "vegan" | "natural" | "shipping";
+  type: "vegan" | "natural" | "easycare" | "shipping";
 }) {
   if (type === "shipping") {
     return (
@@ -69,7 +72,12 @@ export function FeatureBadge({
   }
 
   const natural = type === "natural";
-  const label = natural ? "סיבים טבעיים" : "טבעוני";
+  const easycare = type === "easycare";
+  const label = easycare
+    ? "איזיקייר"
+    : natural
+      ? "סיבים טבעיים"
+      : "טבעוני";
 
   return (
     <span
@@ -78,7 +86,7 @@ export function FeatureBadge({
       aria-label={label}
       title={label}
     >
-      {natural ? "N" : "V"}
+      {easycare ? "e" : natural ? "N" : "V"}
     </span>
   );
 }
