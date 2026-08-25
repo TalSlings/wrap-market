@@ -319,17 +319,16 @@ export default async function Page({
             )}
           </div>
 
-          <div className="toolbar">
-            <ShareButton
-              url={`/listing/${id}`}
-              title={listingTitle(l)}
-              label="שיתוף המודעה"
-              compact
-            />
+          <div className="listing-primary-actions">
             <FavoriteButton
               listingId={id}
               userId={user?.id}
               initialFavorite={initialFavorite}
+            />
+            <ShareButton
+              url={`/listing/${id}`}
+              title={listingTitle(l)}
+              label="שיתוף מודעה"
             />
           </div>
         </div>
