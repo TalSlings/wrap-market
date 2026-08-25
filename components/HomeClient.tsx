@@ -5,6 +5,7 @@ import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
+import { isEasyCareBlend } from "@/lib/materialFeatures";
 import {
   SORTS,
   SIZES,
@@ -86,6 +87,7 @@ export default function HomeClient({
 
   const [vegan, setVegan] = useState(!!initial?.vegan);
   const [natural, setNatural] = useState(!!initial?.natural);
+  const [easyCare, setEasyCare] = useState(!!initial?.easyCare);
   const [gmin, setGmin] = useState(initial?.gmin || "");
   const [gmax, setGmax] = useState(initial?.gmax || "");
   const [unknown, setUnknown] = useState(initial?.unknown !== false);
@@ -320,6 +322,10 @@ export default function HomeClient({
         return false;
       }
 
+      if (easyCare && !isEasyCareBlend(lm, materials)) {
+        return false;
+      }
+
       if (regs.length || subs.length) {
         const matches = (l.locations || []).some(
           (z: any) =>
@@ -418,6 +424,7 @@ export default function HomeClient({
     defectFilters,
     vegan,
     natural,
+    easyCare,
     gmin,
     gmax,
     unknown,
@@ -453,6 +460,7 @@ export default function HomeClient({
           defectFilters,
           vegan,
           natural,
+          easyCare,
           gmin,
           gmax,
           unknown,
@@ -484,6 +492,7 @@ export default function HomeClient({
       defectFilters,
       vegan,
       natural,
+      easyCare,
       gmin,
       gmax,
       unknown,
@@ -575,6 +584,15 @@ export default function HomeClient({
               onChange={(e) => setNatural(e.target.checked)}
             />{" "}
             רק חומרים טבעיים
+          </label>
+
+          <label className="chip">
+            <input
+              type="checkbox"
+              checked={easyCare}
+              onChange={(e) => setEasyCare(e.target.checked)}
+            />{" "}
+            רק איזיקייר
           </label>
         </div>
 
@@ -947,6 +965,10 @@ export default function HomeClient({
                         m.material?.material_origin ===
                         "natural"
                     ) && <FeatureBadge type="natural" />}
+
+                  {isEasyCareBlend(l.materials || [], materials) && (
+                    <FeatureBadge type="easycare" />
+                  )}
                 </span>
               </div>
             </div>
