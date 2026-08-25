@@ -5,7 +5,6 @@ import { SIZES, labelOf } from "@/lib/constants";
 import ShareShelfButton from "@/components/ShareShelfButton";
 import { FeatureBadge, WovenCorner } from "@/components/DesignMotifs";
 import type { Metadata } from "next";
-import { isEasyCareBlend } from "@/lib/materialFeatures";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -20,7 +19,7 @@ export default async function SellerPage({
   const { publicId } = await params;
   const s = await createClient();
 
-  const [{ data: profileRows }, { data: idRows }, { data: materialCatalog }] =
+  const [{ data: profileRows }, { data: idRows }] =
     await Promise.all([
       s.rpc("get_public_seller_profile", {
         p_public_seller_id: publicId,
@@ -28,7 +27,6 @@ export default async function SellerPage({
       s.rpc("get_public_seller_listing_ids", {
         p_public_seller_id: publicId,
       }),
-      s.from("materials").select("id,name,parent_material_id"),
     ]);
 
   const profile = profileRows?.[0];
@@ -49,7 +47,7 @@ export default async function SellerPage({
       .select(
         `id,design,model,price,size,shipping_available,status,
         manufacturer:manufacturers(name),
-        materials:listing_materials(material:materials(id,name,parent_material_id)),
+        materials:listing_materials(material:materials(id,name,easycare)),
         images:listing_images(storage_path,image_type,position)`
       )
       .in("id", ids)
@@ -214,7 +212,10 @@ export default async function SellerPage({
                     )}
                   </span>
                   <span className="material-features">
-                    {isEasyCareBlend(l.materials || [], materialCatalog || []) && (
+                    {(l.materials || []).length > 0 &&
+                      (l.materials || []).every(
+                        (m: any) => m.material?.easycare
+                      ) && (
                       <FeatureBadge type="easycare" />
                     )}
                   </span>
