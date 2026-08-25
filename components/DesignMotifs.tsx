@@ -81,7 +81,7 @@ export function FeatureBadge({
       aria-label={label}
       title={label}
     >
-      {easycare ? "e" : natural ? "N" : "V"}
+      {easycare ? "E" : natural ? "N" : "V"}
     </span>
   );
 }
