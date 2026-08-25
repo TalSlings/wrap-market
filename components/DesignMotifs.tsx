@@ -1,6 +1,3 @@
-DesignMotifs.tsx
-
-
 "use client";
 
 export function WovenCorner({
