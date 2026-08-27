@@ -8,6 +8,10 @@
    - NEXT_PUBLIC_SUPABASE_URL
    - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
    - NEXT_PUBLIC_SITE_URL
+   - SUPABASE_SERVICE_ROLE_KEY (server only; never expose as NEXT_PUBLIC)
+   - CRON_SECRET
+   - RESEND_API_KEY
+   - CLEANUP_FROM_EMAIL
 5. ב-Supabase Auth הגדירי Site URL ו-Redirect URLs לכתובת Vercel.
 6. Google: הפעילי Google provider לפי Supabase Auth.
 7. Email OTP: בתבנית המייל השתמשי ב-`{{ .Token }}` כדי לשלוח קוד ולא רק Magic Link.
@@ -34,6 +38,7 @@ Admin area
 - עריכת פרופיל וברירות מחדל קבועות
 - מועדפים במסך נפרד (המונה והתשתית קיימים)
 - כל הפילטרים המתקדמים מהאפיון
-- אוטומציה למחיקת חשבונות לא פעילים
+- הפעלה ואימות של אוטומציית מחיקת החשבונות הלא פעילים (הקוד קיים;
+  נדרשים migration, משתני סביבה ושירות שליחת מיילים)
 - rate-limit מתקדם לחשיפת פרטי קשר
 - כלי סטיקרים לפנים
