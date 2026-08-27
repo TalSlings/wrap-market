@@ -10,8 +10,11 @@
    - NEXT_PUBLIC_SITE_URL
    - SUPABASE_SERVICE_ROLE_KEY (server only; never expose as NEXT_PUBLIC)
    - CRON_SECRET
-   - RESEND_API_KEY
+   - SMTP_USER
+   - SMTP_APP_PASSWORD
    - CLEANUP_FROM_EMAIL
+   - CLEANUP_REPLY_TO
+   - INACTIVE_CLEANUP_ENABLED (set to true only after testing)
 5. ב-Supabase Auth הגדירי Site URL ו-Redirect URLs לכתובת Vercel.
 6. Google: הפעילי Google provider לפי Supabase Auth.
 7. Email OTP: בתבנית המייל השתמשי ב-`{{ .Token }}` כדי לשלוח קוד ולא רק Magic Link.
