@@ -1,1 +1,0 @@
-export default function Page(){return <main className="page"><div className="section"><h1>מדיניות פרטיות</h1><p>המערכת אוספת מידע הנדרש לחשבון, מודעות, מועדפים וחיפושים שמורים. נוסח מלא יתווסף לפני השקה ציבורית.</p></div></main>}
