@@ -927,15 +927,20 @@ export default function HomeClient({
               )}
 
               <div className="materials">
-                {(l.materials || [])
-                  .slice(0, 3)
-                  .map((m: any, i: number) => (
-                    <div key={i}>
-                      {m.percentage}% {m.material?.name}
-                    </div>
-                  ))}
+                {l.material_composition_unknown ? (
+                  <div>הרכב לא ידוע</div>
+                ) : (
+                  (l.materials || [])
+                    .slice(0, 3)
+                    .map((m: any, i: number) => (
+                      <div key={i}>
+                        {m.percentage}% {m.material?.name}
+                      </div>
+                    ))
+                )}
 
-                {(l.materials || []).length > 3 && (
+                {!l.material_composition_unknown &&
+                  (l.materials || []).length > 3 && (
                   <div>…</div>
                 )}
               </div>

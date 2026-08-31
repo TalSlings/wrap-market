@@ -69,7 +69,7 @@ export default async function RootLayout({
             </Link>
 
             <Link className="iconbtn" href="/new">
-              ＋ פרסום
+              ＋ הוספת מודעה
             </Link>
 
             <Link

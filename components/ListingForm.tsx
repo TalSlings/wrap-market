@@ -112,6 +112,9 @@ export default function ListingForm({
     ]
   );
 
+  const [materialCompositionUnknown, setMaterialCompositionUnknown] =
+    useState(initial?.material_composition_unknown ?? false);
+
   const [showNewMaterial, setShowNewMaterial] =
     useState(false);
 
@@ -745,10 +748,16 @@ export default function ListingForm({
         "צריך להזין מספר WhatsApp";
     }
 
-    if (!mats.some((x) => x.material_id)) {
+    if (
+      !materialCompositionUnknown &&
+      !mats.some((x) => x.material_id)
+    ) {
       errors.materials =
         "צריך להוסיף לפחות חומר אחד";
-    } else if (Math.abs(sum - 100) > 0.001) {
+    } else if (
+      !materialCompositionUnknown &&
+      Math.abs(sum - 100) > 0.001
+    ) {
       errors.materials =
         "אחוזי החומרים צריכים להסתכם ב־100%";
     }
@@ -845,6 +854,7 @@ export default function ListingForm({
         contact_via_whatsapp: contactViaWhatsapp,
         colors: selectedColors,
         color_patterns: patterns,
+        material_composition_unknown: materialCompositionUnknown,
         status,
       };
 
@@ -881,6 +891,7 @@ export default function ListingForm({
       const mr = mats
         .filter(
           (x) =>
+            !materialCompositionUnknown &&
             x.material_id &&
             Number(x.percentage || 0) > 0
         )
@@ -1243,6 +1254,32 @@ export default function ListingForm({
           )}
         </div>
 
+        <div className="field">
+          <label>
+            <input
+              type="checkbox"
+              checked={materialCompositionUnknown}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setMaterialCompositionUnknown(checked);
+
+                if (checked) {
+                  setShowNewMaterial(false);
+                  setFieldErrors((current) => {
+                    const next = { ...current };
+                    delete next.materials;
+                    return next;
+                  });
+                }
+              }}
+            />{" "}
+            הרכב לא ידוע
+          </label>
+        </div>
+
+        {!materialCompositionUnknown && (
+          <>
+
         {mats.map(
           (r, i) => (
             <div
@@ -1543,6 +1580,8 @@ export default function ListingForm({
             {materialMsg}
           </div>
         )}
+          </>
+        )}
 
         <div className="field">
           <label>
@@ -1814,11 +1853,6 @@ export default function ListingForm({
           }
         />
 
-        <div className="notice" style={{ marginTop: 8 }}>
-          אזורי האיסוף שנבחרו יוצגו במודעה ויכולים לחשוף מידע כללי על
-          המיקום שלך. בחרי רק אזורים שנוח לך לפרסם.
-        </div>
-
         {fieldErrors.locations && (
           <div className="danger" role="alert">
             {fieldErrors.locations}
@@ -2010,12 +2044,6 @@ export default function ListingForm({
         </p>
       )}
 
-      <div className="notice" style={{ marginBottom: 12 }}>
-        בפרסום המודעה, התמונות, שם התצוגה, אזורי האיסוף ופרטי הקשר
-        שבחרת לפרסם יהיו גלויים לציבור. מייל ההתחברות שלך לא יוצג אלא
-        אם בחרת בו במפורש ככתובת הקשר במודעה.
-      </div>
-
       <div className="toolbar">
         <button
           className="btn"
@@ -2036,7 +2064,9 @@ export default function ListingForm({
         >
           {busy
             ? "שומרת..."
-            : "פרסום מודעה"}
+            : initial?.id
+              ? "שמירת שינויים"
+              : "הוספת מודעה"}
         </button>
       </div>
       {incompletePrompt && (
@@ -2216,7 +2246,7 @@ export default function ListingForm({
                   location.href = "/new";
                 }}
               >
-                פרסום מודעה נוספת
+                הוספת מודעה נוספת
               </button>
 
               <button

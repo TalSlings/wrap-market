@@ -81,6 +81,7 @@ export default async function Home({
         color_patterns,
         condition,
         defects,
+        material_composition_unknown,
         shipping_available,
         created_at,
         status,

@@ -355,10 +355,15 @@ export default async function Page({
         )}
       </div>
 
-      {(l.materials || []).length > 0 && (
+      {(l.material_composition_unknown ||
+        (l.materials || []).length > 0) && (
         <div className="section">
           <h2>הרכב</h2>
 
+          {l.material_composition_unknown ? (
+            <p>הרכב לא ידוע</p>
+          ) : (
+            <>
           {(l.materials || []).every(
             (x: any) => x.material?.easycare
           ) && (
@@ -374,6 +379,8 @@ export default async function Page({
                 {x.percentage}% {x.material?.name}
               </p>
             )
+          )}
+            </>
           )}
         </div>
       )}

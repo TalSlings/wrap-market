@@ -45,7 +45,7 @@ export default async function SellerPage({
     const { data } = await s
       .from("listings")
       .select(
-        `id,design,model,price,size,shipping_available,status,
+        `id,design,model,price,size,shipping_available,status,material_composition_unknown,
         manufacturer:manufacturers(name),
         materials:listing_materials(material:materials(id,name,easycare)),
         images:listing_images(storage_path,image_type,position)`

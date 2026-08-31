@@ -10,7 +10,6 @@ export default function LoginForm({
 }) {
   const s = createClient();
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [sent, setSent] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -26,22 +25,16 @@ export default function LoginForm({
   };
 
   const send = async () => {
+    setMsg("");
     const { error } = await s.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     if (error) setMsg(error.message);
     else setSent(true);
-  };
-
-  const verify = async () => {
-    const { error } = await s.auth.verifyOtp({
-      email,
-      token: code,
-      type: "email",
-    });
-    if (error) setMsg(error.message);
-    else location.href = next;
   };
 
   return (
@@ -78,31 +71,26 @@ export default function LoginForm({
           </div>
 
           <button type="button" className="btn" onClick={send}>
-            שלחי קוד חד־פעמי
+            שליחת קישור התחברות
           </button>
         </>
       ) : (
-        <>
-          <div className="field">
-            <label htmlFor="login-code">הקוד שקיבלת במייל</label>
-            <input
-              id="login-code"
-              className="input"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-          </div>
-
+        <div className="notice" role="status">
+          <b>שלחנו אלייך קישור התחברות</b>
+          <p>
+            פתחי את ההודעה שנשלחה ל־{email} ולחצי על הקישור כדי להיכנס.
+          </p>
           <button
             type="button"
-            className="btn primary"
-            onClick={verify}
+            className="btn"
+            onClick={() => {
+              setSent(false);
+              setMsg("");
+            }}
           >
-            כניסה
+            שימוש בכתובת אחרת
           </button>
-        </>
+        </div>
       )}
 
       {msg && (
