@@ -31,7 +31,6 @@ export default async function Page() {
       .from("listings")
       .select("*,manufacturer:manufacturers(name)")
       .eq("owner_id", user.id)
-      .neq("status", "deleted")
       .order("updated_at", { ascending: false }),
 
     s

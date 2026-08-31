@@ -10,6 +10,7 @@ import ShareButton from "@/components/ShareButton";
 type Tab =
   | "profile"
   | "listings"
+  | "deleted"
   | "favorites"
   | "searches";
 
@@ -72,6 +73,8 @@ export default function AccountClient({
     profile?.subregion_ids || []
   );
   const [profileMsg, setProfileMsg] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [accountDeleteMsg, setAccountDeleteMsg] = useState("");
 
   const regionParents = useMemo(
     () =>
@@ -205,7 +208,16 @@ export default function AccountClient({
       return;
     }
 
-    await s
+    if (
+      status === "deleted" &&
+      !confirm(
+        "המודעה תוסר מיד מהאתר ותישמר בסל המודעות שנמחקו למשך 60 יום. בתקופה הזו אפשר לשחזר אותה. להמשיך?"
+      )
+    ) {
+      return;
+    }
+
+    const { error } = await s
       .from("listings")
       .update({
         status,
@@ -220,7 +232,42 @@ export default function AccountClient({
       })
       .eq("id", id);
 
+    if (error) {
+      alert(`לא הצלחנו לעדכן את המודעה: ${error.message}`);
+      return;
+    }
+
     location.reload();
+  };
+
+  const deleteAccount = async () => {
+    setAccountDeleteMsg("");
+
+    if (
+      !confirm(
+        "מחיקת החשבון היא סופית. כל המודעות, התמונות, המועדפים והחיפושים השמורים יימחקו ולא יהיה אפשר לשחזר אותם. להמשיך?"
+      )
+    ) {
+      return;
+    }
+
+    if (!confirm("אישור אחרון: למחוק את החשבון לצמיתות?")) {
+      return;
+    }
+
+    setDeletingAccount(true);
+    const response = await fetch("/api/account/delete", { method: "POST" });
+    const body = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setDeletingAccount(false);
+      setAccountDeleteMsg(
+        body?.error || "לא הצלחנו למחוק את החשבון. אפשר לפנות לתמיכה."
+      );
+      return;
+    }
+
+    location.href = "/?accountDeleted=1";
   };
 
   const dup = async (l: any) => {
@@ -306,6 +353,10 @@ export default function AccountClient({
       label: "המודעות שלי",
     },
     {
+      key: "deleted",
+      label: "מודעות שנמחקו",
+    },
+    {
       key: "favorites",
       label: "מועדפים",
     },
@@ -319,13 +370,21 @@ export default function AccountClient({
     },
   ];
 
+  const activeListings = listings.filter(
+    (l: any) => l.status !== "deleted"
+  );
+
+  const deletedListings = listings.filter(
+    (l: any) => l.status === "deleted"
+  );
+
   const incompleteListings = allowIncomplete
-    ? listings.filter(
+    ? activeListings.filter(
         (l: any) => l.status === "incomplete"
       )
     : [];
 
-  const orderedListings = [...listings].sort(
+  const orderedListings = [...activeListings].sort(
     (a: any, b: any) => {
       if (!allowIncomplete) return 0;
 
@@ -398,7 +457,7 @@ export default function AccountClient({
             </div>
           )}
 
-          {listings.length === 0 ? (
+          {activeListings.length === 0 ? (
             <p className="muted">
               אין עדיין מודעות
             </p>
@@ -541,6 +600,50 @@ export default function AccountClient({
                 </div>
               </div>
             ))
+          )}
+        </div>
+      )}
+
+      {tab === "deleted" && (
+        <div className="section">
+          <h2>מודעות שנמחקו</h2>
+          <p className="muted">
+            מודעה שנמחקה מוסתרת מיד מהאתר. אפשר לשחזר אותה במשך 60 יום;
+            לאחר מכן היא והתמונות שלה נמחקות לצמיתות.
+          </p>
+
+          {deletedListings.length === 0 ? (
+            <p className="muted">אין מודעות שנמחקו</p>
+          ) : (
+            deletedListings.map((l: any) => {
+              const deletedAt = l.deleted_at ? new Date(l.deleted_at) : null;
+              const daysLeft = deletedAt
+                ? Math.max(
+                    0,
+                    Math.ceil(
+                      (deletedAt.getTime() + 60 * 86400000 - Date.now()) /
+                        86400000
+                    )
+                  )
+                : 60;
+
+              return (
+                <div key={l.id} className="section account-card">
+                  <WovenCorner />
+                  <b>{l.manufacturer?.name} · {l.design}</b>
+                  <p className="muted">
+                    נותרו עד {daysLeft} ימים לשחזור.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={() => stat(l.id, "paused")}
+                  >
+                    שחזור המודעה
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
       )}
@@ -693,6 +796,27 @@ export default function AccountClient({
               )}
             </div>
           </div>
+
+          {!isAdmin && (
+            <div className="section">
+              <h2>מחיקת החשבון</h2>
+              <p className="muted">
+                מחיקת החשבון תמחק לצמיתות את המודעות, התמונות, המועדפים,
+                החיפושים השמורים ופרטי החשבון. אי אפשר לבטל פעולה זו.
+              </p>
+              <button
+                type="button"
+                className="btn danger"
+                disabled={deletingAccount}
+                onClick={deleteAccount}
+              >
+                {deletingAccount ? "מוחקת..." : "מחיקת החשבון שלי"}
+              </button>
+              {accountDeleteMsg && (
+                <p className="danger" role="alert">{accountDeleteMsg}</p>
+              )}
+            </div>
+          )}
 
           {sellerPublicId && (
             <div className="section">

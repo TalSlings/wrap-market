@@ -148,7 +148,64 @@ export async function GET(request: NextRequest) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const now = new Date();
-  const result = { checked: 0, scheduled: 0, warned: 0, deleted: 0, errors: 0 };
+  const result = {
+    checked: 0,
+    scheduled: 0,
+    warned: 0,
+    deleted: 0,
+    purgedListings: 0,
+    purgedFeedback: 0,
+    errors: 0,
+  };
+
+  const deletedListingCutoff = new Date(now.getTime() - 60 * DAY).toISOString();
+  const { data: expiredListings, error: expiredListingsError } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("status", "deleted")
+    .lt("deleted_at", deletedListingCutoff);
+  if (expiredListingsError) {
+    return NextResponse.json({ error: expiredListingsError.message }, { status: 500 });
+  }
+
+  for (const listing of expiredListings || []) {
+    try {
+      const { data: images, error: imageError } = await supabase
+        .from("listing_images")
+        .select("storage_path")
+        .eq("listing_id", listing.id);
+      if (imageError) throw imageError;
+
+      const paths = (images || []).map((image) => image.storage_path);
+      if (paths.length) {
+        const { error } = await supabase.storage.from("listing-images").remove(paths);
+        if (error) throw error;
+      }
+
+      const { error: deleteListingError } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listing.id);
+      if (deleteListingError) throw deleteListingError;
+      result.purgedListings += 1;
+    } catch (error) {
+      result.errors += 1;
+      console.error("Deleted listing purge failed", listing.id, error);
+    }
+  }
+
+  const feedbackCutoff = new Date(now.getTime() - 30 * DAY).toISOString();
+  const { data: purgedFeedback, error: feedbackPurgeError } = await supabase
+    .from("feedback_items")
+    .delete()
+    .lt("created_at", feedbackCutoff)
+    .select("id");
+  if (feedbackPurgeError) {
+    result.errors += 1;
+    console.error("Feedback purge failed", feedbackPurgeError);
+  } else {
+    result.purgedFeedback = purgedFeedback?.length || 0;
+  }
 
   // Retry post-deletion messages that could not be delivered on an earlier run.
   const { data: pendingDeletionEmails } = await supabase
@@ -182,18 +239,15 @@ export async function GET(request: NextRequest) {
     (data || []).forEach((row) => protectedUsers.add(row.user_id));
   }
 
-  const listingOwners = new Set<string>();
-  let listingFrom = 0;
-  while (true) {
-    const { data, error } = await supabase
-      .from("listings")
-      .select("owner_id")
-      .range(listingFrom, listingFrom + 999);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    (data || []).forEach((row) => listingOwners.add(row.owner_id));
-    if (!data || data.length < 1000) break;
-    listingFrom += 1000;
+  const { data: historyRows, error: historyError } = await supabase
+    .from("account_listing_history")
+    .select("user_id");
+  if (historyError) {
+    return NextResponse.json({ error: historyError.message }, { status: 500 });
   }
+  const listingOwners = new Set<string>(
+    (historyRows || []).map((row) => row.user_id)
+  );
 
   const { data: states, error: statesError } = await supabase
     .from("account_cleanup_state")
