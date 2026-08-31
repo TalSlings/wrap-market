@@ -1,0 +1,1 @@
+"use client";import{useEffect}from"react";import{createClient}from"@/lib/supabase/client";export default function ViewCounter({id}:{id:string}){useEffect(()=>{const k=`v:${id}:${new Date().toISOString().slice(0,10)}`;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");createClient().rpc("increment_listing_view",{p_listing_id:id})},[id]);return null}

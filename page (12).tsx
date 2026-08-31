@@ -1,0 +1,1 @@
+export default function Page(){return <main className="page"><div className="section"><h1>כללי הלוח</h1><p>בדקי את המוצר והמידע לפני עסקה. מומלץ להימנע מהעלאת מידע אישי מיותר בתמונות.</p></div></main>}
