@@ -18,6 +18,7 @@ export default function LoginForm({
     const { error } = await s.auth.signInWithOAuth({
       provider: "google",
       options: {
+        scopes: "openid email",
         redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });

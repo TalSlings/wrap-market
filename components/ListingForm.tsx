@@ -1814,6 +1814,11 @@ export default function ListingForm({
           }
         />
 
+        <div className="notice" style={{ marginTop: 8 }}>
+          אזורי האיסוף שנבחרו יוצגו במודעה ויכולים לחשוף מידע כללי על
+          המיקום שלך. בחרי רק אזורים שנוח לך לפרסם.
+        </div>
+
         {fieldErrors.locations && (
           <div className="danger" role="alert">
             {fieldErrors.locations}
@@ -2004,6 +2009,12 @@ export default function ListingForm({
           {msg}
         </p>
       )}
+
+      <div className="notice" style={{ marginBottom: 12 }}>
+        בפרסום המודעה, התמונות, שם התצוגה, אזורי האיסוף ופרטי הקשר
+        שבחרת לפרסם יהיו גלויים לציבור. מייל ההתחברות שלך לא יוצג אלא
+        אם בחרת בו במפורש ככתובת הקשר במודעה.
+      </div>
 
       <div className="toolbar">
         <button
