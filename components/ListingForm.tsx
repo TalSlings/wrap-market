@@ -1154,7 +1154,7 @@ export default function ListingForm({
           className="field"
           data-required-field="size"
         >
-          <label>מידה * <HelpNote content={<><p>טבלת עזר: 2 — כ־2.7 מ׳; 3 — כ־3.2 מ׳; 4 — כ־3.6 מ׳; 5 — כ־4.2 מ׳; 6 — כ־4.6 מ׳; 7 — כ־5.2 מ׳; 8 — כ־5.6 מ׳; 9 — כ־6.2 מ׳.</p><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות וההסבר המלאים ↗</Link></>} /></label>
+          <label>מידה * <HelpNote content={<><p>אורכים משוערים: טבעות קצר — 1.7 מ׳; טבעות רגיל — 2 מ׳; טבעות ארוך — 2.2–2.3 מ׳; מידה 1 — 2.2 מ׳; מידה 2 — 2.7–2.8 מ׳; מידה 3 — 3.2 מ׳; מידה 4 — 3.6–3.7 מ׳; מידה 5 — 4.2 מ׳; מידה 6 — 4.6–4.7 מ׳; מידה 7 — 5.2 מ׳; מידה 8 — 5.6–5.8 מ׳; מידה 9 — 6.2 מ׳.</p><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות וההסבר המלאים ↗</Link></>} /></label>
 
           <select
             className="select"
