@@ -34,7 +34,6 @@ export default async function AdminPage() {
     { data: subregions },
     { data: notes },
     { data: sellers },
-    { data: feedbackItems },
     { data: settings },
   ] = await Promise.all([
     s
@@ -53,11 +52,6 @@ export default async function AdminPage() {
     s.from("subregions").select("*").order("sort_order"),
     s.from("help_notes").select("*").order("section_label").order("placement"),
     s.rpc("admin_list_sellers"),
-
-    s
-      .from("feedback_items")
-      .select("*")
-      .order("created_at", { ascending: false }),
 
     s
       .from("site_settings")
@@ -80,7 +74,6 @@ export default async function AdminPage() {
         subregions={subregions || []}
         notes={notes || []}
         sellers={sellers || []}
-        feedbackItems={feedbackItems || []}
         allowIncomplete={
           !!settings?.allow_incomplete_listings
         }

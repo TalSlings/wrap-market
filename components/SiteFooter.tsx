@@ -1,14 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import ShareButton from "@/components/ShareButton";
 
 export default function SiteFooter() {
-  const pathname = usePathname() || "/";
-  const feedbackHref =
-    `/feedback?from=${encodeURIComponent(pathname)}`;
-
   const linkStyle: React.CSSProperties = {
     textDecoration: "underline",
     textUnderlineOffset: 3,
@@ -23,14 +18,15 @@ export default function SiteFooter() {
           padding: "24px 16px 36px",
           borderTop: "1px solid var(--line)",
         }}
-        >
-          <div style={{ textAlign: "center", marginBottom: 16 }}>
-            <ShareButton
-              url="/"
-              label="שתפו את הלוח"
-              text="לוח יד שנייה למנשאים ארוגים ומנשאי טבעות"
-            />
-          </div>
+      >
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <ShareButton
+            url="/"
+            label="שתפו את הלוח"
+            text="לוח יד שנייה למנשאים ארוגים ומנשאי טבעות"
+          />
+        </div>
+
         <nav
           aria-label="קישורים כלליים"
           style={{
@@ -43,10 +39,6 @@ export default function SiteFooter() {
         >
           <Link href="/accessibility" style={linkStyle}>
             נגישות
-          </Link>
-
-          <Link href={feedbackHref} style={linkStyle}>
-            דיווח והצעות לשיפור
           </Link>
 
           <Link href="/privacy" style={linkStyle}>
