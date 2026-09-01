@@ -65,6 +65,7 @@ export default async function Home({
     { data: colors },
     { data: regions },
     { data: subregions },
+    { data: helpNotes },
   ] = await Promise.all([
     s
       .from("listings")
@@ -142,6 +143,11 @@ export default async function Home({
       .select("*")
       .eq("active", true)
       .order("sort_order"),
+
+    s
+      .from("help_notes")
+      .select("section_key,placement,content,is_visible")
+      .eq("placement", "search"),
   ]);
 
   let favoriteIds: string[] = [];
@@ -220,6 +226,7 @@ export default async function Home({
       userId={user?.id}
       favoriteIds={favoriteIds}
       initial={initial}
+      helpNotes={helpNotes || []}
     />
   );
 }

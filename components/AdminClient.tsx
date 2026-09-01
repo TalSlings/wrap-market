@@ -18,11 +18,20 @@ type Tab =
 type Placement = "search" | "listing" | "form";
 
 const NOTE_SECTIONS = [
+  ["form_overview", "פתיח — איפה מוצאים את פרטי המנשא"],
+  ["filter_logic", "לוגיקת סינון — או / וגם"],
   ["manufacturer", "יצרן"],
+  ["manufacturer_add", "הוספת יצרן חדש"],
   ["design", "עיצוב"],
   ["model", "מודל"],
   ["size", "מידה"],
+  ["size_note", "הערת מידה"],
   ["materials", "חומרים"],
+  ["materials_unknown", "הרכב חומרים לא ידוע"],
+  ["material_add", "הוספת חומר חדש"],
+  ["material_name", "שם חומר חדש"],
+  ["material_parent", "קטגוריית חומר חדש"],
+  ["material_origin", "סוג / מקור חומר חדש"],
   ["colors", "צבעים"],
   ["color_patterns", "תכונות / מבנה צבע"],
   ["gsm", "GSM"],

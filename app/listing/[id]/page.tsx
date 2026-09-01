@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import { FeatureBadge } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
 import HelpNote from "@/components/HelpNote";
+import { helpText } from "@/lib/helpNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -132,6 +133,13 @@ export default async function Page({
     .single();
 
   if (!l) notFound();
+
+  const { data: helpNotes } = await s
+    .from("help_notes")
+    .select("section_key,placement,content,is_visible")
+    .eq("placement", "listing");
+  const listingHelp = (key: string, fallback: string) =>
+    helpText(helpNotes || [], key, "listing", fallback);
 
   let initialFavorite = false;
 
@@ -339,12 +347,12 @@ export default async function Page({
           <p>
             {labelOf(SIZES, l.size)}
             {l.size_note && ` · ${l.size_note}`}
-            {" "}<HelpNote content={<Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות ולהסבר על בחירת מידה ↗</Link>} />
+            {" "}<HelpNote content={listingHelp("size", "טבלת מידות ועזרה בבחירת מידה.")} faqHref="/faq#sizes" />
           </p>
         )}
 
         {Number(l.price) > 0 && (
-          <p>{l.price} ₪ <HelpNote content={<Link href="/faq#pricing" target="_blank" rel="noopener noreferrer">מידע על תמחור מנשא יד שנייה ↗</Link>} /></p>
+          <p>{l.price} ₪ <HelpNote content={listingHelp("price", "מידע על תמחור מנשא יד שנייה.")} faqHref="/faq#pricing" /></p>
         )}
 
         {l.gsm && l.gsm !== "unknown" && (
@@ -353,7 +361,7 @@ export default async function Page({
               <b>GSM</b>
               <br />
               {labelOf(GSM, l.gsm)}
-              {" "}<HelpNote content={<Link href="/faq#gsm" target="_blank" rel="noopener noreferrer">מה זה GSM? ↗</Link>} />
+              {" "}<HelpNote content={listingHelp("gsm", "GSM הוא משקל הבד בגרמים למטר רבוע.")} faqHref="/faq#gsm" />
             </div>
           </div>
         )}
@@ -362,7 +370,7 @@ export default async function Page({
       {(l.material_composition_unknown ||
         (l.materials || []).length > 0) && (
         <div className="section">
-          <h2>הרכב</h2>
+          <h2>הרכב <HelpNote content={listingHelp("materials", "טבעוני פירושו ללא משי, צמר או סיבים מן החי; טבעי פירושו שכל הסיבים טבעיים; איזיקייר ניתן למשפחות הכותנה והסינתטיים.")} faqHref="/faq#materials" /></h2>
 
           {l.material_composition_unknown ? (
             <p>הרכב לא ידוע</p>
@@ -384,7 +392,6 @@ export default async function Page({
               </p>
             )
           )}
-          <div className="notice"><b>סיווגי החומרים בלוח:</b> טבעוני פירושו ללא משי, צמר או סיבים מן החי; טבעי פירושו שכל הסיבים טבעיים; איזיקייר ניתן למשפחות הכותנה והסינתטיים. <Link href="/faq#materials">להסבר המלא</Link>.</div>
             </>
           )}
         </div>
@@ -424,15 +431,9 @@ export default async function Page({
 
         <p>
           {l.shipping_available
-            ? "🚚 משלוח זמין"
+            ? <>🚚 משלוח זמין <HelpNote content={listingHelp("shipping", "נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.")} /></>
             : "ללא משלוח"}
         </p>
-
-        {l.shipping_available && (
-          <p className="notice">
-            נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.
-          </p>
-        )}
         </div>
       )}
 
@@ -465,10 +466,7 @@ export default async function Page({
 
         {l.condition && (
           <>
-            <p><b>מצב המנשא:</b>{" "}{labelOf(CONDITIONS, l.condition)}</p>
-            <ul className="condition-legend">
-              {CONDITIONS.map(([key, label]) => <li key={key} className={key === l.condition ? "current" : ""}><b>{label}</b> — {CONDITION_HELP[key]}</li>)}
-            </ul>
+            <p><b>מצב המנשא:</b>{" "}{labelOf(CONDITIONS, l.condition)} <HelpNote content={listingHelp("condition", CONDITIONS.map(([key, label]) => `${label} — ${CONDITION_HELP[key]}`).join("\n"))} faqHref="/faq#condition" /></p>
           </>
         )}
 
@@ -543,4 +541,3 @@ export default async function Page({
     </main>
   );
 }
-

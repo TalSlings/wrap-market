@@ -6,6 +6,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
+import HelpNote from "@/components/HelpNote";
 import {
   SORTS,
   SIZES,
@@ -20,6 +21,7 @@ import {
   HierarchicalMultiSelect,
 } from "@/components/HierarchicalSelect";
 import { createClient } from "@/lib/supabase/client";
+import { helpText } from "@/lib/helpNotes";
 
 const rank: any = {
   lte_180: 180,
@@ -61,9 +63,12 @@ export default function HomeClient({
   userId,
   favoriteIds = [],
   initial,
+  helpNotes = [],
 }: {
   [k: string]: any;
 }) {
+  const searchHelp = (key: string, fallback: string) =>
+    helpText(helpNotes, key, "search", fallback);
   const [q, setQ] = useState(initial?.q || "");
   const [manufacturerIds, setManufacturerIds] = useState<string[]>(
     initial?.manufacturerIds || []
@@ -555,6 +560,10 @@ export default function HomeClient({
   return (
     <main className="page">
       <div className="filters">
+        <div>
+          <b>סינון</b>
+          <HelpNote content={searchHelp("filter_logic", "כשבוחרים כמה אפשרויות בתוך אותו סוג סינון, תופיע מודעה שמתאימה לפחות לאחת מהן. בין סוגי סינון שונים נדרשת התאמה לכולם.")} />
+        </div>
         <FlatMultiSelect
           label="יצרן"
           placeholder="כל היצרנים"
@@ -570,7 +579,7 @@ export default function HomeClient({
           selectedIds={sizes}
           onChange={setSizes}
         />
-        <div className="field-help"><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">טבלת מידות ועזרה בבחירת מידה ↗</Link></div>
+        <div><HelpNote content={searchHelp("size", "אורכים משוערים:\nמידה 2 — 2.7–2.8 מ׳\nמידה 3 — 3.2 מ׳\nמידה 4 — 3.6–3.7 מ׳\nמידה 5 — 4.2 מ׳\nמידה 6 — 4.6–4.7 מ׳\nמידה 7 — 5.2 מ׳\nמידה 8 — 5.6–5.8 מ׳\nמידה 9 — 6.2 מ׳")} faqHref="/faq#sizes" /></div>
 
         <HierarchicalMultiSelect
           label="חומרים"
@@ -580,8 +589,6 @@ export default function HomeClient({
           selectedIds={mats}
           onChange={setMats}
         />
-
-        <div className="field-help">כשבוחרים כמה אפשרויות בתוך אותו סוג סינון, תופיע מודעה שמתאימה לפחות לאחת מהן. בין סוגי סינון שונים נדרשת התאמה לכולם.</div>
 
         <div className="chips">
           <label className="chip">
@@ -659,8 +666,7 @@ export default function HomeClient({
             </div>
 
             <div className="field">
-              <label>GSM</label>
-              <div className="field-help">אפשר לבחור ערך GSM מינימלי ומקסימלי. כאשר מוגדר טווח, מודעות שבהן ה־GSM אינו ידוע יוצגו רק אם תיבחר האפשרות „לכלול גם GSM לא ידוע”.</div>
+              <label>GSM <HelpNote content={searchHelp("gsm", "אפשר לבחור ערך GSM מינימלי ומקסימלי. כאשר מוגדר טווח, מודעות שבהן ה־GSM אינו ידוע יוצגו רק אם תיבחר האפשרות „לכלול גם GSM לא ידוע”.")} faqHref="/faq#gsm" /></label>
               <div className="toolbar">
                 <select
                   className="select"
