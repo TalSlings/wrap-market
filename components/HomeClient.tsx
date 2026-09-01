@@ -88,6 +88,7 @@ export default function HomeClient({
   const [vegan, setVegan] = useState(!!initial?.vegan);
   const [natural, setNatural] = useState(!!initial?.natural);
   const [easyCare, setEasyCare] = useState(!!initial?.easyCare);
+  const [shippingOnly, setShippingOnly] = useState(!!initial?.shippingOnly);
   const [gmin, setGmin] = useState(initial?.gmin || "");
   const [gmax, setGmax] = useState(initial?.gmax || "");
   const [unknown, setUnknown] = useState(initial?.unknown !== false);
@@ -227,6 +228,8 @@ export default function HomeClient({
     setDefectFilters([]);
     setVegan(false);
     setNatural(false);
+    setEasyCare(false);
+    setShippingOnly(false);
     setGmin("");
     setGmax("");
     setUnknown(true);
@@ -263,6 +266,8 @@ export default function HomeClient({
       if (sizes.length && !sizes.includes(l.size)) return false;
 
       const lm = l.materials || [];
+
+      if ((vegan || natural || easyCare) && (l.material_composition_unknown || lm.length === 0)) return false;
 
       if (
         mats.length &&
@@ -328,6 +333,8 @@ export default function HomeClient({
       ) {
         return false;
       }
+
+      if (shippingOnly && !l.shipping_available) return false;
 
       if (regs.length || subs.length) {
         const matches = (l.locations || []).some(
@@ -428,6 +435,7 @@ export default function HomeClient({
     vegan,
     natural,
     easyCare,
+    shippingOnly,
     gmin,
     gmax,
     unknown,
@@ -464,6 +472,7 @@ export default function HomeClient({
           vegan,
           natural,
           easyCare,
+          shippingOnly,
           gmin,
           gmax,
           unknown,
@@ -496,6 +505,7 @@ export default function HomeClient({
       vegan,
       natural,
       easyCare,
+      shippingOnly,
       gmin,
       gmax,
       unknown,
@@ -560,6 +570,7 @@ export default function HomeClient({
           selectedIds={sizes}
           onChange={setSizes}
         />
+        <div className="field-help"><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">טבלת מידות ועזרה בבחירת מידה ↗</Link></div>
 
         <HierarchicalMultiSelect
           label="חומרים"
@@ -569,6 +580,8 @@ export default function HomeClient({
           selectedIds={mats}
           onChange={setMats}
         />
+
+        <div className="field-help">כשבוחרים כמה אפשרויות בתוך אותו סוג סינון, תופיע מודעה שמתאימה לפחות לאחת מהן. בין סוגי סינון שונים נדרשת התאמה לכולם.</div>
 
         <div className="chips">
           <label className="chip">
@@ -608,6 +621,11 @@ export default function HomeClient({
           onChange={setSelectedLocations}
         />
 
+        <label className="chip">
+          <input type="checkbox" checked={shippingOnly} onChange={(e) => setShippingOnly(e.target.checked)} />{" "}
+          רק מודעות שמציעות משלוח
+        </label>
+
         <details
           className="section"
           style={{ marginTop: 8 }}
@@ -642,6 +660,7 @@ export default function HomeClient({
 
             <div className="field">
               <label>GSM</label>
+              <div className="field-help">אפשר לבחור ערך GSM מינימלי ומקסימלי. כאשר מוגדר טווח, מודעות שבהן ה־GSM אינו ידוע יוצגו רק אם תיבחר האפשרות „לכלול גם GSM לא ידוע”.</div>
               <div className="toolbar">
                 <select
                   className="select"

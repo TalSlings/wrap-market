@@ -5,6 +5,7 @@ import {
   SIZES,
   GSM,
   CONDITIONS,
+  CONDITION_HELP,
   DEFECTS,
   labelOf,
 } from "@/lib/constants";
@@ -13,6 +14,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import type { Metadata } from "next";
 import { FeatureBadge } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
+import HelpNote from "@/components/HelpNote";
 
 export const dynamic = "force-dynamic";
 
@@ -337,11 +339,12 @@ export default async function Page({
           <p>
             {labelOf(SIZES, l.size)}
             {l.size_note && ` · ${l.size_note}`}
+            {" "}<HelpNote content={<Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות ולהסבר על בחירת מידה ↗</Link>} />
           </p>
         )}
 
         {Number(l.price) > 0 && (
-          <p>{l.price} ₪</p>
+          <p>{l.price} ₪ <HelpNote content={<Link href="/faq#pricing" target="_blank" rel="noopener noreferrer">מידע על תמחור מנשא יד שנייה ↗</Link>} /></p>
         )}
 
         {l.gsm && l.gsm !== "unknown" && (
@@ -350,6 +353,7 @@ export default async function Page({
               <b>GSM</b>
               <br />
               {labelOf(GSM, l.gsm)}
+              {" "}<HelpNote content={<Link href="/faq#gsm" target="_blank" rel="noopener noreferrer">מה זה GSM? ↗</Link>} />
             </div>
           </div>
         )}
@@ -380,6 +384,7 @@ export default async function Page({
               </p>
             )
           )}
+          <div className="notice"><b>סיווגי החומרים בלוח:</b> טבעוני פירושו ללא משי, צמר או סיבים מן החי; טבעי פירושו שכל הסיבים טבעיים; איזיקייר ניתן למשפחות הכותנה והסינתטיים. <Link href="/faq#materials">להסבר המלא</Link>.</div>
             </>
           )}
         </div>
@@ -425,7 +430,7 @@ export default async function Page({
 
         {l.shipping_available && (
           <p className="notice">
-            דמי משלוח על חשבון הקונה אלא אם צוין אחרת.
+            נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.
           </p>
         )}
         </div>
@@ -459,10 +464,12 @@ export default async function Page({
         <h2>מצב ופגמים</h2>
 
         {l.condition && (
-          <p>
-            <b>מצב המנשא:</b>{" "}
-            {labelOf(CONDITIONS, l.condition)}
-          </p>
+          <>
+            <p><b>מצב המנשא:</b>{" "}{labelOf(CONDITIONS, l.condition)}</p>
+            <ul className="condition-legend">
+              {CONDITIONS.map(([key, label]) => <li key={key} className={key === l.condition ? "current" : ""}><b>{label}</b> — {CONDITION_HELP[key]}</li>)}
+            </ul>
+          </>
         )}
 
         {defectKeys.length === 0 ? (
@@ -536,3 +543,4 @@ export default async function Page({
     </main>
   );
 }
+

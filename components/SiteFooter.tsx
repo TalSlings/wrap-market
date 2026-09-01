@@ -52,6 +52,10 @@ export default function SiteFooter() {
           <Link href="/safety" style={linkStyle}>
             בטיחות
           </Link>
+
+          <Link href="/faq" style={linkStyle}>
+            שאלות נפוצות
+          </Link>
         </nav>
       </footer>
 
@@ -90,3 +94,4 @@ export default function SiteFooter() {
     </>
   );
 }
+

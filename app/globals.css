@@ -219,6 +219,15 @@ button{cursor:pointer}
 .materials{line-height:1.45}
 .icons{display:flex;gap:8px;margin-top:auto;align-items:center;min-height:30px;width:100%}
 .shipping-feature{display:inline-flex;align-items:center;margin-inline-end:auto}
+.help-note{display:inline-block;position:relative;margin-inline-start:.35rem;vertical-align:middle}
+.help-note>summary{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border:1px solid var(--line);border-radius:999px;cursor:pointer;list-style:none;font-weight:700;color:var(--accent)}
+.help-note>summary::-webkit-details-marker{display:none}
+.help-note-content{position:absolute;z-index:30;inset-inline-start:0;top:calc(100% + 6px);width:min(340px,80vw);padding:12px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.14);font-weight:400;line-height:1.55}
+.help-note-content p{margin:.35rem 0}.help-note-content a{text-decoration:underline;text-underline-offset:3px}
+.field-help{font-size:.92rem;color:var(--muted);line-height:1.5;margin-top:6px}
+.condition-legend{display:grid;gap:8px;margin-top:12px;padding:0;list-style:none}
+.condition-legend li{padding:8px 10px;border-inline-start:3px solid var(--line)}
+.condition-legend li.current{border-color:var(--accent);background:rgba(92,70,150,.07)}
 .material-features{display:inline-flex;align-items:center;gap:7px;margin-inline-start:auto}
 .favorite{margin-right:auto;background:none;border:0;font-size:23px}
 .swatches{display:flex;gap:4px}
@@ -399,3 +408,4 @@ button{cursor:pointer}
   height:0;
   margin:12px 0;
 }
+
