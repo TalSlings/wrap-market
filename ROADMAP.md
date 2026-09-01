@@ -5,6 +5,18 @@
 - Luxury badge requested per listing and approved by admin.
 - New-price / no-longer-sold-new context.
 
+## Post-launch: catalog images
+
+- Build an explicit catalog-image flow before allowing users to rely on
+  manufacturer or catalog photos.
+- Require the seller to mark that an uploaded image is a catalog image and
+  confirm that they have permission or another lawful basis to use it.
+- Display catalog images clearly as illustrative rather than as evidence of the
+  condition of the specific item.
+- Keep at least one original photo of the actual item as a publication
+  requirement.
+- Update the Terms of Use only after the feature is implemented and tested.
+
 ## Post-launch: inactive accounts and email notifications
 
 This work was deliberately removed from the launch version. It must not be
