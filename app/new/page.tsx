@@ -32,6 +32,7 @@ export default async function Page() {
     { data: regions },
     { data: subregions },
     { data: settings },
+    { data: helpNotes },
   ] = await Promise.all([
     s
       .from("manufacturers")
@@ -70,6 +71,11 @@ export default async function Page() {
       .select("allow_incomplete_listings")
       .eq("singleton", true)
       .maybeSingle(),
+
+    s
+      .from("help_notes")
+      .select("section_key,placement,content,is_visible")
+      .eq("placement", "form"),
   ]);
 
   return (
@@ -86,6 +92,7 @@ export default async function Page() {
         allowIncomplete={
           !!settings?.allow_incomplete_listings
         }
+        helpNotes={helpNotes || []}
       />
     </main>
   );

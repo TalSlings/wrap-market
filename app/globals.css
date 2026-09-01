@@ -219,11 +219,12 @@ button{cursor:pointer}
 .materials{line-height:1.45}
 .icons{display:flex;gap:8px;margin-top:auto;align-items:center;min-height:30px;width:100%}
 .shipping-feature{display:inline-flex;align-items:center;margin-inline-end:auto}
-.help-note{display:inline-block;position:relative;margin-inline-start:.35rem;vertical-align:middle}
-.help-note>summary{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border:1px solid var(--line);border-radius:999px;cursor:pointer;list-style:none;font-weight:700;color:var(--accent)}
-.help-note>summary::-webkit-details-marker{display:none}
-.help-note-content{position:absolute;z-index:30;inset-inline-start:0;top:calc(100% + 6px);width:min(340px,80vw);padding:12px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.14);font-weight:400;line-height:1.55}
-.help-note-content p{margin:.35rem 0}.help-note-content a{text-decoration:underline;text-underline-offset:3px}
+.help-note{display:inline-flex;margin-inline-start:.35rem;vertical-align:middle}
+.help-note-trigger{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;padding:0;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:var(--paper,#fff);font:inherit;font-weight:700;color:var(--accent)}
+.help-note-trigger:hover,.help-note-trigger:focus-visible{border-color:var(--accent);outline:2px solid color-mix(in srgb,var(--accent) 28%,transparent);outline-offset:2px}
+.help-note-content{position:fixed;z-index:1000;box-sizing:border-box;max-height:calc(100vh - 24px);overflow:auto;padding:12px;background:var(--paper,#fff);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-weight:400;line-height:1.55;opacity:1;transition:opacity .18s ease}
+.help-note-content.is-closing{opacity:0}
+.help-note-content p{margin:.35rem 0}.help-note-content a{text-decoration:underline;text-underline-offset:3px}.help-note-text{white-space:pre-line}
 .field-help{font-size:.92rem;color:var(--muted);line-height:1.5;margin-top:6px}
 .condition-legend{display:grid;gap:8px;margin-top:12px;padding:0;list-style:none}
 .condition-legend li{padding:8px 10px;border-inline-start:3px solid var(--line)}
@@ -408,4 +409,3 @@ button{cursor:pointer}
   height:0;
   margin:12px 0;
 }
-

@@ -2,12 +2,12 @@
 
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   SIZES,
   GSM,
   CONDITIONS,
+  CONDITION_HELP,
   DEFECTS,
   COLOR_PATTERNS,
 } from "@/lib/constants";
@@ -17,6 +17,7 @@ import {
   HierarchicalSingleSelect,
 } from "@/components/HierarchicalSelect";
 import HelpNote from "@/components/HelpNote";
+import { helpText } from "@/lib/helpNotes";
 
 export default function ListingForm({
   userId,
@@ -27,10 +28,13 @@ export default function ListingForm({
   subregions,
   initial,
   allowIncomplete = false,
+  helpNotes = [],
 }: {
   [k: string]: any;
 }) {
   const s = createClient();
+  const formHelp = (key: string, fallback: string) =>
+    helpText(helpNotes, key, "form", fallback);
 
   const [localManufacturers, setLocalManufacturers] =
     useState<any[]>(manufacturers);
@@ -1002,15 +1006,14 @@ export default function ListingForm({
       <div className="section">
         <h2>
           זהות המנשא
+          <HelpNote content={formHelp("form_overview", "את רוב פרטי המנשא אפשר למצוא על התווית, באתר היצרן או ב־WrapTrack. אם פרט מסוים אינו ידוע ולא ניתן לברר אותו, אפשר לבחור „לא ידוע”.")} />
         </h2>
-
-        <p className="notice">את רוב פרטי המנשא אפשר למצוא על התווית, באתר היצרן או ב־WrapTrack. אם פרט מסוים אינו ידוע ולא ניתן לברר אותו, אפשר לבחור „לא ידוע”.</p>
 
         <div
           className="field"
           data-required-field="manufacturer"
         >
-          <label>יצרן * <HelpNote content="brand — החברה שארגה את הבד." /></label>
+          <label>יצרן * <HelpNote content={formHelp("manufacturer", "brand — החברה שארגה את הבד.")} /></label>
 
           <select
             className="select"
@@ -1070,17 +1073,16 @@ export default function ListingForm({
                 placeholder="לא נמצא? אפשר לכתוב יצרן חדש"
               />
 
-              <div className="field-help">היצרן לא נמצא ברשימה? אפשר להוסיף אותו. יש לכתוב את השם המלא והמקובל באותיות לטיניות, אחרי שמוודאים שהוא אינו מופיע כבר באיות אחר. אל חשש — מנהלת תעבור בהמשך על יצרנים חדשים ותאחד או תתקן אותם במידת הצורך.</div>
-
-              <button
-                type="button"
-                className="btn"
-                onClick={
-                  addManufacturerNow
-                }
-              >
-                הוספת יצרן
-              </button>
+              <div className="toolbar">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={addManufacturerNow}
+                >
+                  הוספת יצרן
+                </button>
+                <HelpNote content={formHelp("manufacturer_add", "היצרן לא נמצא ברשימה? אפשר להוסיף אותו. יש לכתוב את השם המלא והמקובל באותיות לטיניות, אחרי שמוודאים שהוא אינו מופיע כבר באיות אחר. אל חשש — מנהלת תעבור בהמשך על יצרנים חדשים ותאחד או תתקן אותם במידת הצורך.")} />
+              </div>
             </div>
           )}
 
@@ -1107,7 +1109,7 @@ export default function ListingForm({
           className="field"
           data-required-field="design"
         >
-          <label>עיצוב * <HelpNote content="design — למשל לה ויטה (של יארו) או אוקינמי (של אושה). ניתן לציין בעברית או באנגלית." /></label>
+          <label>עיצוב * <HelpNote content={formHelp("design", "design — למשל לה ויטה (של יארו) או אוקינמי (של אושה). ניתן לציין בעברית או באנגלית.")} /></label>
 
           <input
             className="input"
@@ -1127,7 +1129,7 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>מודל <HelpNote content="model — מתייחס לצבעים או לחומרים של העיצוב." /></label>
+          <label>מודל <HelpNote content={formHelp("model", "model — מתייחס לצבעים או לחומרים של העיצוב.")} /></label>
 
           <input
             className="input"
@@ -1154,7 +1156,7 @@ export default function ListingForm({
           className="field"
           data-required-field="size"
         >
-          <label>מידה * <HelpNote content={<><p>אורכים משוערים: טבעות קצר — 1.7 מ׳; טבעות רגיל — 2 מ׳; טבעות ארוך — 2.2–2.3 מ׳; מידה 1 — 2.2 מ׳; מידה 2 — 2.7–2.8 מ׳; מידה 3 — 3.2 מ׳; מידה 4 — 3.6–3.7 מ׳; מידה 5 — 4.2 מ׳; מידה 6 — 4.6–4.7 מ׳; מידה 7 — 5.2 מ׳; מידה 8 — 5.6–5.8 מ׳; מידה 9 — 6.2 מ׳.</p><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות וההסבר המלאים ↗</Link></>} /></label>
+          <label>מידה * <HelpNote content={formHelp("size", "צ׳יט שיט — אורכים משוערים:\nמידה 2 — 2.7–2.8 מ׳\nמידה 3 — 3.2 מ׳\nמידה 4 — 3.6–3.7 מ׳\nמידה 5 — 4.2 מ׳\nמידה 6 — 4.6–4.7 מ׳\nמידה 7 — 5.2 מ׳\nמידה 8 — 5.6–5.8 מ׳\nמידה 9 — 6.2 מ׳")} faqHref="/faq#sizes" /></label>
 
           <select
             className="select"
@@ -1192,6 +1194,7 @@ export default function ListingForm({
         <div className="field">
           <label>
             הערת מידה
+            <HelpNote content={formHelp("size_note", "אפשר להוסיף מידע מדויק יותר, למשל: מנשא טבעות קצר, מידה 4 ארוכה, האורך המדוד של המנשא, אם הוא קוצר ממנשא אחר או המידות המדויקות של סקראפ.")} />
           </label>
 
           <input
@@ -1204,11 +1207,10 @@ export default function ListingForm({
               )
             }
           />
-          <div className="field-help">אפשר להוסיף מידע מדויק יותר, למשל: מנשא טבעות קצר, מידה 4 ארוכה, האורך המדוד של המנשא, אם הוא קוצר ממנשא אחר או המידות המדויקות של סקראפ.</div>
         </div>
 
         <div className="field">
-          <label>GSM</label>
+          <label>GSM <HelpNote content={formHelp("gsm", "GSM הוא משקל הבד בגרמים למטר רבוע. בדרך כלל אפשר למצוא אותו על התווית, באתר היצרן או ב־WrapTrack.")} faqHref="/faq#gsm" /></label>
 
           <select
             className="select"
@@ -1272,8 +1274,8 @@ export default function ListingForm({
               }}
             />{" "}
             הרכב לא ידוע
+            <HelpNote content={formHelp("materials_unknown", "נא לסמן רק במצב שבאמת לא ניתן לברר.")} />
           </label>
-          <div className="field-help">נא לסמן רק במצב שבאמת לא ניתן לברר.</div>
         </div>
 
         {!materialCompositionUnknown && (
@@ -1397,24 +1399,20 @@ export default function ListingForm({
             </button>
           )}
 
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              setShowNewMaterial(
-                !showNewMaterial
-              );
-
-              setMaterialMsg(
-                ""
-              );
-            }}
-          >
-            לא מצאת חומר?
-            הוספת חומר חדש
-          </button>
+          <div className="toolbar">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setShowNewMaterial(!showNewMaterial);
+                setMaterialMsg("");
+              }}
+            >
+              לא מצאת חומר? הוספת חומר חדש
+            </button>
+            <HelpNote content={formHelp("material_add", "אם חסר חומר, אפשר להוסיף אותו ולעדכן כמיטב היכולת. בהמשך מנהלת תעבור על חומרים חדשים ותערוך אותם במידת הצורך.")} />
+          </div>
         </div>
-        <div className="field-help">אם חסר חומר, אפשר להוסיף אותו ולעדכן כמיטב היכולת. בהמשך מנהלת תעבור על חומרים חדשים ותערוך אותם במידת הצורך.</div>
 
         {showNewMaterial && (
           <div
@@ -1450,6 +1448,7 @@ export default function ListingForm({
             <div className="field">
               <label>
                 שם החומר
+                <HelpNote content={formHelp("material_name", "הפורמט הוא שם ואז תיאור; למשל „כותנה מצרית” ולא רק „מצרית”.")} />
               </label>
 
               <input
@@ -1465,12 +1464,12 @@ export default function ListingForm({
                   )
                 }
               />
-              <div className="field-help">הפורמט הוא שם ואז תיאור; למשל „כותנה מצרית” ולא רק „מצרית”.</div>
             </div>
 
             <div className="field">
               <label>
                 שייך לקטגוריה
+                <HelpNote content={formHelp("material_parent", "יש לבחור את המשפחה המתאימה. אם יש ספק, מומלץ לבחור „שונות”.")} />
               </label>
 
               <select
@@ -1501,12 +1500,12 @@ export default function ListingForm({
                   )
                 )}
               </select>
-              <div className="field-help">יש לבחור את המשפחה המתאימה. אם יש ספק, מומלץ לבחור „שונות”.</div>
             </div>
 
             <div className="field">
               <label>
                 סוג חומר
+                <HelpNote content={formHelp("material_origin", "טבעי — הסיב גדל בצורתו כסיב, למשל כותנה או צמר. מלאכותי — מקור טבעי שעובד לסיב. סינתטי — סיב שמיוצר מפולימרים, למשל פוליאסטר או ניילון. אחר — כשלא ברור לאיזה סוג החומר שייך.")} faqHref="/faq#materials" />
               </label>
 
               <select
@@ -1538,7 +1537,6 @@ export default function ListingForm({
                   אחר
                 </option>
               </select>
-              <div className="field-help">טבעי — הסיב גדל בצורתו כסיב, למשל כותנה או צמר. מלאכותי — מקור טבעי שעובד לסיב. סינתטי — סיב שמיוצר מפולימרים, למשל פוליאסטר או ניילון. אחר — כשלא ברור לאיזה סוג החומר שייך. <Link href="/faq#materials" target="_blank" rel="noopener noreferrer">להסבר המלא ↗</Link></div>
             </div>
 
             <button
@@ -1567,7 +1565,7 @@ export default function ListingForm({
         )}
 
         <div className="field">
-          <label>צבעים <HelpNote content="מומלץ לסמן את כל הצבעים שמופיעים במנשא, בלי להתעכב על דיוק מושלם. השפה מוגבלת בתיאור צבעים, ומה שנראה לאדם אחד כתום עשוי להיראות לאחר ורוד; מידה מסוימת של שונות ואי־ודאות היא צפויה." /></label>
+          <label>צבעים <HelpNote content={formHelp("colors", "מומלץ לסמן את כל הצבעים שמופיעים במנשא, בלי להתעכב על דיוק מושלם. השפה מוגבלת בתיאור צבעים, ומה שנראה לאדם אחד כתום עשוי להיראות לאחר ורוד; מידה מסוימת של שונות ואי־ודאות היא צפויה.")} /></label>
 
           <div className="chips">
             {colors.map(
@@ -1610,7 +1608,7 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>מבנה הצביעה <HelpNote content="אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — בעיקר בשלב שבו עוד נעזרים בהבדלים בין צבעי הבד בזמן הקשירה, וגם לחובבי פסים, אומברה, קשת ודוגמאות דומות." /></label>
+          <label>מבנה הצביעה <HelpNote content={formHelp("color_patterns", "אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — בעיקר בשלב שבו עוד נעזרים בהבדלים בין צבעי הבד בזמן הקשירה, וגם לחובבי פסים, אומברה, קשת ודוגמאות דומות.")} /></label>
 
           <div className="chips">
             {COLOR_PATTERNS.map(
@@ -1653,7 +1651,7 @@ export default function ListingForm({
           className="field"
           data-required-field="condition"
         >
-          <label>מצב * <HelpNote content={<><p>יש לבחור את רמת השימוש הכוללת; פגמים מתוארים בנפרד.</p><Link href="/faq#condition" target="_blank" rel="noopener noreferrer">למקרא המלא ↗</Link></>} /></label>
+          <label>מצב * <HelpNote content={formHelp("condition", `יש לבחור את רמת השימוש הכוללת; פגמים מתוארים בנפרד.\n\n${CONDITIONS.map(([key, label]) => `${label} — ${CONDITION_HELP[key]}`).join("\n")}`)} faqHref="/faq#condition" /></label>
 
           <select
             className="select"
@@ -1751,7 +1749,7 @@ export default function ListingForm({
           className="field"
           data-required-field="price"
         >
-          <label>מחיר * <HelpNote content={<Link href="/faq#pricing" target="_blank" rel="noopener noreferrer">איך אפשר לקבוע מחיר למנשא יד שנייה? ↗</Link>} /></label>
+          <label>מחיר * <HelpNote content={formHelp("price", "איך אפשר לקבוע מחיר למנשא יד שנייה?")} faqHref="/faq#pricing" /></label>
 
           <input
             className="input"
@@ -1801,11 +1799,8 @@ export default function ListingForm({
               }
             />{" "}
             משלוח זמין
+            <HelpNote content={formHelp("shipping", "נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.")} />
           </label>
-
-          <div className="notice">
-            נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.
-          </div>
         </div>
 
         <div data-required-field="locations">
