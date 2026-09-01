@@ -2,8 +2,9 @@
 
 ## Before public launch
 
-1. Add the actual help-note content in the admin system, especially the color
-   guidance and its two example images.
+1. Complete the deferred color-structure help: one explanation per option and
+   a yes/no image pair. The current release intentionally adds no empty info
+   icons for these future notes.
 2. Move the marketplace to the new address at
    `ksharim-baby.org.il/woven-market`, then update and verify the canonical
    URLs, metadata, Open Graph, robots, sitemap, Supabase Auth redirects and
@@ -21,6 +22,8 @@
   information sources.
 - Keep the current launch page focused on learning through meetings, workshops
   and instruction with babywearing instructors until those resources are ready.
+- Complete every item tracked in `FAQ_CONTENT_PLAN.md`; keep the existing FAQ
+  anchors stable because the form and listing pages link to them.
 
 ## Post-launch: delegated admin roles
 
@@ -85,3 +88,4 @@ end to end.
 - Luxury badge requested per listing and approved by admin.
 - New-price / no-longer-sold-new context.
 - Full admin UI and contact reveal rate limiting.
+

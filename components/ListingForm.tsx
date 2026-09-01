@@ -2,6 +2,7 @@
 
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   SIZES,
@@ -15,6 +16,7 @@ import {
   HierarchicalMultiSelect,
   HierarchicalSingleSelect,
 } from "@/components/HierarchicalSelect";
+import HelpNote from "@/components/HelpNote";
 
 export default function ListingForm({
   userId,
@@ -123,9 +125,6 @@ export default function ListingForm({
 
   const [newMaterialParent, setNewMaterialParent] =
     useState("");
-
-  const [newMaterialVegan, setNewMaterialVegan] =
-    useState(true);
 
   const [newMaterialOrigin, setNewMaterialOrigin] =
     useState("natural");
@@ -328,7 +327,7 @@ export default function ListingForm({
 
     if (!name) {
       setManufacturerMsg(
-        "כתבי שם יצרן"
+        "יש לכתוב שם יצרן"
       );
       return "";
     }
@@ -430,7 +429,7 @@ export default function ListingForm({
 
     if (!name) {
       setMaterialMsg(
-        "כתבי שם חומר"
+        "יש לכתוב שם חומר"
       );
       return;
     }
@@ -451,12 +450,17 @@ export default function ListingForm({
       return;
     }
 
+    const parent = localMaterials.find((m: any) => m.id === newMaterialParent);
+    const familyName = (parent?.name || name).trim();
+    const veganByFamily = !["משי", "צמר", "שיער בעלי חיים", "סיבים מן החי"].includes(familyName);
+    const easyCareByFamily = ["כותנה", "סינתטיים"].includes(familyName);
+
     const payload: any = {
       name,
       parent_material_id:
         newMaterialParent || null,
-      vegan:
-        newMaterialVegan,
+      vegan: veganByFamily,
+      easycare: easyCareByFamily,
       material_origin:
         newMaterialOrigin,
       is_selectable: true,
@@ -469,7 +473,7 @@ export default function ListingForm({
         .from("materials")
         .insert(payload)
         .select(
-          "id,name,parent_material_id,vegan,material_origin,is_selectable,status"
+          "id,name,parent_material_id,vegan,easycare,material_origin,is_selectable,status"
         )
         .single();
 
@@ -528,7 +532,6 @@ export default function ListingForm({
 
     setNewMaterialName("");
     setNewMaterialParent("");
-    setNewMaterialVegan(true);
     setNewMaterialOrigin(
       "natural"
     );
@@ -1001,13 +1004,13 @@ export default function ListingForm({
           זהות המנשא
         </h2>
 
+        <p className="notice">את רוב פרטי המנשא אפשר למצוא על התווית, באתר היצרן או ב־WrapTrack. אם פרט מסוים אינו ידוע ולא ניתן לברר אותו, אפשר לבחור „לא ידוע”.</p>
+
         <div
           className="field"
           data-required-field="manufacturer"
         >
-          <label>
-            יצרן * ⓘ
-          </label>
+          <label>יצרן * <HelpNote content="brand — החברה שארגה את הבד." /></label>
 
           <select
             className="select"
@@ -1026,7 +1029,7 @@ export default function ListingForm({
             }}
           >
             <option value="">
-              בחרי יצרן
+              בחירת יצרן
             </option>
 
             {localManufacturers.map(
@@ -1064,8 +1067,10 @@ export default function ListingForm({
                       .value
                   )
                 }
-                placeholder="לא מצאת? כתבי יצרן חדש"
+                placeholder="לא נמצא? אפשר לכתוב יצרן חדש"
               />
+
+              <div className="field-help">היצרן לא נמצא ברשימה? אפשר להוסיף אותו. יש לכתוב את השם המלא והמקובל באותיות לטיניות, אחרי שמוודאים שהוא אינו מופיע כבר באיות אחר. אל חשש — מנהלת תעבור בהמשך על יצרנים חדשים ותאחד או תתקן אותם במידת הצורך.</div>
 
               <button
                 type="button"
@@ -1102,9 +1107,7 @@ export default function ListingForm({
           className="field"
           data-required-field="design"
         >
-          <label>
-            עיצוב * ⓘ
-          </label>
+          <label>עיצוב * <HelpNote content="design — למשל לה ויטה (של יארו) או אוקינמי (של אושה). ניתן לציין בעברית או באנגלית." /></label>
 
           <input
             className="input"
@@ -1124,9 +1127,7 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>
-            מודל ⓘ
-          </label>
+          <label>מודל <HelpNote content="model — מתייחס לצבעים או לחומרים של העיצוב." /></label>
 
           <input
             className="input"
@@ -1153,9 +1154,7 @@ export default function ListingForm({
           className="field"
           data-required-field="size"
         >
-          <label>
-            מידה * ⓘ
-          </label>
+          <label>מידה * <HelpNote content={<><p>טבלת עזר: 2 — כ־2.7 מ׳; 3 — כ־3.2 מ׳; 4 — כ־3.6 מ׳; 5 — כ־4.2 מ׳; 6 — כ־4.6 מ׳; 7 — כ־5.2 מ׳; 8 — כ־5.6 מ׳; 9 — כ־6.2 מ׳.</p><Link href="/faq#sizes" target="_blank" rel="noopener noreferrer">לטבלת המידות וההסבר המלאים ↗</Link></>} /></label>
 
           <select
             className="select"
@@ -1168,7 +1167,7 @@ export default function ListingForm({
             }
           >
             <option value="">
-              בחרי
+              בחירת מידה
             </option>
 
             {SIZES.map(
@@ -1205,12 +1204,11 @@ export default function ListingForm({
               )
             }
           />
+          <div className="field-help">אפשר להוסיף מידע מדויק יותר, למשל: מנשא טבעות קצר, מידה 4 ארוכה, האורך המדוד של המנשא, אם הוא קוצר ממנשא אחר או המידות המדויקות של סקראפ.</div>
         </div>
 
         <div className="field">
-          <label>
-            GSM ⓘ
-          </label>
+          <label>GSM</label>
 
           <select
             className="select"
@@ -1275,6 +1273,7 @@ export default function ListingForm({
             />{" "}
             הרכב לא ידוע
           </label>
+          <div className="field-help">נא לסמן רק במצב שבאמת לא ניתן לברר.</div>
         </div>
 
         {!materialCompositionUnknown && (
@@ -1412,9 +1411,10 @@ export default function ListingForm({
             }}
           >
             לא מצאת חומר?
-            הוסיפי חדש
+            הוספת חומר חדש
           </button>
         </div>
+        <div className="field-help">אם חסר חומר, אפשר להוסיף אותו ולעדכן כמיטב היכולת. בהמשך מנהלת תעבור על חומרים חדשים ותערוך אותם במידת הצורך.</div>
 
         {showNewMaterial && (
           <div
@@ -1465,6 +1465,7 @@ export default function ListingForm({
                   )
                 }
               />
+              <div className="field-help">הפורמט הוא שם ואז תיאור; למשל „כותנה מצרית” ולא רק „מצרית”.</div>
             </div>
 
             <div className="field">
@@ -1500,6 +1501,7 @@ export default function ListingForm({
                   )
                 )}
               </select>
+              <div className="field-help">יש לבחור את המשפחה המתאימה. אם יש ספק, מומלץ לבחור „שונות”.</div>
             </div>
 
             <div className="field">
@@ -1536,26 +1538,7 @@ export default function ListingForm({
                   אחר
                 </option>
               </select>
-            </div>
-
-            <div className="field">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={
-                    newMaterialVegan
-                  }
-                  onChange={(
-                    e
-                  ) =>
-                    setNewMaterialVegan(
-                      e.target
-                        .checked
-                    )
-                  }
-                />{" "}
-                טבעוני
-              </label>
+              <div className="field-help">טבעי — הסיב גדל בצורתו כסיב, למשל כותנה או צמר. מלאכותי — מקור טבעי שעובד לסיב. סינתטי — סיב שמיוצר מפולימרים, למשל פוליאסטר או ניילון. אחר — כשלא ברור לאיזה סוג החומר שייך. <Link href="/faq#materials" target="_blank" rel="noopener noreferrer">להסבר המלא ↗</Link></div>
             </div>
 
             <button
@@ -1584,9 +1567,7 @@ export default function ListingForm({
         )}
 
         <div className="field">
-          <label>
-            צבעים
-          </label>
+          <label>צבעים <HelpNote content="מומלץ לסמן את כל הצבעים שמופיעים במנשא, בלי להתעכב על דיוק מושלם. השפה מוגבלת בתיאור צבעים, ומה שנראה לאדם אחד כתום עשוי להיראות לאחר ורוד; מידה מסוימת של שונות ואי־ודאות היא צפויה." /></label>
 
           <div className="chips">
             {colors.map(
@@ -1629,9 +1610,7 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>
-            מבנה הצביעה
-          </label>
+          <label>מבנה הצביעה <HelpNote content="אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — בעיקר בשלב שבו עוד נעזרים בהבדלים בין צבעי הבד בזמן הקשירה, וגם לחובבי פסים, אומברה, קשת ודוגמאות דומות." /></label>
 
           <div className="chips">
             {COLOR_PATTERNS.map(
@@ -1674,9 +1653,7 @@ export default function ListingForm({
           className="field"
           data-required-field="condition"
         >
-          <label>
-            מצב *
-          </label>
+          <label>מצב * <HelpNote content={<><p>יש לבחור את רמת השימוש הכוללת; פגמים מתוארים בנפרד.</p><Link href="/faq#condition" target="_blank" rel="noopener noreferrer">למקרא המלא ↗</Link></>} /></label>
 
           <select
             className="select"
@@ -1689,7 +1666,7 @@ export default function ListingForm({
             }
           >
             <option value="">
-              בחרי
+              בחירת מצב
             </option>
 
             {CONDITIONS.map(
@@ -1774,9 +1751,7 @@ export default function ListingForm({
           className="field"
           data-required-field="price"
         >
-          <label>
-            מחיר *
-          </label>
+          <label>מחיר * <HelpNote content={<Link href="/faq#pricing" target="_blank" rel="noopener noreferrer">איך אפשר לקבוע מחיר למנשא יד שנייה? ↗</Link>} /></label>
 
           <input
             className="input"
@@ -1825,20 +1800,18 @@ export default function ListingForm({
                 )
               }
             />{" "}
-            משלוח זמין ⓘ
+            משלוח זמין
           </label>
 
           <div className="notice">
-            דמי משלוח על חשבון
-            הקונה אלא אם צוין
-            אחרת.
+            נהוג שדמי המשלוח משולמים על ידי הקונה, אלא אם סוכם אחרת.
           </div>
         </div>
 
         <div data-required-field="locations">
         <HierarchicalMultiSelect
           label={shipping ? "אזורי איסוף — אופציונלי" : "אזורי איסוף *"}
-          placeholder="בחרי אזורים"
+          placeholder="בחירת אזורים"
           parents={
             regionParents
           }
