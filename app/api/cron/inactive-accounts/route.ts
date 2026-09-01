@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
   const result = {
     inactiveAccountCleanupEnabled: false,
     purgedListings: 0,
-    purgedFeedback: 0,
     clearedDeletionEmailQueue: 0,
     errors: 0,
   };
@@ -78,21 +77,6 @@ export async function GET(request: NextRequest) {
       result.errors += 1;
       console.error("Deleted listing purge failed", listing.id, error);
     }
-  }
-
-  // Feedback is operational data and is kept for no more than 30 days.
-  const feedbackCutoff = new Date(now.getTime() - 30 * DAY).toISOString();
-  const { data: purgedFeedback, error: feedbackPurgeError } = await supabase
-    .from("feedback_items")
-    .delete()
-    .lt("created_at", feedbackCutoff)
-    .select("id");
-
-  if (feedbackPurgeError) {
-    result.errors += 1;
-    console.error("Feedback purge failed", feedbackPurgeError);
-  } else {
-    result.purgedFeedback = purgedFeedback?.length || 0;
   }
 
   // Confirmation emails are not part of the launch version. Remove any
