@@ -1,9 +1,43 @@
 # Roadmap
 
-- Import from WrapTrack/manufacturer pages.
-- Face-cover sticker editor.
-- Luxury badge requested per listing and approved by admin.
-- New-price / no-longer-sold-new context.
+## Before public launch
+
+1. Add the actual help-note content in the admin system, especially the color
+   guidance and its two example images.
+2. Move the marketplace to the new address at
+   `ksharim-baby.org.il/woven-market`, then update and verify the canonical
+   URLs, metadata, Open Graph, robots, sitemap, Supabase Auth redirects and
+   sharing previews.
+3. Run final end-to-end testing with family and friends on mobile and desktop,
+   including login, publishing, editing, favorites, search, contact reveal,
+   sharing and all footer links.
+
+## Post-launch: learning resources and beginner FAQ
+
+- Add curated babywearing information sources to the learning page.
+- Build a beginner FAQ about woven wraps and ring slings.
+- Use the FAQ to direct readers more efficiently to meetings, workshops,
+  individual guidance with babywearing instructors and other relevant
+  information sources.
+- Keep the current launch page focused on learning through meetings, workshops
+  and instruction with babywearing instructors until those resources are ready.
+
+## Post-launch: delegated admin roles
+
+- Add a less-privileged manager role below the primary administrator role.
+- Let the primary administrator grant access to selected admin pages or
+  management areas instead of granting access to the entire admin interface.
+- Define permissions explicitly and enforce them in database/server checks, not
+  only by hiding interface tabs.
+- Add a simple interface for granting, reviewing and revoking those permissions.
+
+## Post-launch: verify permanent listing deletion
+
+- Test the complete 60-day deleted-listing lifecycle with controlled test dates.
+- Verify that the cron permanently removes both the listing row and its stored
+  images after the recovery period.
+- Record the result and fix any gap before treating the mechanism as fully
+  verified.
 
 ## Post-launch: catalog images
 
@@ -44,4 +78,10 @@ end to end.
 - Only after all tests pass, update the privacy policy with the final retention
   periods, warning schedule, email behavior and effective date.
 
+## Other future work
+
+- Import from WrapTrack/manufacturer pages.
+- Face-cover sticker editor.
+- Luxury badge requested per listing and approved by admin.
+- New-price / no-longer-sold-new context.
 - Full admin UI and contact reveal rate limiting.
