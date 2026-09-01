@@ -76,7 +76,6 @@ export async function POST() {
       .update({ granted_by: null })
       .eq("granted_by", user.id);
 
-    await admin.from("feedback_items").delete().eq("user_id", user.id);
     await admin.from("listings").delete().eq("owner_id", user.id);
     await admin.from("favorites").delete().eq("user_id", user.id);
     await admin.from("saved_searches").delete().eq("user_id", user.id);
