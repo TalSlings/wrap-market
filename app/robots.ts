@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         "/suspended",
       ],
     },
-    sitemap: "https://market.talslings.info/sitemap.xml",
-    host: "https://market.talslings.info",
+    sitemap: "https://ksharim-baby.org.il/sitemap.xml",
+    host: "https://ksharim-baby.org.il",
   };
 }

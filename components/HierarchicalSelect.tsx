@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
+import HelpNote from "@/components/HelpNote";
 
 export type TreeParent = {
   id: string;
@@ -75,12 +76,17 @@ export function FlatMultiSelect({
   options,
   selectedIds,
   onChange,
+  optionHelp = {},
 }: {
-  label?: string;
+  label?: ReactNode;
   placeholder?: string;
   options: { id: string; name: string }[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
+  optionHelp?: Record<
+    string,
+    { content?: ReactNode; faqHref?: string }
+  >;
 }) {
   const selected = useMemo(() => new Set(selectedIds), [selectedIds]);
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
@@ -139,22 +145,35 @@ export function FlatMultiSelect({
           }}
         >
           {options.map((option) => (
-            <label
+            <div
               key={option.id}
               style={{
                 display: "flex",
                 gap: 8,
                 alignItems: "center",
-                cursor: "pointer",
               }}
             >
-              <input
-                type="checkbox"
-                checked={selected.has(option.id)}
-                onChange={() => toggle(option.id)}
+              <label
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(option.id)}
+                  onChange={() => toggle(option.id)}
+                />
+                <span>{option.name}</span>
+              </label>
+              <HelpNote
+                content={optionHelp[option.id]?.content}
+                faqHref={optionHelp[option.id]?.faqHref}
+                label={`הסבר על ${option.name}`}
               />
-              <span>{option.name}</span>
-            </label>
+            </div>
           ))}
         </div>
       </details>

@@ -12,6 +12,7 @@ import {
   SIZES,
   GSM,
   CONDITIONS,
+  CONDITION_HELP,
   DEFECTS,
   COLOR_PATTERNS,
   labelOf,
@@ -579,8 +580,6 @@ export default function HomeClient({
           selectedIds={sizes}
           onChange={setSizes}
         />
-        <div><HelpNote content={searchHelp("size", "אורכים משוערים:\nמידה 2 — 2.7–2.8 מ׳\nמידה 3 — 3.2 מ׳\nמידה 4 — 3.6–3.7 מ׳\nמידה 5 — 4.2 מ׳\nמידה 6 — 4.6–4.7 מ׳\nמידה 7 — 5.2 מ׳\nמידה 8 — 5.6–5.8 מ׳\nמידה 9 — 6.2 מ׳")} faqHref="/faq#sizes" /></div>
-
         <HierarchicalMultiSelect
           label="חומרים"
           placeholder="כל החומרים"
@@ -666,7 +665,7 @@ export default function HomeClient({
             </div>
 
             <div className="field">
-              <label>GSM <HelpNote content={searchHelp("gsm", "אפשר לבחור ערך GSM מינימלי ומקסימלי. כאשר מוגדר טווח, מודעות שבהן ה־GSM אינו ידוע יוצגו רק אם תיבחר האפשרות „לכלול גם GSM לא ידוע”.")} faqHref="/faq#gsm" /></label>
+              <label>GSM <HelpNote content={searchHelp("gsm", "אפשר לכלול בתוצאות גם מודעות שבהן ה־GSM לא ידוע.")} faqHref="/faq#gsm" /></label>
               <div className="toolbar">
                 <select
                   className="select"
@@ -770,10 +769,32 @@ export default function HomeClient({
               options={patternOptions}
               selectedIds={colorPatterns}
               onChange={setColorPatterns}
+              optionHelp={Object.fromEntries(
+                COLOR_PATTERNS.map(([id]) => [
+                  id,
+                  {
+                    content: searchHelp(`color_pattern_${id}`, ""),
+                    faqHref: "/faq#color-patterns",
+                  },
+                ])
+              )}
             />
 
             <FlatMultiSelect
-              label="מצב המנשא"
+              label={
+                <>
+                  מצב המנשא
+                  <HelpNote
+                    content={searchHelp(
+                      "condition",
+                      CONDITIONS.map(
+                        ([key, label]) => `${label} — ${CONDITION_HELP[key]}`
+                      ).join("\n")
+                    )}
+                    faqHref="/faq#condition"
+                  />
+                </>
+              }
               placeholder="כל המצבים"
               options={conditionOptions}
               selectedIds={conditions}

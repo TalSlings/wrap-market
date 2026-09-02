@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const AUTO_CLOSE_MS = 12_000;
+const AUTO_CLOSE_MS = 5_000;
 const EDGE_GAP = 12;
 
 export default function HelpNote({ content, label = "הסבר נוסף", faqHref }: {
@@ -92,7 +92,7 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
   return (
     <span className="help-note">
       <button ref={buttonRef} type="button" className="help-note-trigger" aria-label={label}
-        aria-expanded={open} aria-controls={`${id}-popup`} onClick={toggle}>ⓘ</button>
+        aria-expanded={open} aria-controls={`${id}-popup`} onClick={toggle}>i</button>
       {open && typeof document !== "undefined" && createPortal(
         <div ref={popupRef} id={`${id}-popup`} role="note"
           className={`help-note-content${closing ? " is-closing" : ""}`} style={position}>

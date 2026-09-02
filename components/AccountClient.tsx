@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/client";
 import { HierarchicalMultiSelect } from "@/components/HierarchicalSelect";
 import { WovenCorner } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
+import {
+  normalizePawnAvatar,
+  PawnAvatar,
+  PawnAvatarPicker,
+  type PawnAvatarKey,
+} from "@/components/PawnAvatar";
 
 type Tab =
   | "profile"
@@ -45,7 +51,7 @@ export default function AccountClient({
 }) {
   const s = createClient();
 
-  const [tab, setTab] = useState<Tab>("listings");
+  const [tab, setTab] = useState<Tab>("profile");
   const [displayName, setDisplayName] = useState(
     profile?.display_name || ""
   );
@@ -73,6 +79,10 @@ export default function AccountClient({
     profile?.subregion_ids || []
   );
   const [profileMsg, setProfileMsg] = useState("");
+  const [identityMsg, setIdentityMsg] = useState("");
+  const [avatarKey, setAvatarKey] = useState<PawnAvatarKey>(
+    normalizePawnAvatar(profile?.avatar_key)
+  );
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [accountDeleteMsg, setAccountDeleteMsg] = useState("");
 
@@ -170,8 +180,8 @@ export default function AccountClient({
       .upsert(
         {
           user_id: userId,
-          display_name:
-            displayName.trim() || null,
+          display_name: displayName.trim() || null,
+          avatar_key: avatarKey,
           contact_email:
             contactEmail.trim() || null,
           whatsapp_number:
@@ -194,6 +204,26 @@ export default function AccountClient({
       error
         ? `לא נשמר: ${error.message}`
         : "ברירות המחדל נשמרו"
+    );
+  };
+
+  const saveIdentity = async () => {
+    setIdentityMsg("");
+
+    const { error } = await s
+      .from("user_profiles")
+      .upsert(
+        {
+          user_id: userId,
+          display_name: displayName.trim() || null,
+          avatar_key: avatarKey,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" }
+      );
+
+    setIdentityMsg(
+      error ? `לא נשמר: ${error.message}` : "הפרופיל נשמר"
     );
   };
 
@@ -349,6 +379,10 @@ export default function AccountClient({
     label: string;
   }[] = [
     {
+      key: "profile",
+      label: "אזור אישי",
+    },
+    {
       key: "listings",
       label: "המודעות שלי",
     },
@@ -363,10 +397,6 @@ export default function AccountClient({
     {
       key: "searches",
       label: "חיפושים שמורים",
-    },
-    {
-      key: "profile",
-      label: "פרטים אישיים",
     },
   ];
 
@@ -761,6 +791,42 @@ export default function AccountClient({
 
       {tab === "profile" && (
         <>
+          <div className="section profile-identity">
+            <div className="profile-identity-heading">
+              <PawnAvatar avatarKey={avatarKey} size={96} />
+              <div>
+                <h2>הפרופיל שלי</h2>
+                <p className="muted">
+                  הכינוי והפיון הם פרטי הפרופיל של הלוח. האתר אינו משתמש
+                  בשם או בתמונת הפרופיל של Google.
+                </p>
+              </div>
+            </div>
+
+            <div className="field">
+              <label>כינוי</label>
+              <input
+                className="input"
+                aria-label="כינוי"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="הכינוי שיוצג בלוח"
+              />
+            </div>
+
+            <PawnAvatarPicker value={avatarKey} onChange={setAvatarKey} />
+
+            {identityMsg && (
+              <div className="notice" role="status" aria-live="polite">
+                {identityMsg}
+              </div>
+            )}
+
+            <button type="button" className="btn primary" onClick={saveIdentity}>
+              שמירת הפרופיל
+            </button>
+          </div>
+
           <div className="section">
             <h2>החשבון שלי</h2>
 
@@ -860,20 +926,6 @@ export default function AccountClient({
               במודעות חדשות. תמיד אפשר לשנות
               אותם בתוך מודעה ספציפית.
             </p>
-
-            <div className="field">
-              <label>שם להצגה</label>
-              <input
-                className="input"
-                aria-label="שם להצגה"
-                value={displayName}
-                onChange={(e) =>
-                  setDisplayName(
-                    e.target.value
-                  )
-                }
-              />
-            </div>
 
             <div className="field">
               <label>

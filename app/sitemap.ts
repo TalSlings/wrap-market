@@ -12,17 +12,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: "https://market.talslings.info",
+      url: "https://ksharim-baby.org.il",
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: "https://market.talslings.info/faq",
+      url: "https://ksharim-baby.org.il/faq",
       changeFrequency: "monthly",
       priority: 0.6,
     },
     ...(data || []).map((listing: any) => ({
-      url: `https://market.talslings.info/listing/${listing.id}`,
+      url: `https://ksharim-baby.org.il/listing/${listing.id}`,
       lastModified: listing.created_at || undefined,
       changeFrequency: "weekly" as const,
       priority: 0.8,

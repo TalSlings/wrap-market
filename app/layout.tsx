@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import SiteFooter from "@/components/SiteFooter";
 import { Noto_Sans_Hebrew, Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
+import HeaderAuthLink from "@/components/HeaderAuthLink";
 
 const notoHebrew = Noto_Sans_Hebrew({
   subsets: ["hebrew"],
@@ -18,7 +19,7 @@ const notoLatin = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://market.talslings.info"),
+  metadataBase: new URL("https://ksharim-baby.org.il"),
   title: {
     default: "רק ארוגים (וטבעות) — לוח יד שנייה למנשאים ארוגים",
     template: "%s | רק ארוגים (וטבעות)",
@@ -72,12 +73,7 @@ export default async function RootLayout({
               ＋ הוספת מודעה
             </Link>
 
-            <Link
-              className="iconbtn"
-              href={user ? "/account" : "/login"}
-            >
-              {user ? "אזור אישי" : "כניסה"}
-            </Link>
+            <HeaderAuthLink initialAuthenticated={Boolean(user)} />
           </header>
 
           {children}
