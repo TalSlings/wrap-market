@@ -23,6 +23,15 @@ export function normalizePawnAvatar(value: unknown): PawnAvatarKey {
     : "pawn-01";
 }
 
+export function pawnAvatarForSeed(seed: string): PawnAvatarKey {
+  let hash = 2166136261;
+  for (const character of seed) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return PAWN_AVATARS[Math.abs(hash >>> 0) % PAWN_AVATARS.length].key;
+}
+
 export function PawnAvatar({
   avatarKey,
   size = 88,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { HierarchicalMultiSelect } from "@/components/HierarchicalSelect";
@@ -8,10 +8,12 @@ import { WovenCorner } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
 import {
   normalizePawnAvatar,
+  pawnAvatarForSeed,
   PawnAvatar,
   PawnAvatarPicker,
   type PawnAvatarKey,
 } from "@/components/PawnAvatar";
+import { sanitizeProfileImage } from "@/lib/image";
 
 type Tab =
   | "profile"
@@ -49,7 +51,7 @@ export default function AccountClient({
   isSuspended: boolean;
   allowIncomplete: boolean;
 }) {
-  const s = createClient();
+  const s = useMemo(() => createClient(), []);
 
   const [tab, setTab] = useState<Tab>("profile");
   const [displayName, setDisplayName] = useState(
@@ -81,10 +83,44 @@ export default function AccountClient({
   const [profileMsg, setProfileMsg] = useState("");
   const [identityMsg, setIdentityMsg] = useState("");
   const [avatarKey, setAvatarKey] = useState<PawnAvatarKey>(
-    normalizePawnAvatar(profile?.avatar_key)
+    profile?.profile_setup_complete
+      ? normalizePawnAvatar(profile?.avatar_key)
+      : pawnAvatarForSeed(userId)
   );
+  const [profileImagePath, setProfileImagePath] = useState<string | null>(
+    profile?.profile_image_path || null
+  );
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [avatarMode, setAvatarMode] = useState<"pawn" | "image">(
+    profile?.profile_image_path ? "image" : "pawn"
+  );
+  const [profileSetupComplete, setProfileSetupComplete] = useState(
+    !!profile?.profile_setup_complete
+  );
+  const [editingIdentity, setEditingIdentity] = useState(
+    !profile?.profile_setup_complete
+  );
+  const [savingIdentity, setSavingIdentity] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [accountDeleteMsg, setAccountDeleteMsg] = useState("");
+
+  const storedProfileImageUrl = useMemo(() => {
+    if (!profileImagePath) return null;
+    return s.storage.from("profile-images").getPublicUrl(profileImagePath).data
+      .publicUrl;
+  }, [profileImagePath, s]);
+
+  useEffect(() => {
+    if (!profileImageFile) {
+      setProfileImagePreview(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(profileImageFile);
+    setProfileImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [profileImageFile]);
 
   const regionParents = useMemo(
     () =>
@@ -210,21 +246,79 @@ export default function AccountClient({
   const saveIdentity = async () => {
     setIdentityMsg("");
 
-    const { error } = await s
-      .from("user_profiles")
-      .upsert(
-        {
-          user_id: userId,
-          display_name: displayName.trim() || null,
-          avatar_key: avatarKey,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" }
-      );
+    if (!displayName.trim()) {
+      setIdentityMsg("צריך להזין שם או כינוי שיוצג באתר.");
+      return;
+    }
 
-    setIdentityMsg(
-      error ? `לא נשמר: ${error.message}` : "הפרופיל נשמר"
-    );
+    setSavingIdentity(true);
+    let nextImagePath = avatarMode === "image" ? profileImagePath : null;
+    let uploadedPath: string | null = null;
+
+    try {
+      if (avatarMode === "image" && profileImageFile) {
+        if (profileImageFile.size > 15 * 1024 * 1024) {
+          throw new Error("התמונה גדולה מדי. אפשר לבחור תמונה בגודל של עד 15MB.");
+        }
+
+        const blob = await sanitizeProfileImage(profileImageFile);
+        uploadedPath = `${userId}/profile-${Date.now()}.jpg`;
+        const { error: uploadError } = await s.storage
+          .from("profile-images")
+          .upload(uploadedPath, blob, {
+            contentType: "image/jpeg",
+            upsert: false,
+          });
+        if (uploadError) throw uploadError;
+        nextImagePath = uploadedPath;
+      }
+
+      const { error } = await s
+        .from("user_profiles")
+        .upsert(
+          {
+            user_id: userId,
+            display_name: displayName.trim(),
+            avatar_key: avatarKey,
+            profile_image_path: nextImagePath,
+            profile_setup_complete: true,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+      if (error) throw error;
+
+      if (profileImagePath && profileImagePath !== nextImagePath) {
+        await s.storage.from("profile-images").remove([profileImagePath]);
+      }
+
+      setProfileImagePath(nextImagePath);
+      setProfileImageFile(null);
+      setProfileSetupComplete(true);
+      setEditingIdentity(false);
+      setIdentityMsg("");
+    } catch (error) {
+      if (uploadedPath) {
+        await s.storage.from("profile-images").remove([uploadedPath]);
+      }
+      setIdentityMsg(
+        `לא נשמר: ${error instanceof Error ? error.message : "שגיאה לא ידועה"}`
+      );
+    } finally {
+      setSavingIdentity(false);
+    }
+  };
+
+  const choosePawn = (key: PawnAvatarKey) => {
+    setAvatarKey(key);
+    setAvatarMode("pawn");
+  };
+
+  const chooseProfileImage = (file: File | null) => {
+    if (!file) return;
+    setProfileImageFile(file);
+    setAvatarMode("image");
+    setIdentityMsg("");
   };
 
   const stat = async (
@@ -241,7 +335,7 @@ export default function AccountClient({
     if (
       status === "deleted" &&
       !confirm(
-        "המודעה תוסר מיד מהאתר ותישמר בסל המודעות שנמחקו למשך 60 יום. בתקופה הזו אפשר לשחזר אותה. להמשיך?"
+        "המודעה תוסר מיד מהאתר ותישמר בסל המיחזור למשך 60 יום. בתקופה הזו אפשר לשחזר אותה. להמשיך?"
       )
     ) {
       return;
@@ -388,7 +482,7 @@ export default function AccountClient({
     },
     {
       key: "deleted",
-      label: "מודעות שנמחקו",
+      label: "סל מיחזור",
     },
     {
       key: "favorites",
@@ -636,14 +730,14 @@ export default function AccountClient({
 
       {tab === "deleted" && (
         <div className="section">
-          <h2>מודעות שנמחקו</h2>
+          <h2>סל מיחזור</h2>
           <p className="muted">
             מודעה שנמחקה מוסתרת מיד מהאתר. אפשר לשחזר אותה במשך 60 יום;
             לאחר מכן היא והתמונות שלה נמחקות לצמיתות.
           </p>
 
           {deletedListings.length === 0 ? (
-            <p className="muted">אין מודעות שנמחקו</p>
+            <p className="muted">סל המיחזור ריק</p>
           ) : (
             deletedListings.map((l: any) => {
               const deletedAt = l.deleted_at ? new Date(l.deleted_at) : null;
@@ -792,39 +886,111 @@ export default function AccountClient({
       {tab === "profile" && (
         <>
           <div className="section profile-identity">
-            <div className="profile-identity-heading">
-              <PawnAvatar avatarKey={avatarKey} size={96} />
-              <div>
-                <h2>הפרופיל שלי</h2>
-                <p className="muted">
-                  הכינוי והפיון הם פרטי הפרופיל של הלוח. האתר אינו משתמש
-                  בשם או בתמונת הפרופיל של Google.
-                </p>
+            {!editingIdentity ? (
+              <div className="profile-identity-summary">
+                {avatarMode === "image" && storedProfileImageUrl ? (
+                  <img
+                    className="profile-avatar-image"
+                    src={storedProfileImageUrl}
+                    alt="תמונת הפרופיל"
+                    width={96}
+                    height={96}
+                  />
+                ) : (
+                  <PawnAvatar avatarKey={avatarKey} size={96} />
+                )}
+                <div>
+                  <h2>{displayName || "הפרופיל שלי"}</h2>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setEditingIdentity(true)}
+                  >
+                    עריכת הפרופיל
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="profile-identity-heading">
+                  {avatarMode === "image" &&
+                  (profileImagePreview || storedProfileImageUrl) ? (
+                    <img
+                      className="profile-avatar-image"
+                      src={profileImagePreview || storedProfileImageUrl || ""}
+                      alt="תצוגה מקדימה של תמונת הפרופיל"
+                      width={96}
+                      height={96}
+                    />
+                  ) : (
+                    <PawnAvatar avatarKey={avatarKey} size={96} />
+                  )}
+                  <div>
+                    <h2>{profileSetupComplete ? "עריכת הפרופיל" : "יצירת פרופיל באתר"}</h2>
+                    {!profileSetupComplete && (
+                      <p className="muted">
+                        אפשר לבחור איך להופיע באתר ולשנות את הפרטים בהמשך.
+                      </p>
+                    )}
+                  </div>
+                </div>
 
-            <div className="field">
-              <label>כינוי</label>
-              <input
-                className="input"
-                aria-label="כינוי"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="הכינוי שיוצג בלוח"
-              />
-            </div>
+                <div className="field">
+                  <label>שם/כינוי שיוצג באתר</label>
+                  <input
+                    className="input"
+                    aria-label="שם או כינוי שיוצג באתר"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="שם או כינוי"
+                  />
+                </div>
 
-            <PawnAvatarPicker value={avatarKey} onChange={setAvatarKey} />
+                <div className="field">
+                  <label htmlFor="profile-image">תמונה אישית</label>
+                  <input
+                    id="profile-image"
+                    className="input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => chooseProfileImage(e.target.files?.[0] || null)}
+                  />
+                  <div className="field-help">
+                    התמונה תיחתך לריבוע ותוצג במדף הציבורי.
+                  </div>
+                </div>
 
-            {identityMsg && (
-              <div className="notice" role="status" aria-live="polite">
-                {identityMsg}
-              </div>
+                <div className="profile-choice-divider"><span>או לבחור פיון</span></div>
+                <PawnAvatarPicker value={avatarKey} onChange={choosePawn} />
+
+                {identityMsg && (
+                  <div className="notice" role="status" aria-live="polite">
+                    {identityMsg}
+                  </div>
+                )}
+
+                <div className="toolbar">
+                  <button
+                    type="button"
+                    className="btn primary"
+                    disabled={savingIdentity}
+                    onClick={saveIdentity}
+                  >
+                    {savingIdentity ? "שומרת..." : "שמירת הפרופיל"}
+                  </button>
+                  {profileSetupComplete && (
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={savingIdentity}
+                      onClick={() => location.reload()}
+                    >
+                      ביטול
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-
-            <button type="button" className="btn primary" onClick={saveIdentity}>
-              שמירת הפרופיל
-            </button>
           </div>
 
           <div className="section">

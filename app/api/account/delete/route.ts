@@ -44,6 +44,19 @@ export async function POST() {
   }
 
   try {
+    const { data: profileObjects, error: profileObjectsError } =
+      await admin.storage.from("profile-images").list(user.id);
+    if (profileObjectsError) throw profileObjectsError;
+    const profilePaths = (profileObjects || []).map(
+      (object: { name: string }) => `${user.id}/${object.name}`
+    );
+    if (profilePaths.length) {
+      const { error } = await admin.storage
+        .from("profile-images")
+        .remove(profilePaths);
+      if (error) throw error;
+    }
+
     const { data: images, error: imageQueryError } = await admin
       .from("listing_images")
       .select("storage_path")

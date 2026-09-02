@@ -5,6 +5,7 @@ import { SIZES, labelOf } from "@/lib/constants";
 import ShareShelfButton from "@/components/ShareShelfButton";
 import { FeatureBadge, WovenCorner } from "@/components/DesignMotifs";
 import type { Metadata } from "next";
+import { PawnAvatar } from "@/components/PawnAvatar";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -19,7 +20,11 @@ export default async function SellerPage({
   const { publicId } = await params;
   const s = await createClient();
 
-  const [{ data: profileRows }, { data: idRows }] =
+  const [
+    { data: profileRows },
+    { data: idRows },
+    { data: identityRows },
+  ] =
     await Promise.all([
       s.rpc("get_public_seller_profile", {
         p_public_seller_id: publicId,
@@ -27,9 +32,13 @@ export default async function SellerPage({
       s.rpc("get_public_seller_listing_ids", {
         p_public_seller_id: publicId,
       }),
+      s.rpc("get_public_seller_identity", {
+        p_public_seller_id: publicId,
+      }),
     ]);
 
   const profile = profileRows?.[0];
+  const identity = identityRows?.[0] || null;
 
   if (!profile) {
     notFound();
@@ -99,8 +108,15 @@ export default async function SellerPage({
     });
   }
 
-  const title = profile.display_name
-    ? `המדף של ${profile.display_name}`
+  const displayName = identity?.display_name || profile.display_name || "";
+  const profileImageUrl = identity?.profile_image_path
+    ? s.storage
+        .from("profile-images")
+        .getPublicUrl(identity.profile_image_path).data.publicUrl
+    : null;
+
+  const title = displayName
+    ? `המדף של ${displayName}`
     : "מדף המנשאים";
 
   return (
@@ -113,13 +129,29 @@ export default async function SellerPage({
             flexWrap: "wrap",
           }}
         >
-          <div>
-            <h1>{title}</h1>
-            <div className="muted">
-              {profile.active_listing_count}{" "}
-              {Number(profile.active_listing_count) === 1
-                ? "מנשא למכירה"
-                : "מנשאים למכירה"}
+          <div className="seller-profile-heading">
+            {profileImageUrl ? (
+              <img
+                className="profile-avatar-image"
+                src={profileImageUrl}
+                alt="תמונת הפרופיל של המוכרת"
+                width={88}
+                height={88}
+              />
+            ) : (
+              <PawnAvatar
+                avatarKey={identity?.avatar_key || "pawn-01"}
+                size={88}
+              />
+            )}
+            <div>
+              <h1>{title}</h1>
+              <div className="muted">
+                {profile.active_listing_count}{" "}
+                {Number(profile.active_listing_count) === 1
+                  ? "מנשא למכירה"
+                  : "מנשאים למכירה"}
+              </div>
             </div>
           </div>
 
