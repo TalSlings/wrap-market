@@ -13,34 +13,25 @@ export default function Image() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 64,
-        direction: "rtl",
         background: "#fbfaff",
-        color: "#111",
-        fontFamily: "sans-serif",
       }}
     >
       <div
         style={{
-          width: 250,
-          height: 250,
+          width: 310,
+          height: 310,
           borderRadius: 999,
           background: "#7d6cd1",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           color: "white",
-          fontSize: 150,
+          fontSize: 190,
           fontWeight: 300,
           lineHeight: 1,
         }}
       >
         #
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-        <div style={{ fontSize: 76, fontWeight: 800 }}>רק ארוגים</div>
-        <div style={{ fontSize: 46, marginTop: 12 }}>(וטבעות)</div>
-        <div style={{ fontSize: 30, marginTop: 30 }}>לוח יד שנייה למנשאים ארוגים</div>
       </div>
     </div>,
     size

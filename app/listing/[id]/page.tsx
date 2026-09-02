@@ -51,18 +51,6 @@ export async function generateMetadata({
   ].filter(Boolean).join(", ");
   const description = `${title}${details ? `, ${details}` : ""}. מנשא יד שנייה למכירה בישראל.`;
   const isPublic = ["active", "incomplete"].includes(l.status);
-  const image = (l.images || [])
-    .filter((x: any) => x.image_type === "listing")
-    .sort((a: any, b: any) => Number(a.position || 0) - Number(b.position || 0))[0];
-  let imageUrl: string | undefined;
-
-  if (image) {
-    const { data } = await s.storage
-      .from("listing-images")
-      .createSignedUrl(image.storage_path, 60 * 60 * 24 * 7);
-    imageUrl = data?.signedUrl;
-  }
-
   return {
     title,
     description,
@@ -74,13 +62,11 @@ export async function generateMetadata({
       url: `/listing/${id}`,
       title,
       description,
-      images: imageUrl ? [{ url: imageUrl, alt: title }] : undefined,
     },
     twitter: {
-      card: imageUrl ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title,
       description,
-      images: imageUrl ? [imageUrl] : undefined,
     },
   };
 }

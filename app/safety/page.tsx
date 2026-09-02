@@ -1,5 +1,11 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "לומדות להשתמש במנשא",
+  description:
+    "למה חשוב ללמוד להשתמש במנשא ארוג או במנשא טבעות, ואיפה אפשר לקבל הדרכה, תרגול ומשוב.",
+};
+
 export default function SafetyPage() {
   return (
     <main className="page">

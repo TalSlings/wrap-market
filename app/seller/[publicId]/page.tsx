@@ -8,9 +8,37 @@ import type { Metadata } from "next";
 import { PawnAvatar } from "@/components/PawnAvatar";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ publicId: string }>;
+}): Promise<Metadata> {
+  const { publicId } = await params;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_public_seller_identity", {
+    p_public_seller_id: publicId,
+  });
+  const displayName = data?.[0]?.display_name;
+  const title = displayName ? `המדף של ${displayName}` : "מדף מנשאים";
+
+  return {
+    title,
+    description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
+    robots: { index: false, follow: true },
+    openGraph: {
+      type: "website",
+      locale: "he_IL",
+      title,
+      description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
+      url: `/seller/${publicId}`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
+    },
+  };
+}
 
 export default async function SellerPage({
   params,

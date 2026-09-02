@@ -21,6 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: "https://ksharim-baby.org.il/safety",
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
     ...(data || []).map((listing: any) => ({
       url: `https://ksharim-baby.org.il/listing/${listing.id}`,
       lastModified: listing.created_at || undefined,

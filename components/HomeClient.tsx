@@ -560,6 +560,15 @@ export default function HomeClient({
 
   return (
     <main className="page">
+      <section className="home-intro" aria-labelledby="marketplace-title">
+        <h1 id="marketplace-title">
+          לוח יד שנייה למנשאים ארוגים ומנשאי טבעות
+        </h1>
+        <p>
+          כאן אפשר לחפש ולפרסם מנשאים ארוגים, מנשאי טבעות
+          וסקראפים למכירה בישראל.
+        </p>
+      </section>
       <div className="filters">
         <div>
           <b>סינון</b>

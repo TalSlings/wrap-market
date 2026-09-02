@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { CONDITION_HELP, CONDITIONS } from "@/lib/constants";
 
-export const metadata = { title: "שאלות נפוצות" };
+export const metadata = {
+  title: "שאלות נפוצות על מנשאים ארוגים",
+  description:
+    "מידות, GSM, חומרים, מצב ותמחור של מנשאים ארוגים ומנשאי טבעות יד שנייה.",
+};
 
 export default function FaqPage() {
   return <main className="page">

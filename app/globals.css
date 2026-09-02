@@ -69,6 +69,7 @@ button{cursor:pointer}
   transform-origin:right center;
 }
 .page{padding:16px}
+.home-intro{margin:4px 0 18px}.home-intro h1{margin:0;font-size:clamp(1.35rem,3vw,1.75rem);line-height:1.25}.home-intro p{margin:5px 0 0;color:var(--muted)}
 
 .btn,.iconbtn{
   border:1px solid var(--ink);
