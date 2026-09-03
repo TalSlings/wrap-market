@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
 import HelpNote from "@/components/HelpNote";
+import ColorPatternChecklist from "@/components/ColorPatternChecklist";
 import {
   SORTS,
   SIZES,
@@ -14,7 +15,6 @@ import {
   CONDITIONS,
   CONDITION_HELP,
   DEFECTS,
-  COLOR_PATTERNS,
   labelOf,
 } from "@/lib/constants";
 import {
@@ -102,6 +102,18 @@ export default function HomeClient({
   const [priceMax, setPriceMax] = useState(initial?.priceMax || "");
   const [sort, setSort] = useState(initial?.sort || "stable_random");
   const [grid, setGrid] = useState(!!initial?.grid);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersInitialised = useRef(false);
+
+  useEffect(() => {
+    if (filtersInitialised.current) return;
+    filtersInitialised.current = true;
+
+    const seenBefore = window.localStorage.getItem("wrap-market-search-seen") === "true";
+    const openedFromSearch = window.location.search.length > 1;
+    setFiltersOpen(seenBefore || openedFromSearch);
+    window.localStorage.setItem("wrap-market-search-seen", "true");
+  }, []);
 
   const favoriteSet = useMemo(
     () => new Set(favoriteIds),
@@ -120,15 +132,6 @@ export default function HomeClient({
   const sizeOptions = useMemo(
     () =>
       SIZES.map(([id, name]) => ({
-        id,
-        name,
-      })),
-    []
-  );
-
-  const patternOptions = useMemo(
-    () =>
-      COLOR_PATTERNS.map(([id, name]) => ({
         id,
         name,
       })),
@@ -569,8 +572,20 @@ export default function HomeClient({
           וסקראפים למכירה בישראל.
         </p>
       </section>
-      <div className="filters">
-        <div>
+      <div className={`filters${filtersOpen ? " is-open" : " is-collapsed"}`}>
+        <button
+          type="button"
+          className="filters-toggle"
+          aria-expanded={filtersOpen}
+          aria-controls="market-search-filters"
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <span><b>חיפוש וסינון</b>{advancedActive ? " · פעיל" : ""}</span>
+          <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+        </button>
+
+        <div id="market-search-filters" className="filters-content" hidden={!filtersOpen}>
+        <div className="filters-heading">
           <b>סינון</b>
           <HelpNote content={searchHelp("filter_logic", "כשבוחרים כמה אפשרויות בתוך אותו סוג סינון, תופיע מודעה שמתאימה לפחות לאחת מהן. בין סוגי סינון שונים נדרשת התאמה לכולם.")} />
         </div>
@@ -772,20 +787,12 @@ export default function HomeClient({
               </div>
             </div>
 
-            <FlatMultiSelect
-              label="תכונות צבע"
-              placeholder="כל תכונות הצבע"
-              options={patternOptions}
+            <ColorPatternChecklist
               selectedIds={colorPatterns}
               onChange={setColorPatterns}
-              optionHelp={Object.fromEntries(
-                COLOR_PATTERNS.map(([id]) => [
-                  id,
-                  {
-                    content: searchHelp(`color_pattern_${id}`, ""),
-                    faqHref: "/faq#color-patterns",
-                  },
-                ])
+              intro={searchHelp(
+                "color_patterns",
+                "אפשר לבחור יותר מתכונת צבע אחת. חלק מהתכונות עיצוביות, ואחרות יכולות לעזור בלימוד ההידוק ובזיהוי היפוך בבד."
               )}
             />
 
@@ -839,6 +846,7 @@ export default function HomeClient({
           >
             ניקוי סינון
           </button>
+        </div>
         </div>
       </div>
 

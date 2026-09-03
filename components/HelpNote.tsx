@@ -6,10 +6,12 @@ import { createPortal } from "react-dom";
 const AUTO_CLOSE_MS = 5_000;
 const EDGE_GAP = 12;
 
-export default function HelpNote({ content, label = "הסבר נוסף", faqHref }: {
+export default function HelpNote({ content, label = "הסבר נוסף", faqHref, wide = false, autoClose = true }: {
   content?: ReactNode;
   label?: string;
   faqHref?: string;
+  wide?: boolean;
+  autoClose?: boolean;
 }) {
   const id = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -36,7 +38,7 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     const trigger = buttonRef.current;
     if (!trigger) return;
     const rect = trigger.getBoundingClientRect();
-    const width = Math.min(340, window.innerWidth - EDGE_GAP * 2);
+    const width = Math.min(wide ? 760 : 340, window.innerWidth - EDGE_GAP * 2);
     const popupHeight = popupRef.current?.offsetHeight || 180;
     const roomBelow = window.innerHeight - rect.bottom;
     const showBelow = roomBelow >= popupHeight + EDGE_GAP || rect.top < popupHeight + EDGE_GAP;
@@ -52,7 +54,9 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     if (!open) return;
     placePopup();
     const frame = window.requestAnimationFrame(placePopup);
-    const timer = window.setTimeout(() => close(true), AUTO_CLOSE_MS);
+    const timer = autoClose
+      ? window.setTimeout(() => close(true), AUTO_CLOSE_MS)
+      : undefined;
     const onOtherOpened = (event: Event) => {
       if ((event as CustomEvent<string>).detail !== id) close();
     };
@@ -73,14 +77,14 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     window.addEventListener("scroll", placePopup, true);
     return () => {
       window.cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
+      if (timer) window.clearTimeout(timer);
       window.removeEventListener("help-note-open", onOtherOpened as EventListener);
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", placePopup);
       window.removeEventListener("scroll", placePopup, true);
     };
-  }, [close, id, open, placePopup]);
+  }, [autoClose, close, id, open, placePopup]);
 
   if (empty) return null;
   const toggle = () => {

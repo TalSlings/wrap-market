@@ -17,6 +17,7 @@ import {
   HierarchicalSingleSelect,
 } from "@/components/HierarchicalSelect";
 import HelpNote from "@/components/HelpNote";
+import ColorPatternHelp from "@/components/ColorPatternGuide";
 import { helpText } from "@/lib/helpNotes";
 
 export default function ListingForm({
@@ -1608,7 +1609,7 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>מבנה הצביעה <HelpNote content={formHelp("color_patterns", "אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — בעיקר בשלב שבו עוד נעזרים בהבדלים בין צבעי הבד בזמן הקשירה, וגם לחובבי פסים, אומברה, קשת ודוגמאות דומות.")} /></label>
+          <label>תכונות צבע <ColorPatternHelp intro={formHelp("color_patterns", "אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — חלק מהתכונות עיצוביות, ואחרות יכולות לעזור בלימוד ההידוק ובזיהוי היפוך בבד.")} /></label>
 
           <div className="chips">
             {COLOR_PATTERNS.map(
