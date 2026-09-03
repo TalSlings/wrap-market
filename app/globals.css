@@ -266,8 +266,15 @@ button{cursor:pointer}
 .color-pattern-option > span{display:grid;gap:1px}
 .color-pattern-option b{font-size:14px}
 .color-pattern-option small{color:var(--muted);font-size:12px;line-height:1.35}
-.color-pattern-form-options{align-items:flex-start}
-.color-pattern-form-option{display:inline-flex;align-items:center;gap:2px}
+.colors-field{margin-top:18px}
+.color-pattern-form-options{display:grid;gap:2px}
+.color-pattern-form-option{display:flex;align-items:center;min-height:34px}
+.color-pattern-form-option > label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.color-pattern-form-option input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
+.listing-contact-details{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:12px}
+.listing-contact-details > summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.listing-contact-details > summary .muted{font-size:12px;font-weight:400}
+.listing-contact-details-content{padding-top:14px}
 .color-pattern-guide{direction:rtl}
 .color-pattern-intro{margin:0 0 8px}
 .color-pattern-guide-section{border-top:1px solid var(--line-soft);padding:7px 0}

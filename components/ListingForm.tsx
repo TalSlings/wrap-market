@@ -20,6 +20,13 @@ import HelpNote from "@/components/HelpNote";
 import ColorPatternHelp from "@/components/ColorPatternGuide";
 import { helpText } from "@/lib/helpNotes";
 
+function hasUsableContactDetails(value: any) {
+  return Boolean(
+    (value?.contact_via_email && value?.contact_email?.trim()) ||
+    (value?.contact_via_whatsapp && value?.whatsapp_number?.trim())
+  );
+}
+
 export default function ListingForm({
   userId,
   manufacturers,
@@ -96,6 +103,9 @@ export default function ListingForm({
   const [whatsappNumber, setWhatsappNumber] = useState(initial?.whatsapp_number || "");
   const [contactViaEmail, setContactViaEmail] = useState(initial?.contact_via_email ?? false);
   const [contactViaWhatsapp, setContactViaWhatsapp] = useState(initial?.contact_via_whatsapp ?? false);
+  const [contactDetailsOpen, setContactDetailsOpen] = useState(
+    !hasUsableContactDetails(initial)
+  );
 
   const [selectedColors, setSelectedColors] =
     useState<string[]>(
@@ -300,6 +310,8 @@ export default function ListingForm({
           setRegionIds(data.region_ids || []);
           setSubIds(data.subregion_ids || []);
         }
+
+        setContactDetailsOpen(!hasUsableContactDetails(data));
 
         setProfileLoaded(true);
       });
@@ -816,6 +828,10 @@ export default function ListingForm({
         Object.keys(errors).length > 0
       ) {
         setFieldErrors(errors);
+
+        if (errors.contactMethod || errors.contactEmail || errors.whatsapp) {
+          setContactDetailsOpen(true);
+        }
 
         if (allowIncomplete) {
           setIncompleteErrors(errors);
@@ -1565,7 +1581,7 @@ export default function ListingForm({
           </>
         )}
 
-        <div className="field">
+        <div className="field colors-field">
           <label>צבעים <HelpNote content={formHelp("colors", "מומלץ לסמן את כל הצבעים שמופיעים במנשא, בלי להתעכב על דיוק מושלם. השפה מוגבלת בתיאור צבעים, ומה שנראה לאדם אחד כתום עשוי להיראות לאחר ורוד; מידה מסוימת של שונות ואי־ודאות היא צפויה.")} /></label>
 
           <div className="chips">
@@ -1611,32 +1627,18 @@ export default function ListingForm({
         <div className="field">
           <label>תכונות צבע</label>
 
-          <div className="chips color-pattern-form-options">
+          <div className="color-pattern-form-options">
             {COLOR_PATTERNS.map(
               ([k, l]) => (
                 <span className="color-pattern-form-option" key={k}>
-                  <button
-                    type="button"
-                    className={
-                      "chip " +
-                      (patterns.includes(
-                        k
-                      )
-                        ? "active"
-                        : "")
-                    }
-                    aria-pressed={patterns.includes(k)}
-                    onClick={() =>
-                      setPatterns(
-                        toggle(
-                          patterns,
-                          k
-                        )
-                      )
-                    }
-                  >
-                    {l}
-                  </button>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={patterns.includes(k)}
+                      onChange={() => setPatterns(toggle(patterns, k))}
+                    />
+                    <span>{l}</span>
+                  </label>
                   <ColorPatternHelp patternId={k} />
                 </span>
               )
@@ -1745,7 +1747,7 @@ export default function ListingForm({
 
       <div className="section">
         <h2>
-          מכירה ומסירה
+          מחיר ותיאור
         </h2>
 
         <div
@@ -1788,6 +1790,31 @@ export default function ListingForm({
             }
           />
         </div>
+
+        <div className="field">
+          <label>
+            קישור למידע נוסף
+          </label>
+
+          <input
+            className="input"
+            type="url"
+            aria-label="קישור למידע נוסף"
+            value={moreInfo}
+            onChange={(e) =>
+              setMoreInfo(
+                e.target.value
+              )
+            }
+            placeholder="WrapTrack / אתר היצרן"
+          />
+        </div>
+      </div>
+
+      <div className="section">
+        <h2>
+          מסירה ופרטי קשר
+        </h2>
 
         <div className="field">
           <label>
@@ -1834,11 +1861,20 @@ export default function ListingForm({
         )}
         </div>
 
-        <div
-          className="field"
-          data-required-field="contactMethod"
+        <details
+          className="listing-contact-details"
+          open={contactDetailsOpen}
+          onToggle={(e) => setContactDetailsOpen(e.currentTarget.open)}
         >
-          <label>פרטי קשר למודעה *</label>
+          <summary>
+            <b>פרטי קשר למודעה *</b>
+            {!contactDetailsOpen && <span className="muted">הפרטים השמורים ישמשו במודעה</span>}
+          </summary>
+          <div className="listing-contact-details-content">
+          <div
+            className="field"
+            data-required-field="contactMethod"
+          >
           <input
             className="input"
             aria-label="שם להצגה בפרטי הקשר"
@@ -1920,25 +1956,8 @@ export default function ListingForm({
         <div className="notice">
           פרטי הקשר יוצגו רק למשתמשות מחוברות.
         </div>
-
-        <div className="field">
-          <label>
-            קישור למידע נוסף
-          </label>
-
-          <input
-            className="input"
-            type="url"
-            aria-label="קישור למידע נוסף"
-            value={moreInfo}
-            onChange={(e) =>
-              setMoreInfo(
-                e.target.value
-              )
-            }
-            placeholder="WrapTrack / אתר היצרן"
-          />
-        </div>
+          </div>
+        </details>
       </div>
 
       <div className="section">
