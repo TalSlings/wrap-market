@@ -247,20 +247,27 @@ button{cursor:pointer}
 .color-pattern-filter{margin:0 0 10px;padding:0;border:0;min-width:0}
 .color-pattern-filter legend{padding:0;margin-bottom:4px;font-size:14px;font-weight:600}
 .color-pattern-options{display:grid}
+.color-pattern-option-row{
+  display:flex;
+  align-items:center;
+  min-height:45px;
+  padding:6px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.color-pattern-option-row:last-child{border-bottom:0}
 .color-pattern-option{
   display:flex;
   align-items:flex-start;
   gap:9px;
-  min-height:45px;
-  padding:6px 0;
-  border-bottom:1px solid var(--line-soft);
+  flex:1;
   cursor:pointer;
 }
-.color-pattern-option:last-child{border-bottom:0}
 .color-pattern-option input{width:18px;height:18px;margin:2px 0 0;flex:0 0 auto;accent-color:var(--accent)}
 .color-pattern-option > span{display:grid;gap:1px}
 .color-pattern-option b{font-size:14px}
 .color-pattern-option small{color:var(--muted);font-size:12px;line-height:1.35}
+.color-pattern-form-options{align-items:flex-start}
+.color-pattern-form-option{display:inline-flex;align-items:center;gap:2px}
 .color-pattern-guide{direction:rtl}
 .color-pattern-intro{margin:0 0 8px}
 .color-pattern-guide-section{border-top:1px solid var(--line-soft);padding:7px 0}

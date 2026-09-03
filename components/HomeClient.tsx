@@ -110,7 +110,7 @@ export default function HomeClient({
     filtersInitialised.current = true;
 
     const seenBefore = window.localStorage.getItem("wrap-market-search-seen") === "true";
-    const openedFromSearch = window.location.search.length > 1;
+    const openedFromSearch = Object.keys(initial || {}).length > 0;
     setFiltersOpen(seenBefore || openedFromSearch);
     window.localStorage.setItem("wrap-market-search-seen", "true");
   }, []);
@@ -563,15 +563,6 @@ export default function HomeClient({
 
   return (
     <main className="page">
-      <section className="home-intro" aria-labelledby="marketplace-title">
-        <h1 id="marketplace-title">
-          לוח יד שנייה למנשאים ארוגים ומנשאי טבעות
-        </h1>
-        <p>
-          כאן אפשר לחפש ולפרסם מנשאים ארוגים, מנשאי טבעות
-          וסקראפים למכירה בישראל.
-        </p>
-      </section>
       <div className={`filters${filtersOpen ? " is-open" : " is-collapsed"}`}>
         <button
           type="button"
@@ -790,10 +781,6 @@ export default function HomeClient({
             <ColorPatternChecklist
               selectedIds={colorPatterns}
               onChange={setColorPatterns}
-              intro={searchHelp(
-                "color_patterns",
-                "אפשר לבחור יותר מתכונת צבע אחת. חלק מהתכונות עיצוביות, ואחרות יכולות לעזור בלימוד ההידוק ובזיהוי היפוך בבד."
-              )}
             />
 
             <FlatMultiSelect

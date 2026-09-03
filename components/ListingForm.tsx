@@ -1609,34 +1609,36 @@ export default function ListingForm({
         </div>
 
         <div className="field">
-          <label>תכונות צבע <ColorPatternHelp intro={formHelp("color_patterns", "אין חובה לסמן. זהו סיווג נוסף שיכול לעזור בחיפוש — חלק מהתכונות עיצוביות, ואחרות יכולות לעזור בלימוד ההידוק ובזיהוי היפוך בבד.")} /></label>
+          <label>תכונות צבע</label>
 
-          <div className="chips">
+          <div className="chips color-pattern-form-options">
             {COLOR_PATTERNS.map(
               ([k, l]) => (
-                <button
-                  type="button"
-                  key={k}
-                  className={
-                    "chip " +
-                    (patterns.includes(
-                      k
-                    )
-                      ? "active"
-                      : "")
-                  }
-                  aria-pressed={patterns.includes(k)}
-                  onClick={() =>
-                    setPatterns(
-                      toggle(
-                        patterns,
+                <span className="color-pattern-form-option" key={k}>
+                  <button
+                    type="button"
+                    className={
+                      "chip " +
+                      (patterns.includes(
                         k
                       )
-                    )
-                  }
-                >
-                  {l}
-                </button>
+                        ? "active"
+                        : "")
+                    }
+                    aria-pressed={patterns.includes(k)}
+                    onClick={() =>
+                      setPatterns(
+                        toggle(
+                          patterns,
+                          k
+                        )
+                      )
+                    }
+                  >
+                    {l}
+                  </button>
+                  <ColorPatternHelp patternId={k} />
+                </span>
               )
             )}
           </div>

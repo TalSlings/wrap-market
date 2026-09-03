@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CONDITION_HELP, CONDITIONS } from "@/lib/constants";
+import { ColorPatternExamples } from "@/components/ColorPatternGuide";
 
 export const metadata = {
   title: "שאלות נפוצות על מנשאים ארוגים",
@@ -17,17 +18,22 @@ export default function FaqPage() {
     <div className="section" id="color-patterns">
       <h2>תכונות צבע</h2>
       <p>אפשר לסמן יותר מתכונת צבע אחת כאשר שתיהן מתאימות. חלק מהתכונות הן עיצוביות, ואחרות יכולות לשמש סימון חזותי בזמן לימוד הקשירה וההידוק.</p>
-      <h3>צבע חלק — עיצובי</h3>
+      <h3 id="color-pattern-single_color">צבע חלק — עיצובי</h3>
       <p>המראה חלק, גם אם האריגה עשויה משני צבעים. בד חלק לגמרי ודוגמה קטנה וצפופה שמתמזגת למראה אחיד שייכים לקטגוריה הזו.</p>
-      <h3>דו צדדי — עוזר ללמוד קשירות ומקל על זיהוי היפוך בבד</h3>
+      <ColorPatternExamples patternId="single_color" />
+      <h3 id="color-pattern-two_color_positive_negative">דו צדדי — עוזר ללמוד קשירות ומקל על זיהוי היפוך בבד</h3>
       <p>לכל צד של הבד יש צבע מובחן משלו. ההבדל מקל לראות איזה צד פונה החוצה ולזהות היפוך שנוצר בזמן הקשירה.</p>
-      <h3>פסים סימטרי — עוזר ללמוד להדק סיב אחרי סיב</h3>
+      <ColorPatternExamples patternId="two_color_positive_negative" />
+      <h3 id="color-pattern-stripes_ombre_symmetric">פסים סימטרי — עוזר ללמוד להדק סיב אחרי סיב</h3>
       <p>הצבע משתנה לרוחב המנשא בסידור סימטרי, והשוליים הארוכים דומים זה לזה. אפשר לעקוב אחרי הפסים בזמן ההידוק, אבל הדמיון בין השוליים אינו נותן אינדיקציה ברורה להיפוך בבד.</p>
-      <h3>פסים אסימטרי — עוזר בהידוק וגם בזיהוי היפוכים</h3>
+      <ColorPatternExamples patternId="stripes_ombre_symmetric" />
+      <h3 id="color-pattern-stripes_ombre_asymmetric">פסים אסימטרי — עוזר בהידוק וגם בזיהוי היפוכים</h3>
       <p>הצבע משתנה לרוחב המנשא בסידור אסימטרי, ושני השוליים הארוכים שונים זה מזה. לכן אפשר גם לעקוב אחרי ההידוק סיב אחרי סיב וגם לזהות היפוך בבד.</p>
-      <h3>קשת — עיצובי</h3>
+      <ColorPatternExamples patternId="stripes_ombre_asymmetric" />
+      <h3 id="color-pattern-rainbow">קשת — עיצובי</h3>
       <p>רצף צבעי הקשת מופיע על פני רוחב הבד. הסיווג מתאר את מראה המנשא.</p>
-      <h3>רב גוני — עיצובי</h3>
+      <ColorPatternExamples patternId="rainbow" />
+      <h3 id="color-pattern-multicolor">רב גוני — עיצובי</h3>
       <p>בד שיש בו כמה צבעים או שילובי צבעים, ואינו מתאים לאחת מקטגוריות הצבע האחרות.</p>
     </div>
     <div className="section" id="pricing"><h2>איך קובעים מחיר?</h2><p>אין בלוח מחירון מחייב. אפשר להביא בחשבון את המחיר החדש, זמינות, מצב, פגמים, ביקוש ומודעות או עסקאות דומות. הלוח אינו מעריך או מאשר את שווי המנשא.</p></div>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-const AUTO_CLOSE_MS = 5_000;
+const AUTO_CLOSE_MS = 3_500;
 const EDGE_GAP = 12;
 
 export default function HelpNote({ content, label = "הסבר נוסף", faqHref, wide = false, autoClose = true }: {
