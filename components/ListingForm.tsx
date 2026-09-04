@@ -56,6 +56,7 @@ export default function ListingForm({
 
   const [newManufacturer, setNewManufacturer] = useState("");
   const [manufacturerMsg, setManufacturerMsg] = useState("");
+  const [showNewManufacturer, setShowNewManufacturer] = useState(false);
 
   const [design, setDesign] = useState(initial?.design || "");
   const [model, setModel] = useState(initial?.model || "");
@@ -103,7 +104,7 @@ export default function ListingForm({
   const [whatsappNumber, setWhatsappNumber] = useState(initial?.whatsapp_number || "");
   const [contactViaEmail, setContactViaEmail] = useState(initial?.contact_via_email ?? false);
   const [contactViaWhatsapp, setContactViaWhatsapp] = useState(initial?.contact_via_whatsapp ?? false);
-  const [contactDetailsOpen, setContactDetailsOpen] = useState(
+  const [deliveryDetailsOpen, setDeliveryDetailsOpen] = useState(
     !hasUsableContactDetails(initial)
   );
 
@@ -285,6 +286,38 @@ export default function ListingForm({
     );
   };
 
+  const deliverySummary = useMemo(() => {
+    const locationNames = [
+      ...regionIds.map(
+        (id) => regions.find((region: any) => region.id === id)?.name
+      ),
+      ...subIds.map(
+        (id) => subregions.find((subregion: any) => subregion.id === id)?.name
+      ),
+    ].filter(Boolean) as string[];
+    const locationSummary = locationNames.length
+      ? locationNames.length > 2
+        ? `${locationNames.slice(0, 2).join(", ")} ועוד ${locationNames.length - 2}`
+        : locationNames.join(", ")
+      : shipping
+        ? "משלוח בלבד"
+        : "לא הוגדרו אזורי איסוף";
+    const contactChannels = [
+      contactViaEmail ? "מייל" : "",
+      contactViaWhatsapp ? "WhatsApp" : "",
+    ].filter(Boolean);
+
+    return `${locationSummary} · ${contactChannels.join(" ו־") || "לא הוגדר אמצעי קשר"}`;
+  }, [
+    contactViaEmail,
+    contactViaWhatsapp,
+    regionIds,
+    regions,
+    shipping,
+    subIds,
+    subregions,
+  ]);
+
   useEffect(() => {
     if (initial) return;
 
@@ -311,7 +344,7 @@ export default function ListingForm({
           setSubIds(data.subregion_ids || []);
         }
 
-        setContactDetailsOpen(!hasUsableContactDetails(data));
+        setDeliveryDetailsOpen(!hasUsableContactDetails(data));
 
         setProfileLoaded(true);
       });
@@ -830,7 +863,7 @@ export default function ListingForm({
         setFieldErrors(errors);
 
         if (errors.contactMethod || errors.contactEmail || errors.whatsapp) {
-          setContactDetailsOpen(true);
+          setDeliveryDetailsOpen(true);
         }
 
         if (allowIncomplete) {
@@ -1014,6 +1047,12 @@ export default function ListingForm({
 
   return (
     <div>
+      <h2 className="listing-form-guidance">
+        {formHelp(
+          "form_overview",
+          "את רוב פרטי המנשא אפשר למצוא על התווית, באתר היצרן או ב־WrapTrack. אם פרט מסוים אינו ידוע ולא ניתן לברר אותו, אפשר לבחור „לא ידוע”."
+        )}
+      </h2>
       <div
         className="muted"
         style={{ marginBottom: 12 }}
@@ -1021,10 +1060,7 @@ export default function ListingForm({
         שדות המסומנים ב־* הם שדות חובה
       </div>
       <div className="section">
-        <h2>
-          זהות המנשא
-          <HelpNote content={formHelp("form_overview", "את רוב פרטי המנשא אפשר למצוא על התווית, באתר היצרן או ב־WrapTrack. אם פרט מסוים אינו ידוע ולא ניתן לברר אותו, אפשר לבחור „לא ידוע”.")} />
-        </h2>
+        <h2>פרטי המנשא</h2>
 
         <div
           className="field"
@@ -1042,6 +1078,10 @@ export default function ListingForm({
               setManufacturerId(
                 e.target.value
               );
+
+              if (e.target.value) {
+                setShowNewManufacturer(false);
+              }
 
               setManufacturerMsg(
                 ""
@@ -1064,7 +1104,20 @@ export default function ListingForm({
             )}
           </select>
 
-          {!manufacturerId && (
+          {!manufacturerId && !showNewManufacturer && (
+            <div className="manufacturer-fallback">
+              חסר יצרן ברשימה?{" "}
+              <button
+                type="button"
+                className="text-link-button"
+                onClick={() => setShowNewManufacturer(true)}
+              >
+                ניתן להוסיף
+              </button>
+            </div>
+          )}
+
+          {!manufacturerId && showNewManufacturer && (
             <div
               style={{
                 display:
@@ -1087,7 +1140,7 @@ export default function ListingForm({
                       .value
                   )
                 }
-                placeholder="לא נמצא? אפשר לכתוב יצרן חדש"
+                placeholder="שם היצרן החדש"
               />
 
               <div className="toolbar">
@@ -1811,10 +1864,19 @@ export default function ListingForm({
         </div>
       </div>
 
-      <div className="section">
-        <h2>
-          מסירה ופרטי קשר
-        </h2>
+      <details
+        className="section listing-delivery-details"
+        open={deliveryDetailsOpen}
+        onToggle={(event) => setDeliveryDetailsOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <h2>מסירה ופרטי קשר</h2>
+          {!deliveryDetailsOpen && (
+            <span className="muted">{deliverySummary}</span>
+          )}
+        </summary>
+
+        <div className="listing-delivery-details-content">
 
         <div className="field">
           <label>
@@ -1861,16 +1923,7 @@ export default function ListingForm({
         )}
         </div>
 
-        <details
-          className="listing-contact-details"
-          open={contactDetailsOpen}
-          onToggle={(e) => setContactDetailsOpen(e.currentTarget.open)}
-        >
-          <summary>
-            <b>פרטי קשר למודעה *</b>
-            {!contactDetailsOpen && <span className="muted">הפרטים השמורים ישמשו במודעה</span>}
-          </summary>
-          <div className="listing-contact-details-content">
+        <h3 className="listing-contact-heading">פרטי קשר למודעה *</h3>
           <div
             className="field"
             data-required-field="contactMethod"
@@ -1956,9 +2009,8 @@ export default function ListingForm({
         <div className="notice">
           פרטי הקשר יוצגו רק למשתמשות מחוברות.
         </div>
-          </div>
-        </details>
-      </div>
+        </div>
+      </details>
 
       <div className="section">
         <h2>

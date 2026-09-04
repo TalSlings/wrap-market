@@ -23,5 +23,5 @@ export const COLOR_PATTERN_DESCRIPTIONS: Record<string, string> = {
   rainbow: "עיצובי",
   multicolor: "עיצובי",
 };
-export const SORTS=[["stable_random","דיפולט"],["price_asc","מחיר: נמוך → גבוה"],["price_desc","מחיר: גבוה → נמוך"],["newest","חדש → ישן"],["oldest","ישן → חדש"],["manufacturer","יצרן: א׳ → ת׳"]] as const;
+export const SORTS=[["stable_random","ברירת מחדל"],["price_asc","מחיר: נמוך → גבוה"],["price_desc","מחיר: גבוה → נמוך"],["newest","חדש → ישן"],["oldest","ישן → חדש"],["manufacturer","יצרן: א׳ → ת׳"]] as const;
 export const labelOf=(items:readonly (readonly [string,string])[],key?:string|null)=>items.find(([k])=>k===key)?.[1]??key??"";

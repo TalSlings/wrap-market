@@ -22,6 +22,23 @@ type Tab =
   | "favorites"
   | "searches";
 
+function ShelfIcon() {
+  return (
+    <svg
+      className="shelf-title-icon"
+      viewBox="0 0 48 40"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 33.5h38M8 33.5V37M40 33.5V37" />
+      <path d="M10 27h28v6.5H10z" />
+      <path d="M13 21h22v6H13z" />
+      <path d="M17 15h18v6H17z" />
+      <path d="M17 18h18M13 24h22M10 30h28" />
+    </svg>
+  );
+}
+
 export default function AccountClient({
   userId,
   listings,
@@ -166,26 +183,6 @@ export default function AccountClient({
   const logout = async () => {
     await s.auth.signOut();
     location.href = "/login";
-  };
-
-  const shareShelf = async () => {
-    if (!sellerPublicId) return;
-
-    const url =
-      `${location.origin}/seller/${sellerPublicId}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "המדף שלי",
-          url,
-        });
-        return;
-      } catch {}
-    }
-
-    await navigator.clipboard.writeText(url);
-    alert("הקישור למדף הועתק");
   };
 
   const saveProfile = async () => {
@@ -774,7 +771,7 @@ export default function AccountClient({
 
       {tab === "favorites" && (
         <div className="section">
-          <h2>המועדפים שלי</h2>
+          <h2>המועדפים שלי - מודעות ששמרתי</h2>
 
           {favorites.length === 0 ? (
             <p className="muted">
@@ -885,7 +882,8 @@ export default function AccountClient({
 
       {tab === "profile" && (
         <>
-          <div className="section profile-identity">
+          <div className="section profile-identity profile-card-part profile-card-first">
+            <h2 className="profile-account-title">הפרופיל והחשבון שלי</h2>
             {!editingIdentity ? (
               <div className="profile-identity-summary">
                 {avatarMode === "image" && storedProfileImageUrl ? (
@@ -900,7 +898,7 @@ export default function AccountClient({
                   <PawnAvatar avatarKey={avatarKey} size={96} />
                 )}
                 <div>
-                  <h2>{displayName || "הפרופיל שלי"}</h2>
+                  <h3>{displayName || "הפרופיל שלי"}</h3>
                   <button
                     type="button"
                     className="btn"
@@ -926,7 +924,7 @@ export default function AccountClient({
                     <PawnAvatar avatarKey={avatarKey} size={96} />
                   )}
                   <div>
-                    <h2>{profileSetupComplete ? "עריכת הפרופיל" : "יצירת פרופיל באתר"}</h2>
+                    <h3>{profileSetupComplete ? "עריכת הפרופיל" : "יצירת פרופיל באתר"}</h3>
                     {!profileSetupComplete && (
                       <p className="muted">
                         אפשר לבחור איך להופיע באתר ולשנות את הפרטים בהמשך.
@@ -993,8 +991,8 @@ export default function AccountClient({
             )}
           </div>
 
-          <div className="section">
-            <h2>החשבון שלי</h2>
+          <div className="section profile-card-part profile-card-middle">
+            <h3>פרטי התחברות</h3>
 
             <div>
               <strong>מחוברת כ־</strong>
@@ -1029,63 +1027,8 @@ export default function AccountClient({
             </div>
           </div>
 
-          {!isAdmin && (
-            <div className="section">
-              <h2>מחיקת החשבון</h2>
-              <p className="muted">
-                מחיקת החשבון תמחק לצמיתות את המודעות, התמונות, המועדפים,
-                החיפושים השמורים ופרטי החשבון. אי אפשר לבטל פעולה זו.
-              </p>
-              <button
-                type="button"
-                className="btn danger"
-                disabled={deletingAccount}
-                onClick={deleteAccount}
-              >
-                {deletingAccount ? "מוחקת..." : "מחיקת החשבון שלי"}
-              </button>
-              {accountDeleteMsg && (
-                <p className="danger" role="alert">{accountDeleteMsg}</p>
-              )}
-            </div>
-          )}
-
-          {sellerPublicId && (
-            <div className="section">
-              <h2>המדף שלי</h2>
-
-              <p className="muted">
-                כאן נמצאות כל המודעות הפעילות
-                שלך במקום אחד. אפשר לפתוח את
-                המדף או לשתף אותו בקישור אחד.
-              </p>
-
-              <div
-                className="toolbar"
-                style={{
-                  flexWrap: "wrap",
-                }}
-              >
-                <Link
-                  className="btn"
-                  href={`/seller/${sellerPublicId}`}
-                >
-                  צפייה במדף
-                </Link>
-
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={shareShelf}
-                >
-                  שיתוף המדף
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="section">
-            <h2>ברירות מחדל למודעות</h2>
+          <div className="section profile-card-part profile-card-last">
+            <h3>ברירות מחדל למודעות</h3>
 
             <p className="muted">
               הפרטים האלה ימולאו אוטומטית
@@ -1204,6 +1147,62 @@ export default function AccountClient({
               שמירת ברירות מחדל
             </button>
           </div>
+
+          {sellerPublicId && (
+            <div className="section shelf-section">
+              <div className="shelf-title">
+                <ShelfIcon />
+                <h2>המדף שלי</h2>
+              </div>
+
+              <p className="muted">
+                כאן נמצאות כל המודעות הפעילות
+                שלך במקום אחד. אפשר לפתוח את
+                המדף או לשתף אותו בקישור אחד.
+              </p>
+
+              <div
+                className="toolbar"
+                style={{
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link
+                  className="btn"
+                  href={`/seller/${sellerPublicId}`}
+                >
+                  צפייה במדף
+                </Link>
+
+                <ShareButton
+                  url={`/seller/${sellerPublicId}`}
+                  title="המדף שלי"
+                  label="שיתוף המדף"
+                />
+              </div>
+            </div>
+          )}
+
+          {!isAdmin && (
+            <div className="section account-delete-section">
+              <h2>מחיקת החשבון</h2>
+              <p className="muted">
+                מחיקת החשבון תמחק לצמיתות את המודעות, התמונות, המועדפים,
+                החיפושים השמורים ופרטי החשבון. אי אפשר לבטל פעולה זו.
+              </p>
+              <button
+                type="button"
+                className="btn danger"
+                disabled={deletingAccount}
+                onClick={deleteAccount}
+              >
+                {deletingAccount ? "מוחקת..." : "מחיקת החשבון שלי"}
+              </button>
+              {accountDeleteMsg && (
+                <p className="danger" role="alert">{accountDeleteMsg}</p>
+              )}
+            </div>
+          )}
         </>
       )}
     </>

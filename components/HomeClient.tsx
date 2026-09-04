@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
@@ -23,6 +23,7 @@ import {
 } from "@/components/HierarchicalSelect";
 import { createClient } from "@/lib/supabase/client";
 import { helpText } from "@/lib/helpNotes";
+import { listingDailyHash } from "@/lib/listingSort";
 
 const rank: any = {
   lte_180: 180,
@@ -45,15 +46,6 @@ const rank: any = {
   gte_350: 350,
 };
 
-const hash = (s: string) => {
-  let h = 2166136261;
-  for (const c of s) {
-    h ^= c.charCodeAt(0);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-};
-
 export default function HomeClient({
   listings,
   manufacturers,
@@ -65,6 +57,7 @@ export default function HomeClient({
   favoriteIds = [],
   initial,
   helpNotes = [],
+  deferRemainingListings = false,
 }: {
   [k: string]: any;
 }) {
@@ -103,17 +96,34 @@ export default function HomeClient({
   const [sort, setSort] = useState(initial?.sort || "stable_random");
   const [grid, setGrid] = useState(!!initial?.grid);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const filtersInitialised = useRef(false);
+  const [availableListings, setAvailableListings] = useState(listings);
+  const [loadingMore, setLoadingMore] = useState(deferRemainingListings);
+  const [loadingMoreFailed, setLoadingMoreFailed] = useState(false);
 
   useEffect(() => {
-    if (filtersInitialised.current) return;
-    filtersInitialised.current = true;
+    if (!deferRemainingListings) return;
 
-    const seenBefore = window.localStorage.getItem("wrap-market-search-seen") === "true";
-    const openedFromSearch = Object.keys(initial || {}).length > 0;
-    setFiltersOpen(seenBefore || openedFromSearch);
-    window.localStorage.setItem("wrap-market-search-seen", "true");
-  }, []);
+    const controller = new AbortController();
+
+    fetch("/api/home-listings", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to load listings");
+        return response.json();
+      })
+      .then((payload) => {
+        if (Array.isArray(payload?.listings)) {
+          setAvailableListings(payload.listings);
+        }
+        setLoadingMore(false);
+      })
+      .catch((error) => {
+        if (error?.name === "AbortError") return;
+        setLoadingMore(false);
+        setLoadingMoreFailed(true);
+      });
+
+    return () => controller.abort();
+  }, [deferRemainingListings]);
 
   const favoriteSet = useMemo(
     () => new Set(favoriteIds),
@@ -259,7 +269,7 @@ export default function HomeClient({
     priceMax !== "";
 
   const out = useMemo(() => {
-    let x = listings.filter((l: any) => {
+    let x = availableListings.filter((l: any) => {
       const text =
         `${l.manufacturer?.name || ""} ${l.design} ${l.model || ""} ${l.description || ""} ${l.size}`.toLowerCase();
 
@@ -414,8 +424,8 @@ export default function HomeClient({
       const d = new Date().toISOString().slice(0, 10);
       x.sort(
         (a: any, b: any) =>
-          hash(a.id + d) -
-          hash(b.id + d)
+          listingDailyHash(a.id + d) -
+          listingDailyHash(b.id + d)
       );
     }
 
@@ -430,7 +440,7 @@ export default function HomeClient({
 
     return x;
   }, [
-    listings,
+    availableListings,
     q,
     manufacturerIds,
     sizes,
@@ -825,10 +835,40 @@ export default function HomeClient({
           </div>
         </details>
 
-        <div className="toolbar">
+        <div className="filter-actions">
+          <div className="filter-actions-main">
+            <button
+              type="button"
+              className="btn filter-command-btn"
+              onClick={save}
+            >
+              שמירת חיפוש
+            </button>
+
+            <button
+              type="button"
+              className="btn filter-command-btn"
+              onClick={share}
+            >
+              <svg
+                className="share-arrow-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="18" cy="5" r="2.5" />
+                <circle cx="6" cy="12" r="2.5" />
+                <circle cx="18" cy="19" r="2.5" />
+                <path d="m8.2 10.8 7.6-4.4" />
+                <path d="m8.2 13.2 7.6 4.4" />
+              </svg>
+              <span>לשיתוף החיפוש</span>
+            </button>
+          </div>
+
           <button
             type="button"
-            className="btn"
+            className="btn clear-filter-btn"
             onClick={clearFilters}
           >
             ניקוי סינון
@@ -839,6 +879,16 @@ export default function HomeClient({
 
       <div className="toolbar results-toolbar">
         <b>{out.length} מודעות</b>
+        {loadingMore && (
+          <span className="loading-more-listings" role="status">
+            טוען מודעות נוספות…
+          </span>
+        )}
+        {loadingMoreFailed && (
+          <span className="danger" role="alert">
+            לא הצלחנו לטעון את שאר המודעות. אפשר לרענן את העמוד.
+          </span>
+        )}
 
         <select
           className="select"
@@ -861,17 +911,10 @@ export default function HomeClient({
           {grid ? "☰ רשימה" : "▦ גריד"}
         </button>
 
-        <button className="btn" onClick={save}>
-          שמרי חיפוש
-        </button>
-
-        <button className="btn" onClick={share}>
-          שתפי
-        </button>
       </div>
 
       <div className={grid ? "grid-mode" : ""}>
-        {out.map((l: any) => (
+        {out.map((l: any, index: number) => (
           <div className="listing-share-wrap" key={l.id}>
           <Link
             className={
@@ -889,6 +932,11 @@ export default function HomeClient({
                 className="listing-img"
                 src={l.image_url}
                 alt=""
+                width={150}
+                height={150}
+                loading={index < (grid ? 4 : 2) ? "eager" : "lazy"}
+                fetchPriority={index < (grid ? 4 : 2) ? "high" : "auto"}
+                decoding="async"
               />
             ) : (
               <div

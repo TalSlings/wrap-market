@@ -65,7 +65,7 @@ export const COLOR_PATTERN_GUIDE: Record<string, GuideEntry> = {
   },
   multicolor: {
     title: "רב גוני",
-    description: "בד שיש בו כמה צבעים או שילובי צבעים, ואינו מתאים לאחת מקטגוריות הצבע האחרות. זהו מאפיין עיצובי.",
+    description: "יש ריבוי צבעים.",
   },
 };
 

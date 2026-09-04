@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import HomeClient from "@/components/HomeClient";
 import type { Metadata } from "next";
+import { fetchHomeListings } from "@/lib/homeListings";
+import { sortListingsByDailyDefault } from "@/lib/listingSort";
 
 export const dynamic = "force-dynamic";
 
@@ -58,8 +60,10 @@ export default async function Home({
     ? ["active", "incomplete"]
     : ["active"];
 
+  const loadAllListingsInitially = Boolean(sp.shared);
+
   const [
-    { data: listings },
+    listingSource,
     { data: manufacturers },
     { data: materials },
     { data: colors },
@@ -67,50 +71,12 @@ export default async function Home({
     { data: subregions },
     { data: helpNotes },
   ] = await Promise.all([
-    s
-      .from("listings")
-      .select(
-        `id,
-        manufacturer_id,
-        design,
-        model,
-        description,
-        size,
-        gsm,
-        price,
-        colors,
-        color_patterns,
-        condition,
-        defects,
-        material_composition_unknown,
-        shipping_available,
-        created_at,
-        status,
-        manufacturer:manufacturers(id,name),
-        materials:listing_materials(
-          material_id,
-          percentage,
-          material:materials(
-            id,
-            name,
-            parent_material_id,
-            vegan,
-            easycare,
-            material_origin
-          )
-        ),
-        locations:listing_locations(
-          region_id,
-          subregion_id,
-          region:regions(id,name)
-        ),
-        images:listing_images(
-          storage_path,
-          image_type,
-          position
-        )`
-      )
-      .in("status", publicStatuses),
+    loadAllListingsInitially
+      ? fetchHomeListings(s, publicStatuses)
+      : s
+          .from("listings")
+          .select("id,status")
+          .in("status", publicStatuses),
 
     s
       .from("manufacturers")
@@ -161,59 +127,19 @@ export default async function Home({
     favoriteIds = (favorites || []).map((x: any) => x.listing_id);
   }
 
-  const rows = listings || [];
-
-  const mainImages: any[] = [];
-
-  for (const l of rows) {
-    const im = (l.images || [])
-      .filter((x: any) => x.image_type === "listing")
-      .sort(
-        (a: any, b: any) =>
-          Number(a.position || 0) -
-          Number(b.position || 0)
-      )[0];
-
-    if (im) {
-      mainImages.push({
-        listingId: l.id,
-        path: im.storage_path,
-      });
-    }
-  }
-
-  const imageUrlByListing: Record<
-    string,
-    string | null
-  > = {};
-
-  if (mainImages.length > 0) {
-    const { data: signedUrls } = await s.storage
-      .from("listing-images")
-      .createSignedUrls(
-        mainImages.map((x: any) => x.path),
-        3600
-      );
-
-    const signedByPath: Record<string, string> = {};
-
-    for (const item of signedUrls || []) {
-      if (item?.path && item?.signedUrl) {
-        signedByPath[item.path] = item.signedUrl;
-      }
-    }
-
-    for (const image of mainImages) {
-      imageUrlByListing[image.listingId] =
-        signedByPath[image.path] || null;
-    }
-  }
-
-  const enriched = rows.map((l: any) => ({
-    ...l,
-    image_url:
-      imageUrlByListing[l.id] || null,
-  }));
+  const listingCandidates = loadAllListingsInitially
+    ? (listingSource as any[])
+    : ((listingSource as any)?.data || []);
+  const initialListingIds = loadAllListingsInitially
+    ? undefined
+    : sortListingsByDailyDefault(listingCandidates)
+        .slice(0, 10)
+        .map((listing: any) => listing.id);
+  const enriched = loadAllListingsInitially
+    ? listingCandidates
+    : await fetchHomeListings(s, publicStatuses, initialListingIds);
+  const deferRemainingListings =
+    !loadAllListingsInitially && listingCandidates.length > enriched.length;
 
   return (
     <HomeClient
@@ -227,6 +153,7 @@ export default async function Home({
       favoriteIds={favoriteIds}
       initial={initial}
       helpNotes={helpNotes || []}
+      deferRemainingListings={deferRemainingListings}
     />
   );
 }

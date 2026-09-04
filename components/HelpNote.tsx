@@ -16,12 +16,21 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
   const id = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+  const autoCloseTimerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 320 });
   const empty = content == null || content === false || (typeof content === "string" && !content.trim());
 
+  const clearAutoClose = useCallback(() => {
+    if (autoCloseTimerRef.current != null) {
+      window.clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  }, []);
+
   const close = useCallback((fade = false) => {
+    clearAutoClose();
     if (fade) {
       setClosing(true);
       window.setTimeout(() => {
@@ -32,7 +41,16 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     }
     setOpen(false);
     setClosing(false);
-  }, []);
+  }, [clearAutoClose]);
+
+  const scheduleAutoClose = useCallback(() => {
+    clearAutoClose();
+    if (!autoClose) return;
+    autoCloseTimerRef.current = window.setTimeout(
+      () => close(true),
+      AUTO_CLOSE_MS
+    );
+  }, [autoClose, clearAutoClose, close]);
 
   const placePopup = useCallback(() => {
     const trigger = buttonRef.current;
@@ -54,9 +72,7 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     if (!open) return;
     placePopup();
     const frame = window.requestAnimationFrame(placePopup);
-    const timer = autoClose
-      ? window.setTimeout(() => close(true), AUTO_CLOSE_MS)
-      : undefined;
+    scheduleAutoClose();
     const onOtherOpened = (event: Event) => {
       if ((event as CustomEvent<string>).detail !== id) close();
     };
@@ -77,14 +93,14 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
     window.addEventListener("scroll", placePopup, true);
     return () => {
       window.cancelAnimationFrame(frame);
-      if (timer) window.clearTimeout(timer);
+      clearAutoClose();
       window.removeEventListener("help-note-open", onOtherOpened as EventListener);
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", placePopup);
       window.removeEventListener("scroll", placePopup, true);
     };
-  }, [autoClose, close, id, open, placePopup]);
+  }, [clearAutoClose, close, id, open, placePopup, scheduleAutoClose]);
 
   if (empty) return null;
   const toggle = () => {
@@ -99,7 +115,12 @@ export default function HelpNote({ content, label = "הסבר נוסף", faqHref
         aria-expanded={open} aria-controls={`${id}-popup`} onClick={toggle}>i</button>
       {open && typeof document !== "undefined" && createPortal(
         <div ref={popupRef} id={`${id}-popup`} role="note"
-          className={`help-note-content${closing ? " is-closing" : ""}`} style={position}>
+          className={`help-note-content${closing ? " is-closing" : ""}`} style={position}
+          onPointerEnter={clearAutoClose}
+          onPointerLeave={scheduleAutoClose}
+          onPointerDown={clearAutoClose}
+          onPointerUp={scheduleAutoClose}
+          onScroll={scheduleAutoClose}>
           <div className="help-note-text">{content}</div>
           {faqHref && <a href={faqHref} target="_blank" rel="noopener noreferrer">להסבר נוסף ב־FAQ ↗</a>}
         </div>, document.body
