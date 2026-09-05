@@ -34,7 +34,7 @@ export default function FaqPage() {
       <p>רצף צבעי הקשת מופיע על פני רוחב הבד. הסיווג מתאר את מראה המנשא.</p>
       <ColorPatternExamples patternId="rainbow" />
       <h3 id="color-pattern-multicolor">רב גוני — עיצובי</h3>
-      <p>בד שיש בו כמה צבעים או שילובי צבעים, ואינו מתאים לאחת מקטגוריות הצבע האחרות.</p>
+      <p>יש ריבוי צבעים.</p>
     </div>
     <div className="section" id="pricing"><h2>איך קובעים מחיר?</h2><p>אין בלוח מחירון מחייב. אפשר להביא בחשבון את המחיר החדש, זמינות, מצב, פגמים, ביקוש ומודעות או עסקאות דומות. הלוח אינו מעריך או מאשר את שווי המנשא.</p></div>
     <div className="section" id="condition"><h2>מצב ורמות שימוש</h2><ul className="condition-legend">{CONDITIONS.map(([key,label])=><li key={key}><b>{label}</b> — {CONDITION_HELP[key]}</li>)}</ul><p>פגמים מתוארים בנפרד מרמת השימוש, ויכולים להופיע כמעט בכל רמה.</p></div>

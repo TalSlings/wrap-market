@@ -50,7 +50,7 @@ export async function generateMetadata({
     Number(l.price) > 0 ? `${l.price} ₪` : null,
   ].filter(Boolean).join(", ");
   const description = `${title}${details ? `, ${details}` : ""}. מנשא יד שנייה למכירה בישראל.`;
-  const isPublic = ["active", "incomplete"].includes(l.status);
+  const isPublic = l.status === "active";
   return {
     title,
     description,

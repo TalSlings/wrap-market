@@ -8,23 +8,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data } = await s
     .from("listings")
     .select("id,created_at")
-    .in("status", ["active", "incomplete"]);
+    .eq("status", "active");
 
   return [
     {
       url: "https://ksharim-baby.org.il",
       changeFrequency: "daily",
       priority: 1,
-    },
-    {
-      url: "https://ksharim-baby.org.il/faq",
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: "https://ksharim-baby.org.il/safety",
-      changeFrequency: "monthly",
-      priority: 0.5,
     },
     ...(data || []).map((listing: any) => ({
       url: `https://ksharim-baby.org.il/listing/${listing.id}`,

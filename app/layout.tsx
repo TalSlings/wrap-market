@@ -28,6 +28,7 @@ export const metadata: Metadata = {
     "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
   applicationName: "רק ארוגים (וטבעות)",
   alternates: { canonical: "/" },
+  robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     locale: "he_IL",

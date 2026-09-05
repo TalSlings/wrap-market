@@ -1118,14 +1118,7 @@ export default function ListingForm({
           )}
 
           {!manufacturerId && showNewManufacturer && (
-            <div
-              style={{
-                display:
-                  "grid",
-                gap: 8,
-                marginTop: 8,
-              }}
-            >
+            <div className="manufacturer-add-row">
               <input
                 className="input"
                 aria-label="יצרן חדש"
@@ -1143,7 +1136,7 @@ export default function ListingForm({
                 placeholder="שם היצרן החדש"
               />
 
-              <div className="toolbar">
+              <div className="manufacturer-add-action">
                 <button
                   type="button"
                   className="btn"
@@ -1151,7 +1144,7 @@ export default function ListingForm({
                 >
                   הוספת יצרן
                 </button>
-                <HelpNote content={formHelp("manufacturer_add", "היצרן לא נמצא ברשימה? אפשר להוסיף אותו. יש לכתוב את השם המלא והמקובל באותיות לטיניות, אחרי שמוודאים שהוא אינו מופיע כבר באיות אחר. אל חשש — מנהלת תעבור בהמשך על יצרנים חדשים ותאחד או תתקן אותם במידת הצורך.")} />
+                <HelpNote content={formHelp("manufacturer_add", "שם היצרן באותיות לטיניות.")} />
               </div>
             </div>
           )}
@@ -1575,7 +1568,7 @@ export default function ListingForm({
             <div className="field">
               <label>
                 סוג חומר
-                <HelpNote content={formHelp("material_origin", "טבעי — הסיב גדל בצורתו כסיב, למשל כותנה או צמר. מלאכותי — מקור טבעי שעובד לסיב. סינתטי — סיב שמיוצר מפולימרים, למשל פוליאסטר או ניילון. אחר — כשלא ברור לאיזה סוג החומר שייך.")} faqHref="/faq#materials" />
+                <HelpNote content={formHelp("material_origin", "טבעי — הסיב גדל בצורתו כסיב, למשל כותנה או צמר.\nמלאכותי — מקור טבעי שעובד לסיב.\nסינתטי — סיב שמיוצר מפולימרים, למשל פוליאסטר או ניילון.\nאחר — כשלא ברור לאיזה סוג החומר שייך.")} faqHref="/faq#materials" />
               </label>
 
               <select
@@ -1679,6 +1672,13 @@ export default function ListingForm({
 
         <div className="field">
           <label>תכונות צבע</label>
+
+          <p className="field-help color-pattern-form-intro">
+            יש מי שמחפשים מנשאים בדוגמאות מסוימות — לפעמים בגלל
+            המראה, ולפעמים כי הדוגמה עוזרת בקשירה. לא חובה לסמן איך
+            המנשא נראה, אבל הסימון יעזור למי שהתכונה חשובה להם למצוא
+            אותו בחיפוש.
+          </p>
 
           <div className="color-pattern-form-options">
             {COLOR_PATTERNS.map(
