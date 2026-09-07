@@ -1019,6 +1019,7 @@ export default function AdminClient({
                       ? {
                           vegan: parent.vegan !== false,
                           easycare: parent.easycare === true,
+                          material_origin: parent.material_origin,
                         }
                       : {}),
                   });

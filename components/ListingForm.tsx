@@ -523,7 +523,7 @@ export default function ListingForm({
       vegan: veganByFamily,
       easycare: easyCareByFamily,
       material_origin:
-        newMaterialOrigin,
+        parent?.material_origin || newMaterialOrigin,
       is_selectable: true,
       status: "active",
       created_by: userId,
