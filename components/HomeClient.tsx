@@ -57,7 +57,7 @@ export default function HomeClient({
   favoriteIds = [],
   initial,
   helpNotes = [],
-  deferRemainingListings = false,
+  remainingListingIds = [],
 }: {
   [k: string]: any;
 }) {
@@ -97,33 +97,53 @@ export default function HomeClient({
   const [grid, setGrid] = useState(!!initial?.grid);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [availableListings, setAvailableListings] = useState(listings);
-  const [loadingMore, setLoadingMore] = useState(deferRemainingListings);
+  const [loadingMore, setLoadingMore] = useState(remainingListingIds.length > 0);
   const [loadingMoreFailed, setLoadingMoreFailed] = useState(false);
 
   useEffect(() => {
-    if (!deferRemainingListings) return;
+    if (!remainingListingIds.length) return;
 
     const controller = new AbortController();
+    let cancelled = false;
 
-    fetch("/api/home-listings", { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to load listings");
-        return response.json();
-      })
-      .then((payload) => {
-        if (Array.isArray(payload?.listings)) {
-          setAvailableListings(payload.listings);
+    async function loadRemainingListings() {
+      try {
+        for (let offset = 0; offset < remainingListingIds.length; offset += 20) {
+          const ids = remainingListingIds.slice(offset, offset + 20);
+          const response = await fetch(
+            `/api/home-listings?ids=${encodeURIComponent(ids.join(","))}`,
+            { signal: controller.signal }
+          );
+          if (!response.ok) throw new Error("Failed to load listings");
+          const payload = await response.json();
+          if (cancelled) return;
+
+          if (Array.isArray(payload?.listings)) {
+            setAvailableListings((current: any[]) => {
+              const known = new Set(current.map((listing: any) => listing.id));
+              return [
+                ...current,
+                ...payload.listings.filter((listing: any) => !known.has(listing.id)),
+              ];
+            });
+          }
         }
         setLoadingMore(false);
-      })
-      .catch((error) => {
+      } catch (error: any) {
         if (error?.name === "AbortError") return;
         setLoadingMore(false);
         setLoadingMoreFailed(true);
-      });
+      }
+    }
 
-    return () => controller.abort();
-  }, [deferRemainingListings]);
+    const start = window.setTimeout(loadRemainingListings, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(start);
+      controller.abort();
+    };
+  }, [remainingListingIds]);
 
   const favoriteSet = useMemo(
     () => new Set(favoriteIds),

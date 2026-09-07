@@ -40,7 +40,8 @@ export default async function AdminPage() {
       .from("listings")
       .select(
         `id,owner_id,manufacturer_id,design,model,price,status,created_at,updated_at,
-        manufacturer:manufacturers(name)`
+        manufacturer:manufacturers(name),
+        materials:listing_materials(material_id)`
       )
       .neq("status", "deleted")
       .order("updated_at", { ascending: false }),

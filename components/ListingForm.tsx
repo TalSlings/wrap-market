@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   SIZES,
@@ -169,6 +169,13 @@ export default function ListingForm({
 
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  // React state is not updated synchronously. This ref closes the small window
+  // in which a quick double tap can start two saves before `busy` is rendered.
+  const saveInFlightRef = useRef(false);
+  // If a later step (relations or images) fails after the listing row was
+  // created, a retry must continue that row instead of creating another one.
+  const workingListingIdRef = useRef<string | null>(initial?.id || null);
+  const uploadedFileKeysRef = useRef(new Set<string>());
 
   const [savedProfile, setSavedProfile] = useState<any | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(!!initial);
@@ -502,8 +509,12 @@ export default function ListingForm({
 
     const parent = localMaterials.find((m: any) => m.id === newMaterialParent);
     const familyName = (parent?.name || name).trim();
-    const veganByFamily = !["משי", "צמר", "שיער בעלי חיים", "סיבים מן החי"].includes(familyName);
-    const easyCareByFamily = ["כותנה", "סינתטיים"].includes(familyName);
+    const veganByFamily = parent
+      ? parent.vegan !== false
+      : !["משי", "צמר", "שיער בעלי חיים", "סיבים מן החי"].includes(familyName);
+    const easyCareByFamily = parent
+      ? parent.easycare === true
+      : familyName === "כותנה" || newMaterialOrigin === "synthetic";
 
     const payload: any = {
       name,
@@ -605,6 +616,9 @@ export default function ListingForm({
       i < files.length;
       i++
     ) {
+      const fileKey = `${kind}:${files[i].name}:${files[i].size}:${files[i].lastModified}`;
+      if (uploadedFileKeysRef.current.has(fileKey)) continue;
+
       const blob =
         await sanitizeImage(
           files[i]
@@ -648,6 +662,8 @@ export default function ListingForm({
       if (e) {
         throw e;
       }
+
+      uploadedFileKeysRef.current.add(fileKey);
     }
   }
 
@@ -839,6 +855,8 @@ export default function ListingForm({
   async function save(
     status: "draft" | "active" | "incomplete"
   ) {
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setBusy(true);
     setMsg("");
 
@@ -915,7 +933,7 @@ export default function ListingForm({
         status,
       };
 
-      let id = initial?.id;
+      let id = initial?.id || workingListingIdRef.current;
 
       if (id) {
         const { error } = await s
@@ -943,6 +961,7 @@ export default function ListingForm({
 
         if (error) throw error;
         id = data.id;
+        workingListingIdRef.current = id;
       }
 
       const mr = mats
@@ -1033,7 +1052,6 @@ export default function ListingForm({
         status === "active" ||
         status === "incomplete"
       ) {
-        setBusy(false);
         setPublishedListingId(id);
         return;
       }
@@ -1041,6 +1059,8 @@ export default function ListingForm({
       location.href = "/account";
     } catch (e: any) {
       setMsg(e.message || String(e));
+    } finally {
+      saveInFlightRef.current = false;
       setBusy(false);
     }
   }

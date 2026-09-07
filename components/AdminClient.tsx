@@ -895,6 +895,21 @@ export default function AdminClient({
       ? manufacturerMerge[row.id] || ""
       : materialMerge[row.id] || "";
 
+    const sourceListing = listings
+      .filter((listing: any) => listing.owner_id === row.created_by)
+      .filter((listing: any) =>
+        isManufacturer
+          ? listing.manufacturer_id === row.id
+          : (listing.materials || []).some(
+              (material: any) => material.material_id === row.id
+            )
+      )
+      .sort(
+        (a: any, b: any) =>
+          Math.abs(Date.parse(a.created_at) - Date.parse(row.created_at)) -
+          Math.abs(Date.parse(b.created_at) - Date.parse(row.created_at))
+      )[0];
+
     return (
       <div className="section account-card">
         <div
@@ -924,6 +939,24 @@ export default function AdminClient({
                   )?.name || "לא ידוע"
                 }`
               : "חומר־אב"}
+          </div>
+        )}
+
+        {row.created_by && (
+          <div className="muted" style={{ marginTop: 6 }}>
+            {sourceListing ? (
+              <>
+                הופיע לראשונה במודעה: {" "}
+                <Link href={`/listing/${sourceListing.id}`}>
+                  {[sourceListing.manufacturer?.name, sourceListing.design, sourceListing.model]
+                    .filter(Boolean)
+                    .join(" · ") || "פתיחת המודעה"}
+                </Link>
+                {" · "}{statusLabel(sourceListing.status)}
+              </>
+            ) : (
+              <>עדיין לא נמצאה מודעה שמשתמשת בפריט הזה.</>
+            )}
           </div>
         )}
 
@@ -975,12 +1008,21 @@ export default function AdminClient({
                 value={
                   row.parent_material_id || ""
                 }
-                onChange={(e) =>
+                onChange={(e) => {
+                  const parentId = e.target.value || null;
+                  const parent = materials.find(
+                    (material: any) => material.id === parentId
+                  );
                   updateMaterial(row.id, {
-                    parent_material_id:
-                      e.target.value || null,
-                  })
-                }
+                    parent_material_id: parentId,
+                    ...(parent
+                      ? {
+                          vegan: parent.vegan !== false,
+                          easycare: parent.easycare === true,
+                        }
+                      : {}),
+                  });
+                }}
               >
                 <option value="">
                   ללא חומר־אב
@@ -1018,7 +1060,7 @@ export default function AdminClient({
                 <option value="natural">
                   טבעי
                 </option>
-                <option value="manmade">
+                <option value="artificial">
                   מלאכותי
                 </option>
                 <option value="synthetic">
@@ -1043,7 +1085,7 @@ export default function AdminClient({
               <label className="chip">
                 <input
                   type="checkbox"
-                  checked={row.easycare !== false}
+                  checked={!!row.easycare}
                   onChange={(e) =>
                     updateMaterial(row.id, {
                       easycare: e.target.checked,

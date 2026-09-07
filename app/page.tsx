@@ -46,24 +46,11 @@ export default async function Home({
 
   const s = await createClient();
 
-  const {
-    data: { user },
-  } = await s.auth.getUser();
-
-  const { data: settings } = await s
-    .from("site_settings")
-    .select("allow_incomplete_listings")
-    .eq("singleton", true)
-    .maybeSingle();
-
-  const publicStatuses = settings?.allow_incomplete_listings
-    ? ["active", "incomplete"]
-    : ["active"];
-
-  const loadAllListingsInitially = Boolean(sp.shared);
-
+  // Start all independent homepage requests together. Previously authentication
+  // and settings each blocked the catalogue requests that followed them.
   const [
-    listingSource,
+    { data: authData },
+    { data: settings },
     { data: manufacturers },
     { data: materials },
     { data: colors },
@@ -71,19 +58,17 @@ export default async function Home({
     { data: subregions },
     { data: helpNotes },
   ] = await Promise.all([
-    loadAllListingsInitially
-      ? fetchHomeListings(s, publicStatuses)
-      : s
-          .from("listings")
-          .select("id,status")
-          .in("status", publicStatuses),
-
+    s.auth.getUser(),
+    s
+      .from("site_settings")
+      .select("allow_incomplete_listings")
+      .eq("singleton", true)
+      .maybeSingle(),
     s
       .from("manufacturers")
       .select("id,name")
       .eq("status", "active")
       .order("name"),
-
     s
       .from("materials")
       .select(
@@ -91,55 +76,71 @@ export default async function Home({
       )
       .eq("status", "active")
       .order("name"),
-
     s
       .from("colors")
       .select("*")
       .eq("active", true)
       .order("sort_order"),
-
     s
       .from("regions")
       .select("*")
       .eq("active", true)
       .order("sort_order"),
-
     s
       .from("subregions")
       .select("*")
       .eq("active", true)
       .order("sort_order"),
-
     s
       .from("help_notes")
       .select("section_key,placement,content,is_visible")
       .eq("placement", "search"),
   ]);
 
-  let favoriteIds: string[] = [];
+  const user = authData.user;
 
-  if (user) {
-    const { data: favorites } = await s
-      .from("favorites")
-      .select("listing_id")
-      .eq("user_id", user.id);
+  const publicStatuses = settings?.allow_incomplete_listings
+    ? ["active", "incomplete"]
+    : ["active"];
 
-    favoriteIds = (favorites || []).map((x: any) => x.listing_id);
-  }
+  const loadAllListingsInitially = Boolean(sp.shared);
+
+  const [listingSource, favoriteSource] = await Promise.all([
+    loadAllListingsInitially
+      ? fetchHomeListings(s, publicStatuses)
+      : s
+          .from("listings")
+          .select("id,status")
+          .in("status", publicStatuses),
+    user
+      ? s
+          .from("favorites")
+          .select("listing_id")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const favoriteIds = (favoriteSource.data || []).map(
+    (favorite: any) => favorite.listing_id
+  );
 
   const listingCandidates = loadAllListingsInitially
     ? (listingSource as any[])
     : ((listingSource as any)?.data || []);
+  const sortedListingIds = loadAllListingsInitially
+    ? []
+    : sortListingsByDailyDefault(listingCandidates).map(
+        (listing: any) => listing.id
+      );
   const initialListingIds = loadAllListingsInitially
     ? undefined
-    : sortListingsByDailyDefault(listingCandidates)
-        .slice(0, 10)
-        .map((listing: any) => listing.id);
+    : sortedListingIds.slice(0, 10);
   const enriched = loadAllListingsInitially
     ? listingCandidates
     : await fetchHomeListings(s, publicStatuses, initialListingIds);
-  const deferRemainingListings =
-    !loadAllListingsInitially && listingCandidates.length > enriched.length;
+  const remainingListingIds = loadAllListingsInitially
+    ? []
+    : sortedListingIds.slice(10);
 
   return (
     <HomeClient
@@ -153,7 +154,7 @@ export default async function Home({
       favoriteIds={favoriteIds}
       initial={initial}
       helpNotes={helpNotes || []}
-      deferRemainingListings={deferRemainingListings}
+      remainingListingIds={remainingListingIds}
     />
   );
 }
