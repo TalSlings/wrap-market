@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { HierarchicalMultiSelect } from "@/components/HierarchicalSelect";
 import { WovenCorner } from "@/components/DesignMotifs";
@@ -79,16 +80,10 @@ export default function AccountClient({
     "favorites",
     "searches",
   ];
-  const [tab, setTab] = useState<Tab>(
+  const tab: Tab =
     allowedInitialTabs.includes(initialTab as Tab)
       ? (initialTab as Tab)
-      : "profile"
-  );
-  useEffect(() => {
-    if (allowedInitialTabs.includes(initialTab as Tab)) {
-      setTab(initialTab as Tab);
-    }
-  }, [initialTab]);
+      : "profile";
   const [displayName, setDisplayName] = useState(
     profile?.display_name || ""
   );
@@ -577,8 +572,7 @@ export default function AccountClient({
         }}
       >
         {tabs.map((x) => (
-          <button
-            type="button"
+          <Link
             key={x.key}
             className={
               "btn " +
@@ -586,10 +580,11 @@ export default function AccountClient({
                 ? "primary"
                 : "")
             }
-            onClick={() => setTab(x.key)}
+            href={`/account?tab=${x.key}`}
+            prefetch={false}
           >
             {x.label}
-          </button>
+          </Link>
         ))}
       </div>
 
@@ -822,12 +817,13 @@ export default function AccountClient({
                 <WovenCorner />
 
                 {l.image_url ? (
-                  <img
+                  <Image
                     className="favorite-listing-img"
                     src={l.image_url}
                     alt=""
-                    width={110}
-                    height={120}
+                    width={220}
+                    height={240}
+                    sizes="110px"
                   />
                 ) : (
                   <div
