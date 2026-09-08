@@ -79,6 +79,64 @@ button{cursor:pointer}
   transition:background .15s ease,color .15s ease,border-color .15s ease;
 }
 .btn:hover,.iconbtn:hover{background:var(--soft)}
+.header-account{position:relative;display:flex;align-items:center}
+.header-avatar-trigger{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:42px;
+  height:42px;
+  padding:1px;
+  border:1px solid var(--ink);
+  border-radius:50%;
+  background:#fff;
+  color:var(--ink);
+}
+.header-avatar-trigger:hover{background:var(--soft)}
+.header-avatar-trigger .pawn-avatar,.header-profile-image{
+  display:block;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+}
+.header-profile-image{object-fit:cover;background:var(--soft)}
+.empty-pawn-avatar{color:#777}
+.header-account-menu{
+  position:absolute;
+  inset-inline-end:0;
+  top:calc(100% + 9px);
+  z-index:1000;
+  width:220px;
+  max-width:calc(100vw - 24px);
+  padding:7px;
+  border:1px solid var(--ink);
+  border-radius:var(--radius);
+  background:#fff;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+}
+.header-account-name{
+  padding:7px 9px 9px;
+  font-weight:700;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.header-account-menu a,.header-signout{
+  display:block;
+  width:100%;
+  padding:8px 9px;
+  border:0;
+  border-radius:5px;
+  background:transparent;
+  text-align:right;
+}
+.header-account-menu a:hover,.header-account-menu a:focus-visible{
+  background:var(--soft);
+}
+.header-account-menu-divider{height:1px;margin:6px 4px;background:var(--line-soft)}
+.header-signout{color:var(--danger);font-weight:700}
+.header-signout:hover,.header-signout:focus-visible{background:#fff0f1}
+.header-signout:disabled{opacity:.6;cursor:wait}
 .share-icon-btn{
   width:38px;
   height:38px;

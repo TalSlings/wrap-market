@@ -74,7 +74,10 @@ export default async function RootLayout({
               ＋ הוספת מודעה
             </Link>
 
-            <HeaderAuthLink initialAuthenticated={Boolean(user)} />
+            <HeaderAuthLink
+              initialAuthenticated={Boolean(user)}
+              initialUserId={user?.id || null}
+            />
           </header>
 
           {children}

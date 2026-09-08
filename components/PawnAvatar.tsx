@@ -64,6 +64,47 @@ export function PawnAvatar({
   );
 }
 
+export function EmptyPawnAvatar({
+  size = 88,
+}: {
+  size?: number;
+}) {
+  return (
+    <svg
+      className="pawn-avatar empty-pawn-avatar"
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label="משתמשת לא מחוברת"
+    >
+      <circle
+        cx="50"
+        cy="50"
+        r="47"
+        fill="#fff"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <circle
+        cx="50"
+        cy="32"
+        r="13"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="5"
+      />
+      <path
+        d="M38 47h24c0 10-3 17-8 21l15 15H31l15-15c-5-4-8-11-8-21Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function PawnAvatarPicker({
   value,
   onChange,

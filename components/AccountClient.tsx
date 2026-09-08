@@ -53,6 +53,7 @@ export default function AccountClient({
   sellerPublicId,
   isSuspended,
   allowIncomplete,
+  initialTab,
 }: {
   userId: string;
   listings: any[];
@@ -67,10 +68,27 @@ export default function AccountClient({
   sellerPublicId: string | null;
   isSuspended: boolean;
   allowIncomplete: boolean;
+  initialTab?: string;
 }) {
   const s = useMemo(() => createClient(), []);
 
-  const [tab, setTab] = useState<Tab>("profile");
+  const allowedInitialTabs: Tab[] = [
+    "profile",
+    "listings",
+    "deleted",
+    "favorites",
+    "searches",
+  ];
+  const [tab, setTab] = useState<Tab>(
+    allowedInitialTabs.includes(initialTab as Tab)
+      ? (initialTab as Tab)
+      : "profile"
+  );
+  useEffect(() => {
+    if (allowedInitialTabs.includes(initialTab as Tab)) {
+      setTab(initialTab as Tab);
+    }
+  }, [initialTab]);
   const [displayName, setDisplayName] = useState(
     profile?.display_name || ""
   );
@@ -233,11 +251,19 @@ export default function AccountClient({
         { onConflict: "user_id" }
       );
 
-    setProfileMsg(
-      error
-        ? `לא נשמר: ${error.message}`
-        : "ברירות המחדל נשמרו"
-    );
+    if (error) {
+      setProfileMsg(`לא נשמר: ${error.message}`);
+    } else {
+      setProfileMsg("ברירות המחדל נשמרו");
+      window.dispatchEvent(
+        new CustomEvent("wrap-market-profile-updated", {
+          detail: {
+            display_name: displayName.trim() || null,
+            avatar_key: avatarKey,
+          },
+        })
+      );
+    }
   };
 
   const saveIdentity = async () => {
@@ -294,6 +320,16 @@ export default function AccountClient({
       setProfileSetupComplete(true);
       setEditingIdentity(false);
       setIdentityMsg("");
+      window.dispatchEvent(
+        new CustomEvent("wrap-market-profile-updated", {
+          detail: {
+            display_name: displayName.trim(),
+            avatar_key: avatarKey,
+            profile_image_path: nextImagePath,
+            profile_setup_complete: true,
+          },
+        })
+      );
     } catch (error) {
       if (uploadedPath) {
         await s.storage.from("profile-images").remove([uploadedPath]);

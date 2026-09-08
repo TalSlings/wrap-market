@@ -4,7 +4,12 @@ import AccountClient from "@/components/AccountClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const s = await createClient();
 
   const {
@@ -183,6 +188,7 @@ export default async function Page() {
         allowIncomplete={
           !!settings?.allow_incomplete_listings
         }
+        initialTab={tab}
       />
     </main>
   );
