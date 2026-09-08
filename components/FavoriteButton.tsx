@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function FavoriteButton({
@@ -16,6 +16,10 @@ export default function FavoriteButton({
 }) {
   const [favorite, setFavorite] = useState(initialFavorite);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setFavorite(initialFavorite);
+  }, [initialFavorite]);
 
   async function toggle(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();

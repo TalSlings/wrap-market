@@ -54,9 +54,13 @@ export default async function RootLayout({
 }) {
   const supabase = await createClient();
 
+  // Header personalization is visual only. Reading the cookie-backed session
+  // avoids a blocking Auth network request on every page; protected routes and
+  // database policies continue to perform their own authorization checks.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user || null;
 
   return (
     <html lang="he" dir="rtl">

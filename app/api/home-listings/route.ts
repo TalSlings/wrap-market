@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { fetchHomeListings } from "@/lib/homeListings";
+import { fetchCachedHomeListings } from "@/lib/homeListings";
+import { getHomePublicData } from "@/lib/homePublicData";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +15,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ listings: [] });
     }
 
-    const supabase = await createClient();
-    const { data: settings } = await supabase
-      .from("site_settings")
-      .select("allow_incomplete_listings")
-      .eq("singleton", true)
-      .maybeSingle();
+    const { settings } = await getHomePublicData();
 
     const publicStatuses = settings?.allow_incomplete_listings
       ? ["active", "incomplete"]
       : ["active"];
-    const listings = await fetchHomeListings(supabase, publicStatuses, ids);
+    const listings = await fetchCachedHomeListings(publicStatuses, ids);
 
     return NextResponse.json({ listings });
   } catch (error) {

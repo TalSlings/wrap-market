@@ -31,6 +31,11 @@ const HOME_LISTING_SELECT = `id,
     region_id,
     subregion_id,
     region:regions(id,name)
+  ),
+  images:listing_images(
+    storage_path,
+    position,
+    image_type
   )`;
 
 export async function fetchHomeListings(
@@ -52,53 +57,32 @@ export async function fetchHomeListings(
   const { data: listings, error: listingError } = await listingQuery;
   if (listingError) throw listingError;
 
-  const rows = listings || [];
-  const ids = rows.map((listing: any) => listing.id);
-  const firstImagePathByListing: Record<string, string> = {};
-
-  if (ids.length > 0) {
-    const { data: images, error: imageError } = await supabase
-      .from("listing_images")
-      .select("listing_id,storage_path,position")
-      .eq("image_type", "listing")
-      .in("listing_id", ids)
-      .order("position", { ascending: true });
-
-    if (imageError) throw imageError;
-
-    for (const image of images || []) {
-      if (!firstImagePathByListing[image.listing_id]) {
-        firstImagePathByListing[image.listing_id] = image.storage_path;
-      }
-    }
-  }
-
-  const imageEntries = Object.entries(firstImagePathByListing);
-  const signedUrlByPath: Record<string, string> = {};
-
-  if (imageEntries.length > 0) {
-    const { data: signedUrls, error: signedUrlError } = await supabase.storage
-      .from("listing-images")
-      .createSignedUrls(
-        imageEntries.map(([, path]) => path),
-        3600
-      );
-
-    if (signedUrlError) throw signedUrlError;
-
-    for (const item of signedUrls || []) {
-      if (item?.path && item?.signedUrl) {
-        signedUrlByPath[item.path] = item.signedUrl;
-      }
-    }
-  }
-
-  return rows.map((listing: any) => {
-    const path = firstImagePathByListing[listing.id];
+  return (listings || []).map((listing: any) => {
+    const path = [...(listing.images || [])]
+      .filter((image: any) => image.image_type === "listing")
+      .sort((a: any, b: any) => a.position - b.position)[0]?.storage_path;
+    const { images: _images, ...publicListing } = listing;
 
     return {
-      ...listing,
-      image_url: path ? signedUrlByPath[path] || null : null,
+      ...publicListing,
+      image_url: path
+        ? `/api/listing-thumbnail/${listing.id}?v=${encodeURIComponent(path)}`
+        : null,
     };
   });
 }
+
+export const fetchCachedHomeListings = unstable_cache(
+  async (publicStatuses: string[], listingIds?: string[]) =>
+    fetchHomeListings(
+      createPublicServerClient(),
+      publicStatuses,
+      listingIds
+    ),
+  ["home-listing-cards-v2"],
+  { revalidate: 30 }
+);
+import "server-only";
+
+import { unstable_cache } from "next/cache";
+import { createPublicServerClient } from "@/lib/supabase/public-server";

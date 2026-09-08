@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
@@ -97,6 +98,7 @@ export default function HomeClient({
   const [grid, setGrid] = useState(!!initial?.grid);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [availableListings, setAvailableListings] = useState(listings);
+  const [favoriteListingIds, setFavoriteListingIds] = useState(favoriteIds);
   const [loadingMore, setLoadingMore] = useState(remainingListingIds.length > 0);
   const [loadingMoreFailed, setLoadingMoreFailed] = useState(false);
 
@@ -136,7 +138,9 @@ export default function HomeClient({
       }
     }
 
-    const start = window.setTimeout(loadRemainingListings, 0);
+    // Give the first cards and their images a short head start before the
+    // background batches start competing for network and CPU time.
+    const start = window.setTimeout(loadRemainingListings, 600);
 
     return () => {
       cancelled = true;
@@ -145,9 +149,33 @@ export default function HomeClient({
     };
   }, [remainingListingIds]);
 
+  useEffect(() => {
+    if (!userId) {
+      setFavoriteListingIds([]);
+      return;
+    }
+
+    let active = true;
+    createClient()
+      .from("favorites")
+      .select("listing_id")
+      .eq("user_id", userId)
+      .then(({ data }) => {
+        if (active) {
+          setFavoriteListingIds(
+            (data || []).map((favorite: any) => favorite.listing_id)
+          );
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
   const favoriteSet = useMemo(
-    () => new Set(favoriteIds),
-    [favoriteIds]
+    () => new Set(favoriteListingIds),
+    [favoriteListingIds]
   );
 
   const manufacturerOptions = useMemo(
@@ -948,15 +976,15 @@ export default function HomeClient({
           >
             <WovenCorner />
             {l.image_url ? (
-              <img
+              <Image
                 className="listing-img"
                 src={l.image_url}
                 alt=""
-                width={150}
-                height={150}
+                width={300}
+                height={300}
+                sizes={grid ? "(max-width: 520px) 50vw, 33vw" : "(max-width: 520px) 118px, 150px"}
                 loading={index < (grid ? 4 : 2) ? "eager" : "lazy"}
                 fetchPriority={index < (grid ? 4 : 2) ? "high" : "auto"}
-                decoding="async"
               />
             ) : (
               <div
