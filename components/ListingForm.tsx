@@ -604,28 +604,50 @@ export default function ListingForm({
     );
   }
 
+  type PreparedImage = {
+    blob: Blob;
+    fileKey: string;
+    position: number;
+  };
+
+  async function prepareImages(
+    files: File[],
+    kind: "listing" | "defect"
+  ): Promise<PreparedImage[]> {
+    const prepared: PreparedImage[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileKey = `${kind}:${file.name}:${file.size}:${file.lastModified}`;
+      if (uploadedFileKeysRef.current.has(fileKey)) continue;
+
+      try {
+        prepared.push({
+          blob: await sanitizeImage(file),
+          fileKey,
+          position: i,
+        });
+      } catch (error: any) {
+        throw new Error(
+          error?.message ||
+            `לא הצלחנו לעבד את התמונה „${file.name}”. נסי תמונת JPG, PNG או WebP.`
+        );
+      }
+    }
+
+    return prepared;
+  }
+
   async function upload(
     id: string,
-    files: File[],
+    images: PreparedImage[],
     kind:
       | "listing"
       | "defect"
   ) {
-    for (
-      let i = 0;
-      i < files.length;
-      i++
-    ) {
-      const fileKey = `${kind}:${files[i].name}:${files[i].size}:${files[i].lastModified}`;
-      if (uploadedFileKeysRef.current.has(fileKey)) continue;
-
-      const blob =
-        await sanitizeImage(
-          files[i]
-        );
-
+    for (const image of images) {
       const path =
-        `${userId}/${id}/${kind}-${Date.now()}-${i}.jpg`;
+        `${userId}/${id}/${kind}-${Date.now()}-${image.position}.jpg`;
 
       const { error } =
         await s.storage
@@ -634,7 +656,7 @@ export default function ListingForm({
           )
           .upload(
             path,
-            blob,
+            image.blob,
             {
               contentType:
                 "image/jpeg",
@@ -656,14 +678,14 @@ export default function ListingForm({
             storage_path:
               path,
             image_type: kind,
-            position: i,
+            position: image.position,
           });
 
       if (e) {
         throw e;
       }
 
-      uploadedFileKeysRef.current.add(fileKey);
+      uploadedFileKeysRef.current.add(image.fileKey);
     }
   }
 
@@ -899,6 +921,13 @@ export default function ListingForm({
         setFieldErrors({});
       }
 
+      // Decode every newly selected image before creating or updating the
+      // listing row. A bad file therefore cannot leave a partial listing behind.
+      const [preparedMainImages, preparedDefectImages] = await Promise.all([
+        prepareImages(mainImages, "listing"),
+        prepareImages(defectImages, "defect"),
+      ]);
+
       const mid =
         manufacturerId || newManufacturer.trim()
           ? await ensureManufacturer()
@@ -1032,12 +1061,12 @@ export default function ListingForm({
         if (error) throw error;
       }
 
-      if (mainImages.length) {
-        await upload(id, mainImages, "listing");
+      if (preparedMainImages.length) {
+        await upload(id, preparedMainImages, "listing");
       }
 
-      if (defectImages.length) {
-        await upload(id, defectImages, "defect");
+      if (preparedDefectImages.length) {
+        await upload(id, preparedDefectImages, "defect");
       }
 
       if (
