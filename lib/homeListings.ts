@@ -1,3 +1,8 @@
+import "server-only";
+
+import { unstable_cache } from "next/cache";
+import { createPublicServerClient } from "@/lib/supabase/public-server";
+
 const HOME_LISTING_SELECT = `id,
   manufacturer_id,
   design,
@@ -31,11 +36,6 @@ const HOME_LISTING_SELECT = `id,
     region_id,
     subregion_id,
     region:regions(id,name)
-  ),
-  images:listing_images(
-    storage_path,
-    position,
-    image_type
   )`;
 
 export async function fetchHomeListings(
@@ -57,17 +57,33 @@ export async function fetchHomeListings(
   const { data: listings, error: listingError } = await listingQuery;
   if (listingError) throw listingError;
 
-  return (listings || []).map((listing: any) => {
-    const path = [...(listing.images || [])]
-      .filter((image: any) => image.image_type === "listing")
-      .sort((a: any, b: any) => a.position - b.position)[0]?.storage_path;
-    const { images: _images, ...publicListing } = listing;
+  const rows = listings || [];
+  const listingIdsToLoad = rows.map((listing: any) => listing.id);
+  const imagePathByListing: Record<string, string> = {};
+
+  if (listingIdsToLoad.length > 0) {
+    const { data: images, error: imageError } = await supabase
+      .from("listing_images")
+      .select("listing_id,storage_path,position")
+      .eq("image_type", "listing")
+      .in("listing_id", listingIdsToLoad)
+      .order("position", { ascending: true });
+
+    if (imageError) throw imageError;
+
+    for (const image of images || []) {
+      if (!imagePathByListing[image.listing_id]) {
+        imagePathByListing[image.listing_id] = image.storage_path;
+      }
+    }
+  }
+
+  return rows.map((listing: any) => {
+    const path = imagePathByListing[listing.id];
 
     return {
-      ...publicListing,
-      image_url: path
-        ? `/api/listing-thumbnail/${listing.id}?v=${encodeURIComponent(path)}`
-        : null,
+      ...listing,
+      image_path: path || null,
     };
   });
 }
@@ -79,10 +95,6 @@ export const fetchCachedHomeListings = unstable_cache(
       publicStatuses,
       listingIds
     ),
-  ["home-listing-cards-v2"],
+  ["home-listing-cards-v5"],
   { revalidate: 30 }
 );
-import "server-only";
-
-import { unstable_cache } from "next/cache";
-import { createPublicServerClient } from "@/lib/supabase/public-server";

@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import FavoriteButton from "@/components/FavoriteButton";
 import ImpressionTracker from "@/components/ImpressionTracker";
 import { FeatureBadge, LooseThread, WovenCorner } from "@/components/DesignMotifs";
@@ -99,6 +98,9 @@ export default function HomeClient({
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [availableListings, setAvailableListings] = useState(listings);
   const [favoriteListingIds, setFavoriteListingIds] = useState(favoriteIds);
+  const [imageUrlByPath, setImageUrlByPath] = useState<Record<string, string>>({});
+  const requestedImagePathsRef = useRef(new Set<string>());
+  const retriedImagePathsRef = useRef(new Set<string>());
   const [loadingMore, setLoadingMore] = useState(remainingListingIds.length > 0);
   const [loadingMoreFailed, setLoadingMoreFailed] = useState(false);
 
@@ -148,6 +150,73 @@ export default function HomeClient({
       controller.abort();
     };
   }, [remainingListingIds]);
+
+  useEffect(() => {
+    const paths = [
+      ...new Set(
+        availableListings
+          .map((listing: any) => listing.image_path)
+          .filter(Boolean) as string[]
+      ),
+    ].filter((path) => !requestedImagePathsRef.current.has(path));
+
+    if (!paths.length) return;
+    paths.forEach((path) => requestedImagePathsRef.current.add(path));
+
+    let active = true;
+    const supabase = createClient();
+
+    async function signImages() {
+      for (let offset = 0; offset < paths.length; offset += 50) {
+        const batch = paths.slice(offset, offset + 50);
+        const { data, error } = await supabase.storage
+          .from("listing-images")
+          .createSignedUrls(batch, 3600);
+
+        if (!active) return;
+        if (error) {
+          batch.forEach((path) => requestedImagePathsRef.current.delete(path));
+          continue;
+        }
+
+        setImageUrlByPath((current) => {
+          const next = { ...current };
+          for (const item of data || []) {
+            if (item?.path && item?.signedUrl) next[item.path] = item.signedUrl;
+          }
+          return next;
+        });
+      }
+    }
+
+    void signImages();
+    return () => {
+      active = false;
+    };
+  }, [availableListings]);
+
+  async function retryImageWithSingleUrl(path: string) {
+    if (retriedImagePathsRef.current.has(path)) {
+      setImageUrlByPath((current) => {
+        const next = { ...current };
+        delete next[path];
+        return next;
+      });
+      return;
+    }
+
+    retriedImagePathsRef.current.add(path);
+    const { data } = await createClient().storage
+      .from("listing-images")
+      .createSignedUrl(path, 3600, { cacheNonce: Date.now().toString() });
+
+    if (data?.signedUrl) {
+      setImageUrlByPath((current) => ({
+        ...current,
+        [path]: data.signedUrl,
+      }));
+    }
+  }
 
   useEffect(() => {
     if (!userId) {
@@ -962,7 +1031,9 @@ export default function HomeClient({
       </div>
 
       <div className={grid ? "grid-mode" : ""}>
-        {out.map((l: any, index: number) => (
+        {out.map((l: any, index: number) => {
+          const imageUrl = l.image_url || imageUrlByPath[l.image_path];
+          return (
           <div className="listing-share-wrap" key={l.id}>
           <Link
             className={
@@ -975,16 +1046,26 @@ export default function HomeClient({
             onClick={(e) => openListing(e, l.id)}
           >
             <WovenCorner />
-            {l.image_url ? (
-              <Image
+            {imageUrl ? (
+              <img
                 className="listing-img"
-                src={l.image_url}
+                src={imageUrl}
                 alt=""
-                width={300}
-                height={300}
-                sizes={grid ? "(max-width: 520px) 50vw, 33vw" : "(max-width: 520px) 118px, 150px"}
+                width={150}
+                height={150}
                 loading={index < (grid ? 4 : 2) ? "eager" : "lazy"}
                 fetchPriority={index < (grid ? 4 : 2) ? "high" : "auto"}
+                decoding="async"
+                onError={() => {
+                  if (l.image_path) void retryImageWithSingleUrl(l.image_path);
+                }}
+              />
+            ) : l.image_path ? (
+              <div
+                className="listing-img"
+                aria-label="התמונה נטענת"
+                role="img"
+                style={{ background: "var(--soft)" }}
               />
             ) : (
               <div
@@ -1139,7 +1220,7 @@ export default function HomeClient({
             />
           </div>
           </div>
-        ))}
+        );})}
       </div>
     </main>
   );
