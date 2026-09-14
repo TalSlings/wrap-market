@@ -54,6 +54,21 @@
   requirement.
 - Update the Terms of Use only after the feature is implemented and tested.
 
+## Post-launch: comments, likes and internal notifications
+
+- Add comments with one reply level only, plus likes on comments.
+- Keep a visible “תגובה הוסתרה” placeholder when moderation hides a comment.
+- Do not email a listing owner merely because a new comment was added.
+- Show contextual role badges beside each comment author:
+  - `מנהלת` in forest green;
+  - `מדריכה` in the site's purple;
+  - `בעלת המודעה` in rust / warm orange-brown.
+- Keep regular users unbadged. When the listing owner is also an instructor or
+  administrator, show both the contextual owner badge and the professional or
+  administrative badge so readers do not lose either piece of information.
+- Feed comment replies, personal messages, moderation actions and other relevant
+  account events into the planned internal notification center and avatar count.
+
 ## Post-launch: inactive accounts and email notifications
 
 This work was deliberately removed from the launch version. It must not be
@@ -88,4 +103,3 @@ end to end.
 - Luxury badge requested per listing and approved by admin.
 - New-price / no-longer-sold-new context.
 - Full admin UI and contact reveal rate limiting.
-

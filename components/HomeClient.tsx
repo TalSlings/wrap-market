@@ -1158,17 +1158,11 @@ export default function HomeClient({
                   <div>הרכב לא ידוע</div>
                 ) : (
                   (l.materials || [])
-                    .slice(0, 3)
                     .map((m: any, i: number) => (
-                      <div key={i}>
+                      <div key={m.material_id || i}>
                         {m.percentage}% {m.material?.name}
                       </div>
                     ))
-                )}
-
-                {!l.material_composition_unknown &&
-                  (l.materials || []).length > 3 && (
-                  <div>…</div>
                 )}
               </div>
 

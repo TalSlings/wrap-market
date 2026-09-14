@@ -371,10 +371,12 @@ export default function AdminClient({
     id: string,
     patch: Record<string, any>
   ) {
-    const { error } = await s
+    const { data, error } = await s
       .from("materials")
       .update(patch)
-      .eq("id", id);
+      .eq("id", id)
+      .select("*")
+      .single();
 
     if (error) {
       notify(error.message);
@@ -383,7 +385,7 @@ export default function AdminClient({
 
     setMaterials((rows) =>
       rows.map((x) =>
-        x.id === id ? { ...x, ...patch } : x
+        x.id === id ? data : x
       )
     );
   }
@@ -1057,6 +1059,12 @@ export default function AdminClient({
                       e.target.value,
                   })
                 }
+                disabled={!!row.parent_material_id}
+                title={
+                  row.parent_material_id
+                    ? "הסיווג נקבע לפי משפחת חומר־האב"
+                    : undefined
+                }
               >
                 <option value="natural">
                   טבעי
@@ -1073,6 +1081,7 @@ export default function AdminClient({
                 <input
                   type="checkbox"
                   checked={!!row.vegan}
+                  disabled={!!row.parent_material_id}
                   onChange={(e) =>
                     updateMaterial(row.id, {
                       vegan:
@@ -1087,6 +1096,7 @@ export default function AdminClient({
                 <input
                   type="checkbox"
                   checked={!!row.easycare}
+                  disabled={!!row.parent_material_id}
                   onChange={(e) =>
                     updateMaterial(row.id, {
                       easycare: e.target.checked,

@@ -23,6 +23,7 @@ const HOME_LISTING_SELECT = `id,
   materials:listing_materials(
     material_id,
     percentage,
+    position,
     material:materials(
       id,
       name,
@@ -83,6 +84,9 @@ export async function fetchHomeListings(
 
     return {
       ...listing,
+      materials: [...(listing.materials || [])].sort(
+        (a: any, b: any) => (a.position || 0) - (b.position || 0)
+      ),
       image_path: path || null,
     };
   });
@@ -95,6 +99,6 @@ export const fetchCachedHomeListings = unstable_cache(
       publicStatuses,
       listingIds
     ),
-  ["home-listing-cards-v5"],
+  ["home-listing-cards-v6"],
   { revalidate: 30 }
 );
