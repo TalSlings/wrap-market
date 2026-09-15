@@ -146,7 +146,7 @@ export default function HeaderAuthLink({
     if (signingOut) return;
     setSigningOut(true);
     await supabase.auth.signOut();
-    location.href = "/";
+    location.href = "/market";
   };
 
   return (

@@ -42,7 +42,7 @@ export default async function SuspendedPage() {
             חזרה לאזור שלי
           </Link>
 
-          <Link className="btn" href="/">
+          <Link className="btn" href="/market">
             חזרה ללוח
           </Link>
         </div>

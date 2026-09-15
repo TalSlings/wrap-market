@@ -652,7 +652,7 @@ export default function HomeClient({
     });
 
     navigator.clipboard.writeText(
-      `${location.origin}/?shared=${encodeURIComponent(
+      `${location.origin}/market?shared=${encodeURIComponent(
         btoa(
           unescape(
             encodeURIComponent(raw)

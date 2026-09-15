@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: "https://ksharim-baby.org.il",
+      url: "https://ksharim-baby.org.il/market",
       changeFrequency: "daily",
       priority: 1,
     },
