@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PawnAvatar, pawnAvatarForSeed } from "@/components/PawnAvatar";
 import {
-  educatorsPreviewEnabled, emailLink, getDirectoryData, phoneLink, safeWebUrl,
+  emailLink, getDirectoryData, phoneLink, safeWebUrl,
 } from "@/lib/educators";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,6 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  if (!educatorsPreviewEnabled()) return { robots: { index: false, follow: false } };
   const { id } = await params;
   const { educators } = await getDirectoryData();
   const educator = educators.find((e) => e.id === id);
@@ -29,7 +28,6 @@ function Detail({ title, text }: { title: string; text: string | null }) {
 export default async function EducatorProfilePage({
   params,
 }: { params: Promise<{ id: string }> }) {
-  if (!educatorsPreviewEnabled()) notFound();
   const { id } = await params;
   const { educators, regions, subregions } = await getDirectoryData();
   const educator = educators.find((e) => e.id === id);
@@ -51,6 +49,7 @@ export default async function EducatorProfilePage({
 
   return <main className="page educator-profile">
     <Link href="/educators" className="educator-back">חזרה לכל המדריכות</Link>
+    <p>אזורי השירות עדיין בבדיקה; כדאי לוודא עם המדריכה היכן היא מקבלת.</p>
     <div className={`educator-profile-header${educator.status === "paused" ? " educator-paused" : ""}`}>
       {photo ? (
         // eslint-disable-next-line @next/next/no-img-element

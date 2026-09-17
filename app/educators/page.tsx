@@ -1,8 +1,7 @@
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import EducatorCard from "@/components/EducatorCard";
 import EducatorFilters from "@/components/EducatorFilters";
-import { educatorsPreviewEnabled, getDirectoryData, orderEducators } from "@/lib/educators";
+import { getDirectoryData, orderEducators } from "@/lib/educators";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +16,6 @@ export default async function EducatorsPage({
 }: {
   searchParams: Promise<{ region?: string; subregion?: string }>;
 }) {
-  if (!educatorsPreviewEnabled()) notFound();
   const [query, { educators, regions, subregions }] = await Promise.all([
     searchParams, getDirectoryData(),
   ]);
@@ -41,6 +39,7 @@ export default async function EducatorsPage({
       <div className="educator-intro">
         <h1>מדריכות נשיאה</h1>
         <p>חפשו מדריכה שמגיעה לאזור שלכן, או מדריכה קרובה שאפשר לפנות אליה.</p>
+        <p>אזורי השירות עדיין בבדיקה; חלק מהשיוכים עשויים להשתנות.</p>
       </div>
 
       <EducatorFilters regions={regions} subregions={subregions}
