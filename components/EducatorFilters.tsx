@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 import type { Region, Subregion } from "@/lib/educators";
 
 export default function EducatorFilters({ regions, subregions, initialRegionId,
@@ -9,37 +6,32 @@ export default function EducatorFilters({ regions, subregions, initialRegionId,
   regions: Region[]; subregions: Subregion[]; initialRegionId: string;
   initialSubregionId: string; initialOnlineOnly?: boolean;
 }) {
-  initialOnlineOnly = Boolean(initialOnlineOnly);
-  const [regionId, setRegionId] = useState(initialRegionId);
-  const [subregionId, setSubregionId] = useState(initialSubregionId);
+  const initialArea=initialSubregionId ? `s:${initialSubregionId}`
+    : initialRegionId ? `r:${initialRegionId}` : "";
   return (
     <details className="educator-filter-panel"
-      open={Boolean(initialRegionId || initialSubregionId || initialOnlineOnly)}>
+      open={Boolean(initialArea || initialOnlineOnly)}>
       <summary>סינון לפי אזור</summary>
       <form className="educator-filters" method="get" action="/educators">
-        <label htmlFor="educator-region">אזור</label>
-        <select id="educator-region" name="region" value={regionId}
-          onChange={(event) => { setRegionId(event.target.value); setSubregionId(""); }}>
+        <label htmlFor="educator-area">איפה מחפשות?</label>
+        <select id="educator-area" name="area" defaultValue={initialArea}>
           <option value="">כל האזורים</option>
-          {regions.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-        </select>
-        <label htmlFor="educator-subregion">יישוב או תת־אזור</label>
-        <select id="educator-subregion" name="subregion" value={subregionId}
-          disabled={!regionId} onChange={(event) => setSubregionId(event.target.value)}>
-          <option value="">כל האזור</option>
-          {subregions.filter((s) => s.region_id === regionId).map((s) =>
-            <option key={s.id} value={s.id}>{s.name}</option>)}
+          {regions.map((region) => <optgroup key={region.id} label={region.name}>
+            <option value={`r:${region.id}`}>כל אזור {region.name}</option>
+            {subregions.filter((subregion) => subregion.region_id === region.id).map((subregion) =>
+              <option key={subregion.id} value={`s:${subregion.id}`}>{subregion.name}</option>)}
+          </optgroup>)}
         </select>
         <label className="educator-online-filter">
-          <input type="checkbox" name="online" value="1" defaultChecked={initialOnlineOnly} />
+          <input type="checkbox" name="online" value="1" defaultChecked={Boolean(initialOnlineOnly)} />
           מקבלת אונליין
         </label>
         <div className="educator-filter-actions">
           <button className="btn primary" type="submit">הצגת מדריכות</button>
-          {(initialRegionId || initialSubregionId || initialOnlineOnly) &&
-            <Link href="/educators">ניקוי סינון</Link>}
+          {(initialArea || initialOnlineOnly) && <Link href="/educators">ניקוי סינון</Link>}
         </div>
       </form>
     </details>
   );
 }
+

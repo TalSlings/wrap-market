@@ -164,6 +164,13 @@ export function hasMeaningfulText(value:string|null|undefined) {
   const normalized=(value || "").trim().replace(/[.!?،,;:]+$/g,"").trim().toLowerCase();
   return Boolean(normalized) && !new Set(["לא","אין","ללא","לא רלוונטי","לא רלבנטי","—","-"]).has(normalized);
 }
+export function truncateCardText(value:string|null|undefined,maxLength=87) {
+  const text=(value || "").trim().replace(/\s+/g," ");
+  if (text.length<=maxLength) return text;
+  const shortened=text.slice(0,maxLength+1);
+  const lastSpace=shortened.lastIndexOf(" ");
+  return `${shortened.slice(0,lastSpace>maxLength*.65 ? lastSpace : maxLength).trim()}…`;
+}
 export function safeWebUrl(value:string|null) {
   if (!value) return null;
   try { const url=new URL(value); return url.protocol==="https:" || url.protocol==="http:" ? url.toString() : null; }

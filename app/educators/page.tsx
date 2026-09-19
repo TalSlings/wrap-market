@@ -10,11 +10,13 @@ export const metadata: Metadata = {
 };
 
 export default async function EducatorsPage({ searchParams }: {
-  searchParams: Promise<{ region?: string; subregion?: string; online?: string }>;
+  searchParams: Promise<{ area?: string; region?: string; subregion?: string; online?: string }>;
 }) {
   const [query, { educators, regions, subregions }] = await Promise.all([searchParams, getDirectoryData()]);
-  const requestedRegion = regions.find((r) => r.id === query.region) || null;
-  const selectedSubregion = subregions.find((s) => s.id === query.subregion &&
+  const areaRegionId=query.area?.startsWith("r:") ? query.area.slice(2) : query.region;
+  const areaSubregionId=query.area?.startsWith("s:") ? query.area.slice(2) : query.subregion;
+  const requestedRegion = regions.find((r) => r.id === areaRegionId) || null;
+  const selectedSubregion = subregions.find((s) => s.id === areaSubregionId &&
     (!requestedRegion || s.region_id === requestedRegion.id)) || null;
   const selectedRegion = requestedRegion || regions.find((r) => r.id === selectedSubregion?.region_id) || null;
   const onlineOnly = query.online === "1";
