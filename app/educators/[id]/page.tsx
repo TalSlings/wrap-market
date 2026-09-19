@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PawnAvatar, pawnAvatarForSeed } from "@/components/PawnAvatar";
+import { PawnAvatar } from "@/components/PawnAvatar";
+import { pawnAvatarForSeed } from "@/lib/pawnAvatarSeed";
 import {
   emailLink, getDirectoryData, phoneLink, safeWebUrl,
 } from "@/lib/educators";

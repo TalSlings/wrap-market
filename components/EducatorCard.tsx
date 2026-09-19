@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PawnAvatar, pawnAvatarForSeed } from "@/components/PawnAvatar";
+import { PawnAvatar } from "@/components/PawnAvatar";
+import { pawnAvatarForSeed } from "@/lib/pawnAvatarSeed";
 import type { Educator } from "@/lib/educators";
 import { safeWebUrl } from "@/lib/educators";
 
