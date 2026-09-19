@@ -153,6 +153,17 @@ export function formatServiceAreas(e:Educator,regions:Region[],subregions:Subreg
   if (!compact || names.length<=3) return names.join(" · ");
   return `${names.slice(0,3).join(" · ")} · ועוד ${names.length-3}`;
 }
+export function formatCompactServiceAreas(e:Educator,regions:Region[],subregions:Subregion[]) {
+  const fullRegionIds=new Set(e.region_ids);
+  const specific=subregions.filter((s)=>e.subregion_ids.includes(s.id) && !fullRegionIds.has(s.region_id));
+  if (fullRegionIds.size===0 && specific.length===1) return specific[0].name;
+  const representedRegionIds=new Set([...fullRegionIds,...specific.map((s)=>s.region_id)]);
+  return regions.filter((r)=>representedRegionIds.has(r.id)).map((r)=>r.name).join(" · ");
+}
+export function hasMeaningfulText(value:string|null|undefined) {
+  const normalized=(value || "").trim().replace(/[.!?،,;:]+$/g,"").trim().toLowerCase();
+  return Boolean(normalized) && !new Set(["לא","אין","ללא","לא רלוונטי","לא רלבנטי","—","-"]).has(normalized);
+}
 export function safeWebUrl(value:string|null) {
   if (!value) return null;
   try { const url=new URL(value); return url.protocol==="https:" || url.protocol==="http:" ? url.toString() : null; }

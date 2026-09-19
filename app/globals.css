@@ -161,19 +161,24 @@ button{cursor:pointer}
 .educator-group-title{margin:0 0 12px;font-size:1.12rem}
 .educator-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .educator-card{
-  display:flex;flex-direction:column;gap:10px;
-  padding:18px;border:1px solid #1d1a22;border-radius:var(--radius);background:#fff;
+  display:flex;flex-direction:column;gap:8px;
+  padding:14px;border:1px solid #1d1a22;border-radius:var(--radius);background:#fff;
   color:inherit;text-decoration:none;transition:transform .12s ease,border-color .12s ease;
+  font-size:.9rem;
 }
 .educator-card:hover,.educator-card:focus-visible{transform:translateY(-1px);border-color:#7d6cd1;outline:none}
-.educator-card-heading{display:flex;align-items:flex-start;gap:13px}
-.educator-card-heading .pawn-avatar,.educator-photo{flex:none;width:86px;height:86px;border-radius:50%;object-fit:cover}
-.educator-card h2{margin:0 0 5px;font-size:1.2rem}
+.educator-card-heading{display:flex;align-items:flex-start;gap:11px}
+.educator-card-heading .pawn-avatar,.educator-photo{flex:none;width:76px;height:76px;border:1px solid #1d1a22;border-radius:50%;object-fit:cover}
+.educator-card h2{margin:0 0 3px;font-size:1.08rem}
 .educator-card p{margin:3px 0;white-space:pre-line}
 .educator-brand{font-weight:700}
-.educator-card-areas{color:var(--muted);font-size:.92rem}
+.educator-card-areas{display:flex;align-items:flex-start;gap:4px;color:var(--muted);font-size:.84rem}
+.educator-card-areas svg{width:15px;height:15px;flex:none;margin-top:1px;fill:none;stroke:currentColor;stroke-width:1.7}
 .educator-card-intro{font-weight:650}
-.educator-card-training{color:var(--muted);font-size:.92rem;max-height:5em;overflow:hidden}
+.educator-card-training{font-size:.88rem;max-height:4.4em;overflow:hidden}
+.educator-card-training strong{color:#5c49bd}
+.educator-card-profession{font-size:.86rem;color:var(--muted);max-height:4.4em;overflow:hidden}
+.educator-card-profession strong{color:var(--ink)}
 .educator-paused{background:#f4f3f5;filter:grayscale(.65)}
 .educator-paused-label{display:inline-block;margin:4px 0 6px;padding:3px 8px;border:1px solid #777;border-radius:4px;color:#424242;font-weight:700;font-size:.87rem}
 .educator-empty{padding:22px 0}
@@ -182,15 +187,18 @@ button{cursor:pointer}
 .educator-profile-header p{margin:5px 0;white-space:pre-line}
 .educator-profile-areas{color:var(--muted)}
 .educator-profile-intro{font-weight:650}
-.educator-professional-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:24px;margin-top:28px}
-.educator-detail-section{margin-bottom:24px}
+.educator-professional-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:14px;margin-top:14px}
+.educator-professional-layout>div,.educator-long-text{padding:18px;border:1px solid #1d1a22;border-radius:var(--radius)}
+.educator-detail-section{margin-bottom:20px}
+.educator-detail-section:last-child{margin-bottom:0}
 .educator-detail-section h2,.educator-digital-links h2,.educator-practical h2{font-size:1.15rem;margin:0 0 7px}
 .educator-detail-section p,.educator-practical p{margin:0 0 11px;white-space:pre-line}
 .educator-digital-links{align-self:start;padding:18px;border:1px solid #1d1a22;border-radius:var(--radius)}
-.educator-long-text{margin-top:8px}
-.educator-practical{margin:8px 0 20px;padding:18px;border:1px solid #cfc5f3;border-radius:var(--radius);background:#faf8ff}
+.educator-digital-links h2{text-align:left}
+.educator-long-text{margin-top:14px}
+.educator-practical{margin:14px 0 20px;padding:18px;border:1px solid #1d1a22;border-radius:var(--radius);background:#faf8ff}
 .educator-practical h3{font-size:1rem;margin:14px 0 5px}
-.educator-contact-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.educator-contact-links{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin-top:16px}
 .educator-contact-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0}
 .educator-contact-actions.compact{justify-content:flex-end;margin:0;max-width:260px}
 .educator-contact-error{width:100%;font-size:.88rem;color:var(--danger)}
@@ -198,12 +206,17 @@ button{cursor:pointer}
 @media(max-width:650px){
   .educator-grid,.educator-professional-layout{grid-template-columns:1fr}
   .educator-profile-header{grid-template-columns:auto 1fr}
-  .educator-contact-actions.compact{grid-column:1 / -1;justify-content:flex-start;max-width:none}
+  .educator-contact-actions.compact{grid-column:1 / -1;justify-content:flex-end;max-width:none}
+  .educator-digital-links{order:-1}
+  .educator-professional-layout>div,.educator-digital-links,.educator-long-text,.educator-practical{padding:14px}
 }
 @media(max-width:420px){
   .educator-filters{grid-template-columns:1fr}
   .educator-profile-header{align-items:flex-start;gap:12px}
   .educator-profile-header .pawn-avatar,.educator-profile-photo{width:88px;height:88px}
+  .educator-card{padding:12px;font-size:.84rem}
+  .educator-card-heading .pawn-avatar,.educator-photo{width:68px;height:68px}
+  .educator-card h2{font-size:1rem}
 }
 .share-icon-btn{
   width:38px;
