@@ -4,8 +4,13 @@ import {
 } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ListingForm from "@/components/ListingForm";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: { absolute: "עריכת מודעה | רק ארוגים (וטבעות)" },
+  robots: { index: false, follow: false },
+};
 
 export default async function Page({
   params,

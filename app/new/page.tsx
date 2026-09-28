@@ -3,7 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import ListingForm from "@/components/ListingForm";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "הוספת מודעה", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: { absolute: "הוספת מודעה | רק ארוגים (וטבעות)" },
+  robots: { index: false, follow: false },
+};
 
 export const dynamic = "force-dynamic";
 

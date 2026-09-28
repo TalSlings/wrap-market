@@ -41,7 +41,10 @@ export async function generateMetadata({
     .maybeSingle();
 
   if (!l) {
-    return { title: "המודעה לא נמצאה", robots: { index: false, follow: false } };
+    return {
+      title: { absolute: "המודעה לא נמצאה | רק ארוגים (וטבעות)" },
+      robots: { index: false, follow: false },
+    };
   }
 
   const title = listingTitle(l);
@@ -52,7 +55,7 @@ export async function generateMetadata({
   const description = `${title}${details ? `, ${details}` : ""}. מנשא יד שנייה למכירה בישראל.`;
   const isPublic = l.status === "active";
   return {
-    title,
+    title: { absolute: `${title} | רק ארוגים (וטבעות)` },
     description,
     alternates: { canonical: `/listing/${id}` },
     robots: { index: isPublic, follow: isPublic },

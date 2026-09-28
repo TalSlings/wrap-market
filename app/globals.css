@@ -37,11 +37,33 @@ button{cursor:pointer}
   background:rgba(255,255,255,.96);
   border-bottom:1px solid var(--ink);
 }
+.site-header{min-height:67px}
+.site-menu-root{position:relative;display:flex;align-items:center;flex:none}
+.site-menu-trigger{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:42px;height:42px;padding:0;border:1px solid var(--ink);
+  border-radius:var(--radius);background:#fff;color:var(--ink);
+}
+.site-menu-trigger:hover{background:var(--soft)}
+.site-menu-trigger svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.site-menu{
+  position:absolute;inset-inline-start:0;top:calc(100% + 9px);z-index:1000;
+  width:250px;max-width:calc(100vw - 24px);padding:7px;
+  border:1px solid var(--ink);border-radius:var(--radius);background:#fff;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+}
+.site-menu a{display:flex;flex-direction:column;gap:1px;padding:10px;border-radius:5px}
+.site-menu a:hover,.site-menu a:focus-visible{background:var(--soft)}
+.site-menu a[aria-current="page"]{background:var(--filter-bg)}
+.site-menu a span{font-weight:750}
+.site-menu a small{font-size:.78rem;color:var(--muted)}
 .logo{
-  margin-left:auto;
+  margin-inline-end:auto;
   display:inline-flex;
   color:var(--ink);
 }
+.ksharim-logo .logo-main{color:var(--accent)}
+.header-new-listing-short{display:none}
 .logo-lockup{
   display:inline-flex;
   align-items:baseline;
@@ -672,9 +694,14 @@ button{cursor:pointer}
 @media (max-width:640px){
   .shell{max-width:none}
   .header{padding:10px 12px;gap:7px}
-  .logo-main{font-size:25px}
-  .logo-aside{font-size:15px}
-  .iconbtn{padding:6px 9px;font-size:13px}
+  .site-header{min-height:61px}
+  .site-menu-trigger{width:38px;height:38px}
+  .logo-main{font-size:23px}
+  .logo-aside{font-size:13px;transform:translateY(3px) scaleX(1.08)}
+  .market-logo .logo-lockup{gap:5px}
+  .iconbtn{padding:6px 8px;font-size:13px}
+  .header-new-listing-wide{display:none}
+  .header-new-listing-short{display:inline}
   .page{padding:12px}
   .filters,.section{padding:12px}
   .listing{grid-template-columns:118px 1fr;gap:10px;padding:8px}

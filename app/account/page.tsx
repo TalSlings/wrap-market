@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AccountClient from "@/components/AccountClient";
 import { getAccountPublicData } from "@/lib/accountPublicData";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,22 @@ function normalizeTab(value?: string): AccountTab {
   return ACCOUNT_TABS.includes(value as AccountTab)
     ? (value as AccountTab)
     : "profile";
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}): Promise<Metadata> {
+  const { tab } = await searchParams;
+  const normalized = normalizeTab(tab);
+  const marketTab = normalized !== "profile";
+  return {
+    title: marketTab
+      ? { absolute: "האזור שלי | רק ארוגים (וטבעות)" }
+      : "האזור שלי",
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function Page({
@@ -114,21 +131,40 @@ export default async function Page({
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    favorites = (favoriteRows || [])
+    const favoriteListings = (favoriteRows || [])
       .map((row: any) => row.listing)
-      .filter((listing: any) => listing && listing.status !== "deleted")
-      .map((listing: any) => {
-        const imagePath = [...(listing.images || [])]
-          .filter((image: any) => image.image_type === "listing")
-          .sort((a: any, b: any) => Number(a.position) - Number(b.position))[0]
-          ?.storage_path;
+      .filter((listing: any) => listing && listing.status !== "deleted");
+    const imagePathByListing: Record<string, string> = {};
+
+    for (const listing of favoriteListings) {
+      const imagePath = [...(listing.images || [])]
+        .filter((image: any) => image.image_type === "listing")
+        .sort((a: any, b: any) => Number(a.position) - Number(b.position))[0]
+        ?.storage_path;
+      if (imagePath) imagePathByListing[listing.id] = imagePath;
+    }
+
+    const signedUrlByPath: Record<string, string> = {};
+    const paths = [...new Set(Object.values(imagePathByListing))];
+    if (paths.length > 0) {
+      const { data: signedUrls } = await s.storage
+        .from("listing-images")
+        .createSignedUrls(paths, 3600);
+
+      for (const item of signedUrls || []) {
+        if (item?.path && item?.signedUrl) {
+          signedUrlByPath[item.path] = item.signedUrl;
+        }
+      }
+    }
+
+    favorites = favoriteListings.map((listing: any) => {
+        const imagePath = imagePathByListing[listing.id];
         const { images: _images, ...favorite } = listing;
 
         return {
           ...favorite,
-          image_url: imagePath
-            ? `/api/listing-thumbnail/${listing.id}?v=${encodeURIComponent(imagePath)}`
-            : null,
+          image_url: imagePath ? signedUrlByPath[imagePath] || null : null,
         };
       });
   } else {

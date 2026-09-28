@@ -22,7 +22,7 @@ export async function generateMetadata({
   const title = displayName ? `המדף של ${displayName}` : "מדף מנשאים";
 
   return {
-    title,
+    title: { absolute: `${title} | רק ארוגים (וטבעות)` },
     description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
     robots: { index: false, follow: true },
     openGraph: {

@@ -3,7 +3,7 @@ import { CONDITION_HELP, CONDITIONS } from "@/lib/constants";
 import { ColorPatternExamples } from "@/components/ColorPatternGuide";
 
 export const metadata = {
-  title: "שאלות נפוצות על מנשאים ארוגים",
+  title: { absolute: "שאלות נפוצות | רק ארוגים (וטבעות)" },
   description:
     "מידות, GSM, חומרים, מצב ותמחור של מנשאים ארוגים ומנשאי טבעות יד שנייה.",
 };

@@ -1,9 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import ShareButton from "@/components/ShareButton";
+import { getSiteSection } from "@/lib/siteSection";
 
 export default function SiteFooter() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const section = getSiteSection(pathname, searchParams);
+  const share = section === "market"
+    ? {
+        url: "/market",
+        title: "רק ארוגים (וטבעות)",
+        label: "שיתוף השוק",
+        text: "שוק יד שנייה למנשאים ארוגים ומנשאי טבעות",
+      }
+    : section === "educators"
+      ? {
+          url: "/educators",
+          title: "מדריכות נשיאה | קשרים",
+          label: "שיתוף כל המדריכות",
+          text: "מאגר מדריכות הנשיאה באתר קשרים",
+        }
+      : null;
   const linkStyle: React.CSSProperties = {
     textDecoration: "underline",
     textUnderlineOffset: 3,
@@ -19,13 +39,14 @@ export default function SiteFooter() {
           borderTop: "1px solid var(--line)",
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: 16 }}>
+        {share && <div style={{ textAlign: "center", marginBottom: 16 }}>
           <ShareButton
-            url="/"
-            label="שתפו את הלוח"
-            text="לוח יד שנייה למנשאים ארוגים ומנשאי טבעות"
+            url={share.url}
+            title={share.title}
+            label={share.label}
+            text={share.text}
           />
-        </div>
+        </div>}
 
         <nav
           aria-label="קישורים כלליים"
@@ -94,4 +115,3 @@ export default function SiteFooter() {
     </>
   );
 }
-

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "לומדות להשתמש במנשא",
+  title: { absolute: "לומדות להשתמש במנשא | רק ארוגים (וטבעות)" },
   description:
     "למה חשוב ללמוד להשתמש במנשא ארוג או במנשא טבעות, ואיפה אפשר לקבל הדרכה, תרגול ומשוב.",
 };

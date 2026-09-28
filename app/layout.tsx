@@ -1,10 +1,10 @@
 import "./globals.css";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import SiteFooter from "@/components/SiteFooter";
 import { Noto_Sans_Hebrew, Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
-import HeaderAuthLink from "@/components/HeaderAuthLink";
+import SiteHeader from "@/components/SiteHeader";
+import { Suspense } from "react";
 
 const notoHebrew = Noto_Sans_Hebrew({
   subsets: ["hebrew"],
@@ -21,28 +21,26 @@ const notoLatin = Noto_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://ksharim-baby.org.il"),
   title: {
-    default: "רק ארוגים (וטבעות) — לוח יד שנייה למנשאים ארוגים",
-    template: "%s | רק ארוגים (וטבעות)",
+    default: "קשרים",
+    template: "%s | קשרים",
   },
-  description:
-    "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
-  applicationName: "רק ארוגים (וטבעות)",
+  description: "קשרים — מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
+  applicationName: "קשרים",
   alternates: { canonical: "/" },
   robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     locale: "he_IL",
-    siteName: "רק ארוגים (וטבעות)",
-    title: "רק ארוגים (וטבעות) — לוח יד שנייה למנשאים ארוגים",
-    description:
-      "לוח יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
+    siteName: "קשרים",
+    title: "קשרים",
+    description: "מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
     url: "/",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "רק ארוגים (וטבעות)",
-    description: "לוח יד שנייה ישראלי למנשאים ארוגים ומנשאי טבעות.",
+    title: "קשרים",
+    description: "מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
     images: ["/opengraph-image"],
   },
 };
@@ -66,27 +64,18 @@ export default async function RootLayout({
     <html lang="he" dir="rtl">
       <body className={`${notoHebrew.variable} ${notoLatin.variable}`}>
         <div className="shell">
-          <header className="header">
-            <Link className="logo" href="/market" aria-label="לוח המודעות">
-              <span className="logo-lockup" aria-hidden="true">
-                <span className="logo-main">רק ארוגים</span>
-                <span className="logo-aside">(וטבעות)</span>
-              </span>
-            </Link>
-
-            <Link className="iconbtn" href="/new">
-              ＋ הוספת מודעה
-            </Link>
-
-            <HeaderAuthLink
+          <Suspense fallback={<div className="header site-header" aria-hidden="true" />}>
+            <SiteHeader
               initialAuthenticated={Boolean(user)}
               initialUserId={user?.id || null}
             />
-          </header>
+          </Suspense>
 
           {children}
 
-          <SiteFooter />
+          <Suspense fallback={null}>
+            <SiteFooter />
+          </Suspense>
         </div>
       </body>
     </html>

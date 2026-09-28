@@ -20,9 +20,11 @@ type HeaderProfile = {
 export default function HeaderAuthLink({
   initialAuthenticated,
   initialUserId = null,
+  signOutDestination = "/market",
 }: {
   initialAuthenticated: boolean;
   initialUserId?: string | null;
+  signOutDestination?: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -146,7 +148,7 @@ export default function HeaderAuthLink({
     if (signingOut) return;
     setSigningOut(true);
     await supabase.auth.signOut();
-    location.href = "/market";
+    location.href = signOutDestination;
   };
 
   return (
