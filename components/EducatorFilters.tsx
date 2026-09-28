@@ -6,32 +6,50 @@ export default function EducatorFilters({ regions, subregions, initialRegionId,
   regions: Region[]; subregions: Subregion[]; initialRegionId: string;
   initialSubregionId: string; initialOnlineOnly?: boolean;
 }) {
-  const initialArea=initialSubregionId ? `s:${initialSubregionId}`
-    : initialRegionId ? `r:${initialRegionId}` : "";
-  return (
-    <details className="educator-filter-panel"
-      open={Boolean(initialArea || initialOnlineOnly)}>
-      <summary>סינון לפי אזור</summary>
-      <form className="educator-filters" method="get" action="/educators">
-        <label htmlFor="educator-area">איפה מחפשות?</label>
-        <select id="educator-area" name="area" defaultValue={initialArea}>
-          <option value="">כל האזורים</option>
-          {regions.map((region) => <optgroup key={region.id} label={region.name}>
-            <option value={`r:${region.id}`}>כל אזור {region.name}</option>
-            {subregions.filter((subregion) => subregion.region_id === region.id).map((subregion) =>
-              <option key={subregion.id} value={`s:${subregion.id}`}>{subregion.name}</option>)}
-          </optgroup>)}
-        </select>
-        <label className="educator-online-filter">
-          <input type="checkbox" name="online" value="1" defaultChecked={Boolean(initialOnlineOnly)} />
-          מקבלת אונליין
-        </label>
-        <div className="educator-filter-actions">
-          <button className="btn primary" type="submit">הצגת מדריכות</button>
-          {(initialArea || initialOnlineOnly) && <Link href="/educators">ניקוי סינון</Link>}
-        </div>
-      </form>
-    </details>
-  );
+  const selectedSubregion=subregions.find((subregion)=>subregion.id===initialSubregionId);
+  const selectedRegion=regions.find((region)=>region.id===initialRegionId);
+  const selectedLabel=initialOnlineOnly ? "מקבלת אונליין"
+    : selectedSubregion?.name || selectedRegion?.name || "סינון לפי אזור";
+
+  return <details className="educator-area-menu">
+    <summary>
+      <span>{selectedLabel}</span>
+      <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5"/></svg>
+    </summary>
+    <div className="educator-area-menu-content">
+      <Link href="/educators" prefetch={false}
+        className={!initialRegionId && !initialSubregionId && !initialOnlineOnly ? "selected" : ""}
+        aria-current={!initialRegionId && !initialSubregionId && !initialOnlineOnly ? "page" : undefined}>
+        כל המדריכות
+      </Link>
+      <Link href="/educators?online=1" prefetch={false}
+        className={`educator-online-option${initialOnlineOnly ? " selected" : ""}`}
+        aria-current={initialOnlineOnly ? "page" : undefined}>
+        מקבלת אונליין
+      </Link>
+      <div className="educator-area-menu-regions">
+        {regions.map((region)=><details className="educator-region-menu" key={region.id}
+          open={!initialOnlineOnly && region.id===initialRegionId}>
+          <summary>
+            <span>{region.name}</span>
+            <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5"/></svg>
+          </summary>
+          <div className="educator-subregion-options">
+            <Link href={`/educators?area=r:${region.id}`} prefetch={false}
+              className={!initialSubregionId && initialRegionId===region.id ? "selected" : ""}
+              aria-current={!initialSubregionId && initialRegionId===region.id ? "page" : undefined}>
+              כל אזור {region.name}
+            </Link>
+            {subregions.filter((subregion)=>subregion.region_id===region.id).map((subregion)=>
+              <Link href={`/educators?area=s:${subregion.id}`} prefetch={false}
+                key={subregion.id} className={initialSubregionId===subregion.id ? "selected" : ""}
+                aria-current={initialSubregionId===subregion.id ? "page" : undefined}>
+                {subregion.name}
+              </Link>)}
+          </div>
+        </details>)}
+      </div>
+    </div>
+  </details>;
 }
 

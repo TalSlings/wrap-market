@@ -140,19 +140,39 @@ button{cursor:pointer}
 .educator-directory,.educator-profile{padding:24px 16px 48px}
 .educator-intro h1,.educator-profile h1{margin:0;font-size:clamp(1.7rem,4vw,2.3rem)}
 .educator-intro{margin-bottom:16px}
-.educator-filter-panel{
-  margin-bottom:20px;border:1px solid #cfc5f3;border-radius:var(--radius);background:#fff;
+.educator-area-menu{
+  margin-bottom:20px;border:1px solid #1d1a22;border-radius:var(--radius);background:#fff;
 }
-.educator-filter-panel summary{padding:12px 16px;font-weight:800;cursor:pointer}
-.educator-filters{
-  display:grid;grid-template-columns:1fr;
-  align-items:end;gap:8px 12px;padding:4px 16px 16px;background:var(--filter-bg);
+.educator-area-menu summary{list-style:none;cursor:pointer}
+.educator-area-menu summary::-webkit-details-marker{display:none}
+.educator-area-menu>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:46px;padding:10px 14px;font-weight:800;
 }
-.educator-filters label{font-weight:700}
-.educator-filters select{width:100%;padding:8px 10px;border:1px solid #a8a1c8;border-radius:var(--radius);background:#fff}
-.educator-online-filter{grid-column:1 / -1;display:flex;align-items:center;gap:8px}
-.educator-filter-actions{grid-column:1 / -1;display:flex;align-items:center;gap:14px}
-.educator-filter-actions a{text-decoration:underline;font-size:.9rem}
+.educator-area-menu summary svg{
+  width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .15s ease;
+}
+.educator-area-menu[open]>summary svg,.educator-region-menu[open]>summary svg{transform:rotate(180deg)}
+.educator-area-menu-content{
+  max-height:68vh;overflow-y:auto;padding:0 10px 10px;border-top:1px solid #ded8ef;
+}
+.educator-area-menu-content a{
+  display:block;padding:10px;border-radius:6px;color:inherit;text-decoration:none;
+}
+.educator-area-menu-content a:hover,.educator-area-menu-content a:focus-visible{background:#f4f1ff}
+.educator-area-menu-content a.selected{font-weight:800;background:#eee9ff}
+.educator-online-option{
+  margin:8px 0;border:1px solid #b9acee;background:#f7f4ff;color:#51409f!important;font-weight:750;
+}
+.educator-area-menu-regions{border-top:1px solid #e4dfef}
+.educator-region-menu{border-bottom:1px solid #e4dfef}
+.educator-region-menu>summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:44px;padding:9px 6px;font-weight:750;
+}
+.educator-subregion-options{padding:0 10px 8px;border-inline-start:2px solid #d8cff8}
+.educator-subregion-options a{padding:8px 10px;font-size:.93rem}
 .educator-result-count{color:var(--muted)}
 .educator-result-group{margin:18px 0;padding:14px;border:1px solid #d8cef9;border-radius:var(--radius)}
 .educator-result-group.exact{background:#faf8ff}
