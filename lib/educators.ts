@@ -171,6 +171,15 @@ export function truncateCardText(value:string|null|undefined,maxLength=87) {
   const lastSpace=shortened.lastIndexOf(" ");
   return `${shortened.slice(0,lastSpace>maxLength*.65 ? lastSpace : maxLength).trim()}…`;
 }
+export function educatorLead(e:Educator,maxLength=150) {
+  const source=[e.card_intro,e.teaching_approach,e.about].find(hasMeaningfulText);
+  if (!source) return null;
+  const text=source.trim().replace(/\s+/g," ");
+  if (text.length<=maxLength) return text;
+  const sentenceEnd=text.slice(0,maxLength+1).search(/[.!?](?:\s|$)/);
+  if (sentenceEnd>=Math.min(45,maxLength*.45)) return text.slice(0,sentenceEnd+1);
+  return truncateCardText(text,maxLength);
+}
 export function safeWebUrl(value:string|null) {
   if (!value) return null;
   if (value.startsWith("/") && !value.startsWith("//")) return value;
