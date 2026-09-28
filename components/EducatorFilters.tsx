@@ -13,8 +13,14 @@ export default function EducatorFilters({ regions, subregions, initialRegionId,
 
   return <details className="educator-area-menu">
     <summary>
-      <span>{selectedLabel}</span>
-      <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5"/></svg>
+      <span className="educator-area-menu-label">
+        <svg className="educator-area-pin" aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M12 21s7-5.4 7-12a7 7 0 1 0-14 0c0 6.6 7 12 7 12Z"/>
+          <circle cx="12" cy="9" r="2.3"/>
+        </svg>
+        <span><small>מיקום</small><strong>{selectedLabel}</strong></span>
+      </span>
+      <svg className="educator-area-chevron" aria-hidden="true" viewBox="0 0 20 20"><path d="m5 7.5 5 5 5-5"/></svg>
     </summary>
     <div className="educator-area-menu-content">
       <Link href="/educators" prefetch={false}
@@ -25,7 +31,7 @@ export default function EducatorFilters({ regions, subregions, initialRegionId,
       <Link href="/educators?online=1" prefetch={false}
         className={`educator-online-option${initialOnlineOnly ? " selected" : ""}`}
         aria-current={initialOnlineOnly ? "page" : undefined}>
-        מקבלת אונליין
+        <span className="educator-online-dot" aria-hidden="true" />מקבלת אונליין
       </Link>
       <div className="educator-area-menu-regions">
         {regions.map((region)=><details className="educator-region-menu" key={region.id}
@@ -52,4 +58,3 @@ export default function EducatorFilters({ regions, subregions, initialRegionId,
     </div>
   </details>;
 }
-
