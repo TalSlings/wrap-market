@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { PawnAvatar } from "@/components/PawnAvatar";
 import { pawnAvatarForSeed } from "@/lib/pawnAvatarSeed";
 import type { Educator, Region, Subregion } from "@/lib/educators";
@@ -17,7 +18,10 @@ export default function EducatorCard({ educator, regions, subregions }: {
     <Link className={`educator-card${educator.status === "paused" ? " educator-paused" : ""}`}
       href={`/educators/${educator.id}`}>
       <div className="educator-card-main">
-        {photo ? (
+        {photo?.startsWith("/") ? (
+          <Image className="educator-photo" src={photo} alt="" width={192} height={192}
+            sizes="96px" />
+        ) : photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img className="educator-photo" src={photo} alt="" loading="lazy" />
         ) : <PawnAvatar avatarKey={pawnAvatarForSeed(educator.id)} size={86} decorative />}

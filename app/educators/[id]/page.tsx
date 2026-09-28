@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PawnAvatar } from "@/components/PawnAvatar";
@@ -43,7 +44,10 @@ export default async function EducatorProfilePage({ params }: { params: Promise<
 
   return <main className="page educator-profile">
     <div className={`educator-profile-header${educator.status === "paused" ? " educator-paused" : ""}`}>
-      {photo ? (
+      {photo?.startsWith("/") ? (
+        <Image src={photo} className="educator-profile-photo" alt="" width={240} height={240}
+          sizes="(max-width: 420px) 88px, 120px" priority />
+      ) : photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={photo} className="educator-profile-photo" alt="" />
       ) : <PawnAvatar avatarKey={pawnAvatarForSeed(educator.id)} size={120} decorative />}
