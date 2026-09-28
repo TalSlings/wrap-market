@@ -23,6 +23,17 @@ function Detail({ title, text }: { title: string; text: string | null }) {
   return <div className="educator-detail-section"><h3>{title}</h3><p>{text}</p></div>;
 }
 
+function digitalLabel(fallback:string,url:string|null) {
+  if (!url) return fallback;
+  try {
+    const host=new URL(url).hostname.toLowerCase();
+    if (host.includes("youtube.com") || host.includes("youtu.be")) return "YouTube";
+    if (host.includes("tiktok.com")) return "TikTok";
+    if (host.includes("whatsapp.com") || host.includes("wa.me")) return "WhatsApp";
+  } catch { return fallback; }
+  return fallback;
+}
+
 export default async function EducatorProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { educators, regions, subregions } = await getDirectoryData();
@@ -33,10 +44,12 @@ export default async function EducatorProfilePage({ params }: { params: Promise<
   const compactAreas = formatCompactServiceAreas(educator, regions, subregions);
   const fullAreas = formatServiceAreas(educator, regions, subregions);
   const lead = educatorLead(educator, 220);
-  const links = [
+  const linkCandidates:Array<[string,string|null]> = [
     ["אתר", educator.website_url], ["Instagram", educator.instagram_url],
     ["Facebook", educator.facebook_url], ["רשת חברתית נוספת", educator.other_social_url],
-  ].map(([label,url]) => ({label,url:safeWebUrl(url)})).filter((entry)=>entry.url);
+  ];
+  const links = linkCandidates.map(([label,rawUrl]) => ({label:digitalLabel(label,rawUrl),url:safeWebUrl(rawUrl)}))
+    .filter((entry)=>entry.url);
   const hasProfessional = [educator.training, educator.related_professions,
     educator.additional_professions, educator.volunteer_work].some(hasMeaningfulText);
   const hasStory = [educator.about,educator.teaching_approach].some(hasMeaningfulText);
@@ -75,6 +88,15 @@ export default async function EducatorProfilePage({ params }: { params: Promise<
       <EducatorContactActions educatorId={educator.id} educatorName={educator.full_name} email={email} compact />
     </section>
 
+    {links.length > 0 && <section className="educator-profile-section educator-digital-links">
+      <div className="educator-section-heading"><div><p>להכיר דרך התוכן</p><h2>ברשתות ובאתר</h2></div></div>
+      <div className="educator-contact-links">{links.map(({label,url}) =>
+        <a className="btn" href={url!} key={label} target="_blank" rel="noopener noreferrer">
+          {label}<span aria-hidden="true"> ↗</span>
+        </a>)}
+      </div>
+    </section>}
+
     {hasProfessional && <section className="educator-profile-section educator-professional-section">
       <div className="educator-section-heading">
         <svg className="educator-section-icon" aria-hidden="true" viewBox="0 0 24 24">
@@ -96,15 +118,6 @@ export default async function EducatorProfilePage({ params }: { params: Promise<
       {hasMeaningfulText(educator.teaching_approach) && <div className="educator-story-block educator-approach-block">
         <h3>הגישה שלי בהדרכה ובנשיאה</h3><p>{educator.teaching_approach}</p>
       </div>}
-    </section>}
-
-    {links.length > 0 && <section className="educator-profile-section educator-digital-links">
-      <div className="educator-section-heading"><div><p>עוד ממני</p><h2>אפשר למצוא אותי גם כאן</h2></div></div>
-      <div className="educator-contact-links">{links.map(({label,url}) =>
-        <a className="btn" href={url!} key={label} target="_blank" rel="noopener noreferrer">
-          {label}<span aria-hidden="true"> ↗</span>
-        </a>)}
-      </div>
     </section>}
 
     {hasPractical && <section className="educator-profile-section educator-practical">

@@ -217,7 +217,13 @@ button{cursor:pointer}
 .educator-card p{margin:4px 0;white-space:pre-line}
 .educator-brand{font-weight:700;color:#51409f}
 .educator-card-facts{display:flex;flex-direction:column;gap:7px;padding:9px 0;border-top:1px solid #e2ddef;border-bottom:1px solid #e2ddef}
-.educator-card-intro{margin:10px 0 5px!important;font-size:.88rem;font-weight:400;line-height:1.5;color:var(--muted)}
+.educator-card-personal{margin:9px 0 4px}
+.educator-card-personal>span{display:block;margin-bottom:2px;color:#6b59c3;font-size:.72rem;font-weight:800}
+.educator-card-intro{
+  display:-webkit-box;min-height:2.7em;margin:0!important;overflow:hidden;
+  -webkit-box-orient:vertical;-webkit-line-clamp:2;
+  font-size:.86rem;font-weight:400;line-height:1.35;color:var(--muted);
+}
 .educator-card-training{display:flex;align-items:flex-start;gap:7px;margin:0!important;font-size:.86rem;line-height:1.45}
 .educator-training-icon{flex:none;width:18px;height:18px;margin-top:1px;fill:none;stroke:#5c49bd;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .educator-training-text{min-width:0}

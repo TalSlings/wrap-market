@@ -3,7 +3,7 @@ import Image from "next/image";
 import { PawnAvatar } from "@/components/PawnAvatar";
 import { pawnAvatarForSeed } from "@/lib/pawnAvatarSeed";
 import type { Educator, Region, Subregion } from "@/lib/educators";
-import { formatCompactServiceAreas, hasMeaningfulText, safeWebUrl } from "@/lib/educators";
+import { formatCompactServiceAreas, hasMeaningfulText, safeWebUrl, truncateCardText } from "@/lib/educators";
 
 export default function EducatorCard({ educator, regions, subregions }: {
   educator: Educator; regions?: Region[]; subregions?: Subregion[];
@@ -12,7 +12,9 @@ export default function EducatorCard({ educator, regions, subregions }: {
   subregions = subregions || [];
   const photo = safeWebUrl(educator.photo_url);
   const areas = formatCompactServiceAreas(educator, regions, subregions);
-  const lead = hasMeaningfulText(educator.card_intro) ? educator.card_intro : null;
+  const personalSource = [educator.card_intro, educator.about, educator.teaching_approach]
+    .find(hasMeaningfulText);
+  const lead = personalSource ? truncateCardText(personalSource, 145) : null;
   const firstName = educator.full_name.trim().split(/\s+/)[0];
   return (
     <Link className={`educator-card${educator.status === "paused" ? " educator-paused" : ""}`}
@@ -44,7 +46,10 @@ export default function EducatorCard({ educator, regions, subregions }: {
             <span>{areas}</span>
           </p>}
         </div>
-        {lead && <p className="educator-card-intro">{lead}</p>}
+        {lead && <div className="educator-card-personal">
+          <span>כמה מילים ממני</span>
+          <p className="educator-card-intro">{lead}</p>
+        </div>}
         <div className="educator-card-footer">
           <span className="educator-card-invitation">להכיר את {firstName}<span aria-hidden="true"> ←</span></span>
         </div>
