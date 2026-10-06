@@ -101,6 +101,8 @@ button{cursor:pointer}
   transition:background .15s ease,color .15s ease,border-color .15s ease;
 }
 .btn:hover,.iconbtn:hover{background:var(--soft)}
+.btn.small{padding:5px 8px;font-size:.78rem}
+.btn.danger-button{color:var(--danger);border-color:currentColor}
 .header-account{position:relative;display:flex;align-items:center}
 .header-avatar-trigger{
   display:inline-flex;
@@ -387,6 +389,45 @@ button{cursor:pointer}
 .section:has(> .section){
   background:var(--group-bg);
 }
+
+.listing-image-editor{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin:8px 0 12px;
+}
+.listing-image-edit-card{
+  min-width:0;
+  padding:7px;
+  border:1px solid var(--line-soft);
+  background:#fff;
+}
+.listing-image-edit-card.is-primary{border:2px solid var(--accent);padding:6px}
+.listing-image-edit-preview{
+  position:relative;
+  display:grid;
+  place-items:center;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border:1px solid var(--ink);
+  background:var(--soft);
+}
+.listing-image-edit-preview img{width:100%;height:100%;object-fit:cover}
+.listing-image-edit-preview>.muted{padding:8px;text-align:center;font-size:.75rem}
+.listing-primary-badge{
+  position:absolute;
+  inset-block-start:6px;
+  inset-inline-start:6px;
+  padding:3px 7px;
+  background:var(--accent);
+  color:#fff;
+  font-size:.72rem;
+  font-weight:800;
+}
+.listing-image-edit-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.listing-image-edit-actions .btn{flex:1 1 auto}
+.defect-images .listing-image-edit-card>.btn{margin-top:7px}
+@media(min-width:700px){.listing-image-editor{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 /* Search is a surface, not another outlined control.
    Tiny irregular horizontal slubs hint at raw silk. */
@@ -771,4 +812,73 @@ button{cursor:pointer}
   border-top:1px dashed var(--ink);
   height:0;
   margin:12px 0;
+}
+
+/* Shared educator and manager dashboard */
+.educator-join-link{display:inline-block;margin-top:8px;color:#5f4eb4;text-decoration:underline;text-underline-offset:3px;font-size:.9rem}
+.dashboard-page{padding-bottom:52px}
+.dashboard-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px}
+.dashboard-heading p{margin:0 0 2px;color:var(--accent);font-weight:750}
+.dashboard-heading h1{margin:0;line-height:1.1}
+.educator-workspace{display:grid;gap:14px}
+.dashboard-panel{border:1px solid var(--ink);background:#fff;border-radius:var(--radius);overflow:hidden}
+.dashboard-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:12px 14px;cursor:pointer;list-style:none;font-weight:800;background:#fbfaff}
+.dashboard-panel>summary::-webkit-details-marker{display:none}
+.dashboard-panel>summary small{font-size:.78rem;font-weight:500;color:var(--muted);text-align:left}
+.dashboard-panel[open]>summary{border-bottom:1px solid var(--line-soft)}
+.dashboard-panel-body{padding:12px}
+.dashboard-panel-empty{padding:14px}
+.dashboard-panel-empty h2{margin:0 0 5px}.dashboard-panel-empty p{margin:0 0 13px}
+.market-admin-panel{margin-top:14px}
+.educator-onboarding-note,.educator-review-note{padding:12px;margin-bottom:12px;border:1px solid var(--accent);background:#f6f3ff}
+.educator-onboarding-note h2,.educator-review-note p{margin:0}.educator-onboarding-note p{margin:5px 0 0}
+.educator-editor{display:grid;gap:12px}
+.educator-editor-section,.educator-area-editor{display:grid;gap:10px;margin:0;padding:12px;border:1px solid #d8d2e3;background:#fff}
+.educator-editor-section h3,.educator-area-editor legend{margin:0;font-size:1rem;font-weight:800}
+.educator-area-editor legend{padding:0 4px}
+.educator-area-editor>.muted{margin:-2px 0 2px;font-size:.82rem}
+.educator-editor-field{display:grid;gap:4px}
+.educator-editor-field>span{font-weight:700;font-size:.9rem}
+.educator-editor-field>small{color:var(--muted);font-size:.76rem}
+.educator-editor-field input,.educator-editor-field textarea,.educator-editor-field select,
+.educator-manager-toolbar input,.educator-claim-input input{width:100%;min-height:42px;border:1px solid #aaa;border-radius:5px;background:#fff;padding:8px 10px}
+.educator-editor-field textarea{resize:vertical;line-height:1.45}
+.educator-area-edit-region{border-top:1px solid var(--line-soft)}
+.educator-area-edit-region>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 2px;cursor:pointer;list-style:none}
+.educator-area-edit-region>summary::-webkit-details-marker{display:none}
+.educator-area-edit-region>summary label{font-weight:700;cursor:pointer}
+.educator-area-edit-subs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:2px 22px 10px 0}
+.educator-area-edit-subs label{font-size:.88rem}
+.educator-editor-actions,.educator-manager-actions{display:flex;flex-wrap:wrap;gap:8px}
+.educator-editor-message{margin:0;padding:9px 11px;background:#f6f3ff;border-inline-start:3px solid var(--accent)}
+.educator-join-page{max-width:760px;margin:0 auto}.educator-join-page h1{margin-bottom:4px}.educator-join-intro{margin-top:0;color:var(--muted)}
+.educator-join-layout{display:grid;gap:16px}.educator-claim-box,.educator-new-application{border:1px solid var(--ink);padding:14px;background:#fff}
+.educator-claim-box h2,.educator-new-application h2{margin:0 0 4px}.educator-claim-box>p,.educator-new-application>p{margin:0 0 12px}
+.educator-claim-input{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.educator-claim-input input{font-size:1.3rem;letter-spacing:.35em;text-align:center;direction:ltr}
+.educator-claim-preview{display:grid;gap:4px;margin-top:12px;padding:12px;border:1px solid var(--accent);background:#f6f3ff}.educator-claim-preview span{color:var(--muted)}.educator-claim-preview p{margin:6px 0}
+.educator-join-divider{display:flex;align-items:center;gap:10px;color:var(--muted)}.educator-join-divider:before,.educator-join-divider:after{content:"";height:1px;background:var(--line-soft);flex:1}
+.educator-manager-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:12px}
+.educator-manager-list{display:grid;gap:10px}.educator-manager-row{padding:11px;border:1px solid var(--line-soft);background:#fff}
+.educator-manager-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.educator-manager-heading>div{display:grid}.educator-manager-heading span{color:var(--muted);font-size:.83rem}
+.educator-review-status{flex:none;padding:3px 7px;border:1px solid var(--line-soft);border-radius:99px;font-size:.74rem!important;color:var(--ink)!important}
+.status-submitted,.status-changes_requested{border-color:var(--accent);background:#f2efff}.status-approved{background:#eef8f0;border-color:#78a883}
+.educator-manager-row>.muted{margin:5px 0;font-size:.8rem}.educator-review-inline{margin:7px 0;padding:7px;background:#fff6e8;font-size:.86rem}
+.educator-claim-code{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0;padding:8px;background:#f6f3ff}.educator-claim-code b{font-size:1.12rem;letter-spacing:.12em}
+.educator-manager-actions{margin-top:8px}.educator-manager-editor{margin-top:11px;padding-top:11px;border-top:1px solid var(--line-soft)}
+
+@media (min-width:720px){
+  .educator-editor-section{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .educator-editor-section h3{grid-column:1/-1}
+  .educator-editor-field:has(textarea){grid-column:1/-1}
+  .educator-join-layout{grid-template-columns:minmax(220px,.7fr) 28px minmax(0,1.5fr);align-items:start}
+  .educator-join-divider{height:100%;flex-direction:column}.educator-join-divider:before,.educator-join-divider:after{width:1px;height:auto}
+}
+
+@media (max-width:640px){
+  .dashboard-heading{align-items:flex-start}.dashboard-heading>.btn{font-size:.8rem;padding:5px 7px}
+  .dashboard-panel-body{padding:9px}.educator-editor-section,.educator-area-editor{padding:10px}
+  .educator-area-edit-subs{grid-template-columns:1fr}
+  .educator-manager-toolbar{grid-template-columns:1fr}.educator-manager-toolbar .btn{width:100%}
+  .educator-manager-heading{align-items:center}
+  .educator-claim-code{align-items:flex-start;flex-direction:column}
 }

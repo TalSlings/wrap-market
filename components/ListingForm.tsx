@@ -27,6 +27,18 @@ function hasUsableContactDetails(value: any) {
   );
 }
 
+function NewImagePreview({ file, alt }: { file: File; alt: string }) {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    const nextUrl = URL.createObjectURL(file);
+    setUrl(nextUrl);
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [file]);
+
+  return url ? <img src={url} alt={alt} /> : null;
+}
+
 export default function ListingForm({
   userId,
   manufacturers,
@@ -167,6 +179,22 @@ export default function ListingForm({
   const [defectImages, setDefectImages] =
     useState<File[]>([]);
 
+  const existingImages = useMemo(
+    () =>
+      [...(initial?.images || [])].sort(
+        (a: any, b: any) => a.position - b.position
+      ),
+    [initial?.images]
+  );
+  const [removedExistingImageIds, setRemovedExistingImageIds] =
+    useState<string[]>([]);
+  const firstExistingMainImage = existingImages.find(
+    (image: any) => image.image_type === "listing"
+  );
+  const [primaryImageKey, setPrimaryImageKey] = useState<string | null>(
+    firstExistingMainImage ? `existing:${firstExistingMainImage.id}` : null
+  );
+
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   // React state is not updated synchronously. This ref closes the small window
@@ -195,6 +223,79 @@ export default function ListingForm({
     a.includes(v)
       ? a.filter((x) => x !== v)
       : [...a, v];
+
+  const imageFileKey = (kind: "listing" | "defect", file: File) =>
+    `${kind}:${file.name}:${file.size}:${file.lastModified}`;
+
+  const retainedExistingImages = existingImages.filter(
+    (image: any) => !removedExistingImageIds.includes(image.id)
+  );
+  const retainedExistingMainImages = retainedExistingImages.filter(
+    (image: any) => image.image_type === "listing"
+  );
+  const retainedExistingDefectImages = retainedExistingImages.filter(
+    (image: any) => image.image_type === "defect"
+  );
+
+  const mainImageItems = [
+    ...retainedExistingMainImages.map((image: any) => ({
+      key: `existing:${image.id}`,
+      kind: "existing" as const,
+      image,
+    })),
+    ...mainImages.map((file) => ({
+      key: `new:${imageFileKey("listing", file)}`,
+      kind: "new" as const,
+      file,
+    })),
+  ];
+
+  useEffect(() => {
+    if (mainImageItems.some((item) => item.key === primaryImageKey)) return;
+    setPrimaryImageKey(mainImageItems[0]?.key || null);
+  }, [primaryImageKey, removedExistingImageIds, mainImages]);
+
+  function addImages(kind: "listing" | "defect", files: File[]) {
+    const currentFiles = kind === "listing" ? mainImages : defectImages;
+    const existingCount =
+      kind === "listing"
+        ? retainedExistingMainImages.length
+        : retainedExistingDefectImages.length;
+    const limit = kind === "listing" ? 9 : 4;
+    const known = new Set(
+      currentFiles.map((file) => imageFileKey(kind, file))
+    );
+    const additions = files.filter((file) => {
+      const key = imageFileKey(kind, file);
+      if (known.has(key)) return false;
+      known.add(key);
+      return true;
+    });
+    const next = [...currentFiles, ...additions].slice(
+      0,
+      Math.max(0, limit - existingCount)
+    );
+
+    if (kind === "listing") setMainImages(next);
+    else setDefectImages(next);
+  }
+
+  function removeExistingImage(image: any) {
+    setRemovedExistingImageIds((current) => [...current, image.id]);
+  }
+
+  function removeNewImage(kind: "listing" | "defect", file: File) {
+    const key = imageFileKey(kind, file);
+    if (kind === "listing") {
+      setMainImages((current) =>
+        current.filter((item) => imageFileKey(kind, item) !== key)
+      );
+    } else {
+      setDefectImages((current) =>
+        current.filter((item) => imageFileKey(kind, item) !== key)
+      );
+    }
+  }
 
   const materialParents = useMemo(
     () =>
@@ -612,7 +713,8 @@ export default function ListingForm({
 
   async function prepareImages(
     files: File[],
-    kind: "listing" | "defect"
+    kind: "listing" | "defect",
+    positions?: Map<string, number>
   ): Promise<PreparedImage[]> {
     const prepared: PreparedImage[] = [];
 
@@ -625,7 +727,7 @@ export default function ListingForm({
         prepared.push({
           blob: await sanitizeImage(file),
           fileKey,
-          position: i,
+          position: positions?.get(fileKey) ?? i,
         });
       } catch (error: any) {
         throw new Error(
@@ -806,15 +908,7 @@ export default function ListingForm({
       errors.condition = "צריך לבחור מצב למנשא";
     }
 
-    const hasExistingMainImage =
-      (initial?.images || []).some(
-        (x: any) => x.image_type === "listing"
-      );
-
-    if (
-      mainImages.length < 1 &&
-      !hasExistingMainImage
-    ) {
+    if (mainImageItems.length < 1) {
       errors.mainImages =
         "צריך להוסיף לפחות תמונה ראשית אחת";
     }
@@ -921,11 +1015,40 @@ export default function ListingForm({
         setFieldErrors({});
       }
 
+      if (initial?.id && mainImageItems.length < 1) {
+        const imageError = {
+          mainImages: "אי אפשר לשמור מודעה ללא תמונה ראשית",
+        };
+        setFieldErrors(imageError);
+        scrollToFirstRequiredError(imageError);
+        setBusy(false);
+        return;
+      }
+
+      const orderedMainItems = [...mainImageItems].sort((a, b) => {
+        if (a.key === primaryImageKey) return -1;
+        if (b.key === primaryImageKey) return 1;
+        return 0;
+      });
+      const mainPositions = new Map<string, number>();
+      orderedMainItems.forEach((item, position) => {
+        if (item.kind === "new") {
+          mainPositions.set(imageFileKey("listing", item.file), position);
+        }
+      });
+      const defectPositions = new Map<string, number>();
+      defectImages.forEach((file, index) => {
+        defectPositions.set(
+          imageFileKey("defect", file),
+          retainedExistingDefectImages.length + index
+        );
+      });
+
       // Decode every newly selected image before creating or updating the
       // listing row. A bad file therefore cannot leave a partial listing behind.
       const [preparedMainImages, preparedDefectImages] = await Promise.all([
-        prepareImages(mainImages, "listing"),
-        prepareImages(defectImages, "defect"),
+        prepareImages(mainImages, "listing", mainPositions),
+        prepareImages(defectImages, "defect", defectPositions),
       ]);
 
       const mid =
@@ -1067,6 +1190,49 @@ export default function ListingForm({
 
       if (preparedDefectImages.length) {
         await upload(id, preparedDefectImages, "defect");
+      }
+
+      if (initial?.id) {
+        for (let position = 0; position < orderedMainItems.length; position++) {
+          const item = orderedMainItems[position];
+          if (item.kind !== "existing") continue;
+
+          const { error } = await s
+            .from("listing_images")
+            .update({ position })
+            .eq("id", item.image.id)
+            .eq("owner_id", userId);
+          if (error) throw error;
+        }
+
+        for (let position = 0; position < retainedExistingDefectImages.length; position++) {
+          const { error } = await s
+            .from("listing_images")
+            .update({ position })
+            .eq("id", retainedExistingDefectImages[position].id)
+            .eq("owner_id", userId);
+          if (error) throw error;
+        }
+
+        const removedImages = existingImages.filter((image: any) =>
+          removedExistingImageIds.includes(image.id)
+        );
+        if (removedImages.length) {
+          const { error: deleteRowsError } = await s
+            .from("listing_images")
+            .delete()
+            .in(
+              "id",
+              removedImages.map((image: any) => image.id)
+            )
+            .eq("owner_id", userId);
+          if (deleteRowsError) throw deleteRowsError;
+
+          const { error: deleteFilesError } = await s.storage
+            .from("listing-images")
+            .remove(removedImages.map((image: any) => image.storage_path));
+          if (deleteFilesError) throw deleteFilesError;
+        }
       }
 
       if (
@@ -2081,20 +2247,71 @@ export default function ListingForm({
             תמונות ראשיות * — עד 9
           </label>
 
+          {mainImageItems.length > 0 && (
+            <div className="listing-image-editor" aria-label="תמונות המודעה">
+              {mainImageItems.map((item, index) => {
+                const selected = item.key === primaryImageKey;
+                return (
+                  <div
+                    className={`listing-image-edit-card${selected ? " is-primary" : ""}`}
+                    key={item.key}
+                  >
+                    <div className="listing-image-edit-preview">
+                      {item.kind === "existing" ? (
+                        item.image.preview_url ? (
+                          <img
+                            src={item.image.preview_url}
+                            alt={`תמונת מודעה ${index + 1}`}
+                          />
+                        ) : (
+                          <span className="muted">התמונה לא זמינה לתצוגה</span>
+                        )
+                      ) : (
+                        <NewImagePreview
+                          file={item.file}
+                          alt={`תמונה חדשה ${index + 1}`}
+                        />
+                      )}
+                      {selected && <span className="listing-primary-badge">ראשית</span>}
+                    </div>
+                    <div className="listing-image-edit-actions">
+                      <button
+                        className="btn small"
+                        type="button"
+                        aria-pressed={selected}
+                        disabled={selected}
+                        onClick={() => setPrimaryImageKey(item.key)}
+                      >
+                        {selected ? "תמונה ראשית" : "בחירה כראשית"}
+                      </button>
+                      <button
+                        className="btn small danger-button"
+                        type="button"
+                        onClick={() =>
+                          item.kind === "existing"
+                            ? removeExistingImage(item.image)
+                            : removeNewImage("listing", item.file)
+                        }
+                      >
+                        הסרה
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <input
             className="input"
             type="file"
             aria-label="תמונות ראשיות"
             accept="image/*"
             multiple
-            onChange={(e) =>
-              setMainImages(
-                Array.from(
-                  e.target
-                    .files || []
-                ).slice(0, 9)
-              )
-            }
+            onChange={(e) => {
+              addImages("listing", Array.from(e.target.files || []));
+              e.currentTarget.value = "";
+            }}
           />
           {fieldErrors.mainImages && (
             <div className="danger" role="alert">
@@ -2108,20 +2325,53 @@ export default function ListingForm({
             תמונות פגמים — עד 4
           </label>
 
+          {(retainedExistingDefectImages.length > 0 || defectImages.length > 0) && (
+            <div className="listing-image-editor defect-images" aria-label="תמונות פגמים">
+              {retainedExistingDefectImages.map((image: any, index: number) => (
+                <div className="listing-image-edit-card" key={`existing:${image.id}`}>
+                  <div className="listing-image-edit-preview">
+                    {image.preview_url ? (
+                      <img src={image.preview_url} alt={`תמונת פגם ${index + 1}`} />
+                    ) : (
+                      <span className="muted">התמונה לא זמינה לתצוגה</span>
+                    )}
+                  </div>
+                  <button
+                    className="btn small danger-button"
+                    type="button"
+                    onClick={() => removeExistingImage(image)}
+                  >
+                    הסרה
+                  </button>
+                </div>
+              ))}
+              {defectImages.map((file, index) => (
+                <div className="listing-image-edit-card" key={`new:${imageFileKey("defect", file)}`}>
+                  <div className="listing-image-edit-preview">
+                    <NewImagePreview file={file} alt={`תמונת פגם חדשה ${index + 1}`} />
+                  </div>
+                  <button
+                    className="btn small danger-button"
+                    type="button"
+                    onClick={() => removeNewImage("defect", file)}
+                  >
+                    הסרה
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <input
             className="input"
             type="file"
             aria-label="תמונות פגמים"
             accept="image/*"
             multiple
-            onChange={(e) =>
-              setDefectImages(
-                Array.from(
-                  e.target
-                    .files || []
-                ).slice(0, 4)
-              )
-            }
+            onChange={(e) => {
+              addImages("defect", Array.from(e.target.files || []));
+              e.currentTarget.value = "";
+            }}
           />
         </div>
       </div>

@@ -105,12 +105,25 @@ export default async function Page({
     notFound();
   }
 
+  const imagesWithPreviews = await Promise.all(
+    (l.images || []).map(async (image: any) => {
+      const { data } = await s.storage
+        .from("listing-images")
+        .createSignedUrl(image.storage_path, 60 * 60);
+
+      return {
+        ...image,
+        preview_url: data?.signedUrl || null,
+      };
+    })
+  );
+
   return (
     <main className="page">
       <h1>עריכת מודעה</h1>
 
       <ListingForm
-        initial={l}
+        initial={{ ...l, images: imagesWithPreviews }}
         userId={user.id}
         manufacturers={manufacturers || []}
         materials={materials || []}
