@@ -4,3 +4,25 @@ do $$declare rid uuid;begin select id into rid from public.regions where name='�
 insert into public.materials(name,vegan,material_origin) values('כותנה',true,'natural'),('משי',false,'natural'),('צמר',false,'natural'),('שיער בעלי חיים',false,'natural'),('פשתן',true,'natural'),('קנבוס',true,'natural'),('טנסל',true,'artificial'),('ויסקוזה',true,'artificial'),('במבוק',true,'artificial'),('קפוק',true,'natural'),('פוליאסטר',true,'synthetic') on conflict do nothing;
 do $$declare cotton uuid;silk uuid;wool uuid;animal uuid;begin select id into cotton from public.materials where normalized_name='כותנה';select id into silk from public.materials where normalized_name='משי';select id into wool from public.materials where normalized_name='צמר';select id into animal from public.materials where normalized_name='שיער בעלי חיים';insert into public.materials(name,parent_material_id,vegan,material_origin) values('כותנה מצרית',cotton,true,'natural'),('כותנה אורגנית',cotton,true,'natural'),('כותנת פימה',cotton,true,'natural'),('משי טוסה',silk,false,'natural'),('משי מאלברי',silk,false,'natural'),('מרינו',wool,false,'natural'),('קשמיר',animal,false,'natural'),('אלפקה',animal,false,'natural') on conflict do nothing;end$$;
 insert into public.field_help(field_key,content,show_in_form,show_on_listing,show_in_filter) values('manufacturer','שם החברה או האורגת שייצרה את המנשא.',true,false,false),('design','שם העיצוב או הדוגמה של המנשא.',true,false,false),('model','שם המודל המדויק, אם קיים.',true,false,false),('size','בחרי מידה רשמית; חריגות אפשר לציין בהערת המידה.',true,false,false),('gsm','בחרי את קטגוריית ה-GSM המתאימה; אם לא ידוע בחרי "לא ידוע".',true,true,true),('shipping','דמי משלוח על חשבון הקונה אלא אם צוין אחרת.',true,true,false) on conflict(field_key) do update set content=excluded.content;
+
+-- Final current shape of area 2. Kept here as well as in migration 022 so a
+-- newly seeded development database matches production.
+do $$
+declare rid uuid;
+begin
+  select id into rid from public.regions where sort_order=2;
+  update public.regions set name='אזור חיפה' where id=rid;
+  update public.subregions set name='חוף הכרמל',sort_order=3
+    where region_id=rid and name='זכרון יעקב וחוף הכרמל';
+  insert into public.subregions(region_id,name,sort_order) values
+    (rid,'זכרון יעקב, בנימינה וגבעת עדה',4),
+    (rid,'פרדס חנה–כרכור',5)
+  on conflict(region_id,name) do update set sort_order=excluded.sort_order,active=true;
+  update public.subregions set name='קיסריה ואור עקיבא',sort_order=6
+    where region_id=rid and name='קיסריה';
+  update public.subregions set name='חדרה והסביבה',sort_order=7
+    where region_id=rid and name='חדרה';
+  update public.subregions set sort_order=8 where region_id=rid and name='טבעון ויקנעם';
+  update public.subregions set sort_order=9 where region_id=rid and name='רמות מנשה';
+end
+$$;
