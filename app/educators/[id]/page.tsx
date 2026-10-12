@@ -7,6 +7,7 @@ import EducatorContactActions from "@/components/EducatorContactActions";
 import { pawnAvatarForSeed } from "@/lib/pawnAvatarSeed";
 import { educatorLead, emailLink, formatCompactServiceAreas, formatServiceAreas,
   getDirectoryData, hasMeaningfulText, safeWebUrl } from "@/lib/educators";
+import { ksharimPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,24 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const { educators } = await getDirectoryData();
   const educator = educators.find((e) => e.id === id);
-  return { title: educator ? `המדריכה ${educator.full_name}` : "מדריכה",
-    robots: { index: false, follow: false } };
+  if (!educator) {
+    return {
+      title: { absolute: "מדריכה לא נמצאה | קשרים" },
+      robots: { index: false, follow: false },
+    };
+  }
+  const title = `${educator.full_name} — מדריכת נשיאת תינוקות`;
+  const description = educatorLead(educator, 155) ||
+    `הפרופיל המקצועי של ${educator.full_name}, מדריכת נשיאת תינוקות.`;
+  return {
+    ...ksharimPageMetadata({
+      title,
+      description,
+      url: `/educators/${id}`,
+      image: safeWebUrl(educator.photo_url),
+    }),
+    robots: { index: false, follow: false },
+  };
 }
 
 function Detail({ title, text }: { title: string; text: string | null }) {

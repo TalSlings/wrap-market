@@ -5,6 +5,7 @@ import { Noto_Sans_Hebrew, Noto_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import { Suspense } from "react";
+import { KSHARIM_NAME, KSHARIM_SHARE_IMAGE } from "@/lib/siteMetadata";
 
 const notoHebrew = Noto_Sans_Hebrew({
   subsets: ["hebrew"],
@@ -21,27 +22,27 @@ const notoLatin = Noto_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL("https://ksharim-baby.org.il"),
   title: {
-    default: "קשרים",
+    default: KSHARIM_NAME,
     template: "%s | קשרים",
   },
   description: "קשרים — מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
-  applicationName: "קשרים",
+  applicationName: KSHARIM_NAME,
   alternates: { canonical: "/" },
   robots: { index: false, follow: true },
   openGraph: {
     type: "website",
     locale: "he_IL",
-    siteName: "קשרים",
-    title: "קשרים",
+    siteName: KSHARIM_NAME,
+    title: KSHARIM_NAME,
     description: "מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
     url: "/",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+    images: [{ url: KSHARIM_SHARE_IMAGE, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "קשרים",
+    title: KSHARIM_NAME,
     description: "מידע ושירותים קהילתיים בתחום נשיאת התינוקות.",
-    images: ["/opengraph-image"],
+    images: [KSHARIM_SHARE_IMAGE],
   },
 };
 

@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { CONDITION_HELP, CONDITIONS } from "@/lib/constants";
 import { ColorPatternExamples } from "@/components/ColorPatternGuide";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const metadata = {
-  title: { absolute: "שאלות נפוצות | רק ארוגים (וטבעות)" },
-  description:
-    "מידות, GSM, חומרים, מצב ותמחור של מנשאים ארוגים ומנשאי טבעות יד שנייה.",
+  ...marketPageMetadata({
+    title: "שאלות נפוצות — רק ארוגים (וטבעות)",
+    description:
+      "מידות, GSM, חומרים, מצב ותמחור של מנשאים ארוגים ומנשאי טבעות יד שנייה.",
+    url: "/faq",
+  }),
 };
 
 export default function FaqPage() {

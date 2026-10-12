@@ -5,10 +5,15 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import ListingForm from "@/components/ListingForm";
 import type { Metadata } from "next";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: { absolute: "עריכת מודעה | רק ארוגים (וטבעות)" },
+  ...marketPageMetadata({
+    title: "עריכת מודעה — רק ארוגים (וטבעות)",
+    description: "עריכת מודעה קיימת בשוק רק ארוגים (וטבעות).",
+    url: "/account?tab=listings",
+  }),
   robots: { index: false, follow: false },
 };
 

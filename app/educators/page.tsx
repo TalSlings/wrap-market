@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import EducatorCard from "@/components/EducatorCard";
 import EducatorFilters from "@/components/EducatorFilters";
 import { getDirectoryData, orderEducators } from "@/lib/educators";
+import { ksharimPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "מדריכות נשיאה", description: "מדריכות נשיאה לפי אזורי שירות בארץ.",
+  ...ksharimPageMetadata({
+    title: "מדריכות נשיאת תינוקות",
+    description: "מדריכות נשיאת תינוקות לפי אזורי שירות בארץ.",
+    url: "/educators",
+  }),
   robots: { index: false, follow: false },
 };
 
@@ -34,7 +40,9 @@ export default async function EducatorsPage({ searchParams }: {
   }
 
   return <main className="page educator-directory">
-    <div className="educator-intro"><h1>מדריכות נשיאה</h1></div>
+    <div className="educator-intro"><h1>מדריכות נשיאה</h1>
+      <Link className="educator-join-link" href="/educators/join">מדריכה? הצטרפות או חיבור הכרטיס שלך</Link>
+    </div>
     <EducatorFilters regions={regions} subregions={subregions}
       initialRegionId={selectedRegion?.id || ""} initialSubregionId={selectedSubregion?.id || ""}
       initialOnlineOnly={onlineOnly} />

@@ -1,9 +1,14 @@
+import { marketPageMetadata } from "@/lib/siteMetadata";
+
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: { absolute: "לומדות להשתמש במנשא | רק ארוגים (וטבעות)" },
-  description:
-    "למה חשוב ללמוד להשתמש במנשא ארוג או במנשא טבעות, ואיפה אפשר לקבל הדרכה, תרגול ומשוב.",
+  ...marketPageMetadata({
+    title: "לומדות להשתמש במנשא — רק ארוגים (וטבעות)",
+    description:
+      "למה חשוב ללמוד להשתמש במנשא ארוג או במנשא טבעות, ואיפה אפשר לקבל הדרכה, תרגול ומשוב.",
+    url: "/safety",
+  }),
 };
 
 export default function SafetyPage() {

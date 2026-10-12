@@ -7,6 +7,7 @@ import {
   getHomeListingCandidates,
   getHomePublicData,
 } from "@/lib/homePublicData";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,12 @@ export async function generateMetadata({
   const isSearchOrSharedView = Object.keys(query).length > 0;
 
   return {
-    title: { absolute: "רק ארוגים (וטבעות) — שוק יד שנייה" },
-    description:
-      "שוק יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
-    alternates: { canonical: "/market" },
+    ...marketPageMetadata({
+      title: "רק ארוגים (וטבעות)",
+      description:
+        "שוק יד שנייה ישראלי למכירה ולקנייה של מנשאים ארוגים ומנשאי טבעות.",
+      url: "/market",
+    }),
     robots: isSearchOrSharedView
       ? { index: false, follow: true }
       : { index: true, follow: true },

@@ -16,13 +16,19 @@ import { FeatureBadge } from "@/components/DesignMotifs";
 import ShareButton from "@/components/ShareButton";
 import HelpNote from "@/components/HelpNote";
 import { helpText } from "@/lib/helpNotes";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 
 function listingTitle(l: any) {
-  return [l.manufacturer?.name, l.design, l.model]
+  return [
+    l.manufacturer?.name,
+    l.design,
+    l.model,
+    l.size ? labelOf(SIZES, l.size) : null,
+  ]
     .filter(Boolean)
-    .join(" — ") || "מנשא ארוג יד שנייה";
+    .join(", ") || "מנשא ארוג";
 }
 
 export async function generateMetadata({
@@ -47,30 +53,21 @@ export async function generateMetadata({
     };
   }
 
-  const title = listingTitle(l);
+  const itemTitle = listingTitle(l);
+  const title = `למכירה — ${itemTitle}`;
   const details = [
-    l.size ? `מידה ${l.size}` : null,
     Number(l.price) > 0 ? `${l.price} ₪` : null,
   ].filter(Boolean).join(", ");
-  const description = `${title}${details ? `, ${details}` : ""}. מנשא יד שנייה למכירה בישראל.`;
+  const description = `${itemTitle}${details ? `, ${details}` : ""}. מנשא יד שנייה למכירה בישראל.`;
   const isPublic = l.status === "active";
   return {
-    title: { absolute: `${title} | רק ארוגים (וטבעות)` },
-    description,
-    alternates: { canonical: `/listing/${id}` },
-    robots: { index: isPublic, follow: isPublic },
-    openGraph: {
-      type: "website",
-      locale: "he_IL",
+    ...marketPageMetadata({
+      title,
+      description,
       url: `/listing/${id}`,
-      title,
-      description,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-    },
+      image: `/listing/${id}/opengraph-image`,
+    }),
+    robots: { index: isPublic, follow: isPublic },
   };
 }
 

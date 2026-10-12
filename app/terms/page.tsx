@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
+export const metadata = marketPageMetadata({
+  title: "תנאי שימוש — רק ארוגים (וטבעות)",
+  description: "תנאי השימוש בשוק היד השנייה רק ארוגים (וטבעות).",
+  url: "/terms",
+});
 
 export default function TermsPage() {
   return (

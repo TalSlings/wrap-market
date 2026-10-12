@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import AccountClient from "@/components/AccountClient";
 import { getAccountPublicData } from "@/lib/accountPublicData";
 import type { Metadata } from "next";
+import { ksharimPageMetadata, marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +31,17 @@ export async function generateMetadata({
   const normalized = normalizeTab(tab);
   const marketTab = normalized !== "profile";
   return {
-    title: marketTab
-      ? { absolute: "האזור שלי | רק ארוגים (וטבעות)" }
-      : "האזור שלי",
+    ...(marketTab
+      ? marketPageMetadata({
+          title: "רק ארוגים (וטבעות) — אזור אישי",
+          description: "ניהול מודעות, מועדפים וחיפושים שמורים.",
+          url: `/account?tab=${normalized}`,
+        })
+      : ksharimPageMetadata({
+          title: "קשרים — אזור אישי",
+          description: "ניהול הפרופיל והעדפות החשבון.",
+          url: "/account",
+        })),
     robots: { index: false, follow: false },
   };
 }

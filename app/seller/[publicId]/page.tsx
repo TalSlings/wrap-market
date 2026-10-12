@@ -6,6 +6,7 @@ import ShareShelfButton from "@/components/ShareShelfButton";
 import { FeatureBadge, WovenCorner } from "@/components/DesignMotifs";
 import type { Metadata } from "next";
 import { PawnAvatar } from "@/components/PawnAvatar";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
 export async function generateMetadata({
@@ -19,24 +20,19 @@ export async function generateMetadata({
     p_public_seller_id: publicId,
   });
   const displayName = data?.[0]?.display_name;
-  const title = displayName ? `המדף של ${displayName}` : "מדף מנשאים";
+  const title = displayName
+    ? `רק ארוגים (וטבעות) — המדף של ${displayName}`
+    : "רק ארוגים (וטבעות) — מדף אישי";
+  const description = "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.";
 
   return {
-    title: { absolute: `${title} | רק ארוגים (וטבעות)` },
-    description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
-    robots: { index: false, follow: true },
-    openGraph: {
-      type: "website",
-      locale: "he_IL",
+    ...marketPageMetadata({
       title,
-      description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
+      description,
       url: `/seller/${publicId}`,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: "מנשאים ארוגים ומנשאי טבעות למכירה במדף המוכרת.",
-    },
+      image: `/seller/${publicId}/opengraph-image`,
+    }),
+    robots: { index: false, follow: true },
   };
 }
 

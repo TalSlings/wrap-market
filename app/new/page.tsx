@@ -2,9 +2,14 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ListingForm from "@/components/ListingForm";
 import type { Metadata } from "next";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const metadata: Metadata = {
-  title: { absolute: "הוספת מודעה | רק ארוגים (וטבעות)" },
+  ...marketPageMetadata({
+    title: "הוספת מודעה — רק ארוגים (וטבעות)",
+    description: "הוספת מודעת מכירה חדשה לשוק רק ארוגים (וטבעות).",
+    url: "/new",
+  }),
   robots: { index: false, follow: false },
 };
 

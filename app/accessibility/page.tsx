@@ -1,4 +1,11 @@
+import { marketPageMetadata } from "@/lib/siteMetadata";
+
 export const dynamic = "force-dynamic";
+export const metadata = marketPageMetadata({
+  title: "הצהרת נגישות — רק ארוגים (וטבעות)",
+  description: "הצהרת הנגישות של שוק היד השנייה רק ארוגים (וטבעות).",
+  url: "/accessibility",
+});
 
 export default function AccessibilityPage() {
   return (

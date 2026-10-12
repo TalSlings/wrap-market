@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { marketPageMetadata } from "@/lib/siteMetadata";
 
 export const dynamic = "force-dynamic";
+export const metadata = marketPageMetadata({
+  title: "מדיניות פרטיות — רק ארוגים (וטבעות)",
+  description: "מדיניות הפרטיות של שוק היד השנייה רק ארוגים (וטבעות).",
+  url: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
