@@ -8,7 +8,7 @@ export default function EducatorJoinClient({ regions, subregions }: { regions:an
     <div className="educator-join-divider"><span>או</span></div>
     <section className="educator-new-application">
       <h2>עדיין אין לך כרטיס?</h2>
-      <p>מלאי טיוטה חדשה. לאחר השליחה מנהלת תוכל לאשר אותה או להחזיר אותה עם הערה לתיקון.</p>
+      <p>מספיק למלא שם כדי להתחיל. אפשר להוסיף מה שנוח עכשיו ולהשלים את השאר בהמשך. הכרטיס יופיע במאגר רק אחרי אישור מנהלת.</p>
       <EducatorProfileEditor regions={regions} subregions={subregions} />
     </section>
   </div>;
