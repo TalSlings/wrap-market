@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, type ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type Region = { id: string; name: string; sort_order: number };
@@ -76,10 +77,17 @@ function AreaPicker({ regions, subregions, regionIds, subregionIds, onChange }: 
   </fieldset>;
 }
 
+function OptionalFields({ collapsed, children }: { collapsed: boolean; children: ReactNode }) {
+  return collapsed ? <details className="dashboard-panel">
+    <summary>הוספת פרטים (לא חובה)</summary>
+    <div className="dashboard-panel-body educator-editor">{children}</div>
+  </details> : <>{children}</>;
+}
+
 export function EducatorProfileEditor({ initialProfile, regions, subregions, mode="own",
-  educatorId=null, onSaved, setupOnly=false }: {
+  educatorId=null, onSaved }: {
   initialProfile?:any; regions:Region[]; subregions:Subregion[];
-  mode?:"own"|"manager"; educatorId?:string|null; onSaved?:()=>void; setupOnly?:boolean;
+  mode?:"own"|"manager"; educatorId?:string|null; onSaved?:()=>void;
 }) {
   const s=useMemo(()=>createClient(),[]);
   const [profile,setProfile]=useState({...EMPTY_PROFILE,...(initialProfile || {})});
@@ -87,10 +95,13 @@ export function EducatorProfileEditor({ initialProfile, regions, subregions, mod
   const [subregionIds,setSubregionIds]=useState<string[]>(initialProfile?.subregion_ids || []);
   const [busy,setBusy]=useState(false); const [message,setMessage]=useState("");
   const approved=initialProfile?.review_status==="approved";
+  const isNewApplication=mode==="own" && !initialProfile;
   const change=(name:string,value:string)=>setProfile((current:any)=>({...current,[name]:value}));
 
   async function save(submit=false) {
-    if (busy) return; setBusy(true); setMessage("");
+    if (busy) return;
+    if (!profile.full_name?.trim()) { setMessage("צריך למלא שם"); return; }
+    setBusy(true); setMessage("");
     const rpc=mode==="manager" ? "admin_save_educator_profile" : "save_my_educator_profile";
     const payload=Object.fromEntries(Object.keys(EMPTY_PROFILE).map((key)=>[key,profile[key]]));
     const fields={p_profile:payload,p_region_ids:regionIds,p_subregion_ids:subregionIds};
@@ -102,32 +113,32 @@ export function EducatorProfileEditor({ initialProfile, regions, subregions, mod
       if (submitError) { setMessage(submitError.message); setBusy(false); return; }
     }
     setMessage(submit ? "הפרטים נשלחו לבדיקה" : "השינויים נשמרו");
-    setBusy(false); onSaved?.();
+    setBusy(false);
+    if (!submit && !isNewApplication) onSaved?.();
     if (mode==="manager") window.setTimeout(()=>location.reload(),500);
-    if (submit || (mode==="own" && !initialProfile)) location.href="/admin?tab=my-card";
+    if (submit || isNewApplication) location.href="/admin?tab=my-card";
   }
 
   return <form className="educator-editor" onSubmit={(e)=>{e.preventDefault();void save(false);}}>
+    {isNewApplication && <section className="educator-editor-section">
+      <Field label="שם מלא" name="full_name" value={profile.full_name || ""} onChange={change} />
+    </section>}
+    <OptionalFields collapsed={isNewApplication}>
     <section className="educator-editor-section">
       <h3>הפרטים שמופיעים בכרטיס</h3>
-      {!setupOnly && <Field label="שם" name="full_name" value={profile.full_name || ""} onChange={change} />}
-      {!setupOnly && <Field label="שם המותג, אם יש" name="brand_name" value={profile.brand_name || ""} onChange={change} />}
-      <Field label="כמה מילים שמבדילות אותך" name="card_intro" value={profile.card_intro || ""}
-        onChange={change} textarea hint="משפט קצר שיופיע כבר ברשימת המדריכות." />
-      {!setupOnly && <>{mode==="manager" && <Field label="נתיב תמונה" name="photo_url" value={profile.photo_url || ""} onChange={change}
+      {!isNewApplication && <Field label="שם מלא" name="full_name" value={profile.full_name || ""} onChange={change} />}
+      <Field label="שם המותג, אם יש" name="brand_name" value={profile.brand_name || ""} onChange={change} />
+      <Field label="משפט היכרות קצר (לא חובה)" name="card_intro" value={profile.card_intro || ""}
+        onChange={change} textarea hint="אם תרצי, כתבי משפט שיופיע ברשימת המדריכות." />
+      {mode==="manager" && <Field label="נתיב תמונה" name="photo_url" value={profile.photo_url || ""} onChange={change}
         hint="שדה טכני למנהלת; העלאת תמונות עצמאית תתווסף בהמשך." />}
-      <Field label="הכשרה" name="training" value={profile.training || ""} onChange={change} textarea /></>}
+      <Field label="הכשרה" name="training" value={profile.training || ""} onChange={change} textarea />
     </section>
 
     <AreaPicker regions={regions} subregions={subregions} regionIds={regionIds}
       subregionIds={subregionIds} onChange={(r,sb)=>{setRegionIds(r);setSubregionIds(sb);}} />
 
-    {setupOnly && <label className="educator-editor-field"><span>הדרכות אונליין</span>
-      <select value={profile.online_status || "no"} onChange={(e)=>change("online_status",e.target.value)}>
-        <option value="yes">כן</option><option value="special">במקרים מיוחדים</option><option value="no">לא</option>
-      </select>
-    </label>}
-    {!setupOnly && <><section className="educator-editor-section">
+    <section className="educator-editor-section">
       <h3>היכרות מקצועית</h3>
       <Field label="מקצועות משיקים" name="related_professions" value={profile.related_professions || ""} onChange={change} textarea />
       <Field label="מקצועות נוספים" name="additional_professions" value={profile.additional_professions || ""} onChange={change} textarea />
@@ -165,14 +176,15 @@ export function EducatorProfileEditor({ initialProfile, regions, subregions, mod
       <Field label="Instagram" name="instagram_url" value={profile.instagram_url || ""} onChange={change} />
       <Field label="Facebook" name="facebook_url" value={profile.facebook_url || ""} onChange={change} />
       <Field label="קישור נוסף" name="other_social_url" value={profile.other_social_url || ""} onChange={change} />
-    </section></>}
+    </section>
+    </OptionalFields>
 
     {message && <p className="educator-editor-message" role="status">{message}</p>}
     <div className="educator-editor-actions">
-      <button className="btn primary" type="submit" disabled={busy}>
+      <button className={isNewApplication ? "btn" : "btn primary"} type="submit" disabled={busy}>
         {busy ? "שומרת…" : approved || mode==="manager" ? "שמירת שינויים" : "שמירת טיוטה"}
       </button>
-      {!approved && mode==="own" && <button className="btn" type="button" disabled={busy}
+      {!approved && mode==="own" && <button className={isNewApplication ? "btn primary" : "btn"} type="button" disabled={busy}
         onClick={()=>void save(true)}>שמירה ושליחה לבדיקה</button>}
     </div>
   </form>;
@@ -206,8 +218,15 @@ export function EducatorClaimBox() {
   </div>;
 }
 
-function needsClaimSetup(profile:any) {
-  return profile?.claim_setup_pending===true;
+function profileSuggestions(profile:any) {
+  if (!profile) return [];
+  const missing:string[]=[];
+  if (!String(profile.card_intro || "").trim()) missing.push("משפט היכרות קצר");
+  if (!profile.region_ids?.length && !profile.subregion_ids?.length &&
+    profile.online_status!=="yes" && profile.online_status!=="special") {
+    missing.push("אזורי פעילות או סימון הדרכות אונליין");
+  }
+  return missing;
 }
 
 export default function EducatorWorkspace({ profile:initialProfile, managerProfiles:initialManagerProfiles,
@@ -215,9 +234,11 @@ export default function EducatorWorkspace({ profile:initialProfile, managerProfi
   profile:any|null; managerProfiles:any[]; view:"own"|"manager"; regions:Region[]; subregions:Subregion[];
 }) {
   const s=useMemo(()=>createClient(),[]); const [profiles,setProfiles]=useState(initialManagerProfiles || []);
+  const router=useRouter();
   const [editing,setEditing]=useState<string|null>(null); const [adding,setAdding]=useState(false);
   const [query,setQuery]=useState(""); const [message,setMessage]=useState("");
   const filtered=profiles.filter((p)=>JSON.stringify([p.full_name,p.brand_name,p.owner_email]).toLowerCase().includes(query.toLowerCase()));
+  const suggestions=profileSuggestions(initialProfile);
 
   async function action(id:string,actionName:string,note?:string) {
     const {error}=await s.rpc("admin_review_educator",{p_educator_id:id,p_action:actionName,p_note:note || null});
@@ -240,12 +261,11 @@ export default function EducatorWorkspace({ profile:initialProfile, managerProfi
       <div className="dashboard-panel-body">
         <p className="muted">מצב הכרטיס: {reviewLabel(initialProfile.review_status)}</p>
         {initialProfile.review_note && <div className="educator-review-note"><strong>הערה מהמנהלת</strong><p>{initialProfile.review_note}</p></div>}
-        {needsClaimSetup(initialProfile) && <div className="educator-onboarding-note">
-          <h2>לפני שממשיכות</h2><p>בדקי את אזורי השירות והוסיפי משפט קצר שמבדיל אותך. אחר כך כל שדות הכרטיס יישארו פתוחים לעריכה.</p>
-        </div>}
+        {suggestions.length>0 && <aside className="educator-onboarding-note" aria-label="אפשר להשלים בהמשך">
+          <p><strong>אפשר להשלים בהמשך:</strong> {suggestions.join(" · ")}</p>
+        </aside>}
         <EducatorProfileEditor initialProfile={initialProfile} regions={regions} subregions={subregions}
-          setupOnly={needsClaimSetup(initialProfile)}
-          onSaved={()=>needsClaimSetup(initialProfile) ? location.reload() : setMessage("השינויים נשמרו")} />
+          onSaved={()=>router.refresh()} />
         {initialProfile.published && <p><Link className="btn" href={`/educators/${initialProfile.id}`}>צפייה בכרטיס הציבורי</Link></p>}
       </div>
     </section> : <section className="dashboard-panel dashboard-panel-empty">
