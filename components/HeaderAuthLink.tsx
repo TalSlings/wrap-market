@@ -53,7 +53,7 @@ export default function HeaderAuthLink({
         return;
       }
 
-      const [{ data: nextProfile }, { data: adminRow }] = await Promise.all([
+      const [{ data: nextProfile }, { data: adminRow }, { data: dashboardContext }] = await Promise.all([
         supabase
           .from("user_profiles")
           .select(
@@ -66,17 +66,19 @@ export default function HeaderAuthLink({
           .select("user_id")
           .eq("user_id", nextUserId)
           .maybeSingle(),
+        supabase.rpc("get_my_dashboard_context"),
       ]);
 
       if (!active) return;
       setProfile(nextProfile || null);
-      setIsAdmin(Boolean(adminRow));
+      setIsAdmin(Boolean(adminRow || dashboardContext?.has_educator_profile || dashboardContext?.is_manager));
     }
 
     supabase.auth.getSession().then(({ data }) => applySession(data.session));
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      void applySession(session);
+      // Run data requests after Supabase has released the auth callback lock.
+      window.setTimeout(() => { void applySession(session); }, 0);
     });
 
     return () => {
@@ -196,7 +198,7 @@ export default function HeaderAuthLink({
 
           {isAdmin && (
             <Link href="/admin" role="menuitem" onClick={closeMenu}>
-              אזור ניהול
+              לוח בקרה
             </Link>
           )}
 
