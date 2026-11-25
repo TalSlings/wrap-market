@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import EducatorCard from "@/components/EducatorCard";
 import EducatorFilters from "@/components/EducatorFilters";
 import { getDirectoryData, orderEducators } from "@/lib/educators";
@@ -41,7 +40,6 @@ export default async function EducatorsPage({ searchParams }: {
 
   return <main className="page educator-directory">
     <div className="educator-intro"><h1>מדריכות נשיאה</h1>
-      <Link className="educator-join-link" href="/educators/join">מדריכה? הצטרפות או חיבור הכרטיס שלך</Link>
     </div>
     <EducatorFilters regions={regions} subregions={subregions}
       initialRegionId={selectedRegion?.id || ""} initialSubregionId={selectedSubregion?.id || ""}
