@@ -23,7 +23,7 @@ export default async function EducatorJoinPage() {
     s.from("regions").select("id,name,sort_order").eq("active",true).order("sort_order"),
     s.from("subregions").select("id,name,region_id,sort_order").eq("active",true).order("sort_order"),
   ]);
-  if (workspace) redirect("/admin");
+  if (workspace) redirect("/admin?tab=my-card");
   return <main className="page educator-join-page">
     <h1>הצטרפות למאגר המדריכות</h1>
     <p className="educator-join-intro">אפשר לחבר כרטיס שכבר ייבאנו מהאתר הישן, או ליצור כרטיס חדש לבדיקה.</p>

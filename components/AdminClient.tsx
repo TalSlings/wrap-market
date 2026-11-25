@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { WovenCorner } from "@/components/DesignMotifs";
 import { createClient } from "@/lib/supabase/client";
 
-type Tab =
+type EducatorTab = "educators" | "my-card";
+type Tab = EducatorTab
   | "attention"
   | "listings"
   | "manufacturers"
@@ -89,6 +90,9 @@ export default function AdminClient({
   notes: initialNotes,
   sellers: initialSellers,
   allowIncomplete: initialAllowIncomplete,
+  initialTab,
+  educatorManagement,
+  myCard,
 }: {
   userId: string;
   listings: any[];
@@ -100,10 +104,14 @@ export default function AdminClient({
   notes: any[];
   sellers: any[];
   allowIncomplete: boolean;
+  initialTab?: EducatorTab;
+  educatorManagement: ReactNode;
+  myCard: ReactNode;
 }) {
   const s = createClient();
 
-  const [tab, setTab] = useState<Tab>("attention");
+  const [tab, setTab] = useState<Tab>(initialTab || "attention");
+  const educatorTab = tab === "educators" || tab === "my-card";
   const [q, setQ] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -180,6 +188,8 @@ export default function AdminClient({
     { key: "notes", label: "הערות והנחיות" },
     { key: "colors", label: `צבעים (${colors.length})` },
     { key: "regions", label: `אזורים (${regions.length})` },
+    { key: "educators", label: "ניהול מדריכות" },
+    { key: "my-card", label: "הכרטיס שלי" },
   ];
 
   const notify = (text: string) => {
@@ -1213,7 +1223,27 @@ export default function AdminClient({
 
   return (
     <>
-      <div className="section">
+      <nav className="toolbar" style={{ flexWrap: "wrap" }} aria-label="לשוניות לוח הבקרה">
+        {tabs.map((x) => (
+          <button type="button" key={x.key} className={"btn " + (tab === x.key ? "primary" : "")}
+            aria-pressed={tab === x.key}
+            onClick={() => {
+              const url = new URL(window.location.href);
+              if (x.key === "educators" || x.key === "my-card") url.searchParams.set("tab", x.key);
+              else url.searchParams.delete("tab");
+              window.history.replaceState(null, "", url);
+              setTab(x.key);
+              setQ("");
+            }}>
+            {x.label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === "educators" && educatorManagement}
+      {tab === "my-card" && myCard}
+
+      {!educatorTab && <div className="section">
         <h2>הגדרות הלוח</h2>
 
         <label
@@ -1236,33 +1266,9 @@ export default function AdminClient({
           נשמרות במערכת אבל אינן מוצגות לציבור ומתנהגות
           כמו טיוטות באזור האישי.
         </p>
-      </div>
+      </div>}
 
-      <div
-        className="toolbar"
-        style={{ flexWrap: "wrap" }}
-      >
-        {tabs.map((x) => (
-          <button
-            type="button"
-            key={x.key}
-            className={
-              "btn " +
-              (tab === x.key
-                ? "primary"
-                : "")
-            }
-            onClick={() => {
-              setTab(x.key);
-              setQ("");
-            }}
-          >
-            {x.label}
-          </button>
-        ))}
-      </div>
-
-      {msg && (
+      {!educatorTab && msg && (
         <div
           className="notice"
           role="status"
@@ -1272,7 +1278,7 @@ export default function AdminClient({
         </div>
       )}
 
-      {tab !== "notes" &&
+      {!educatorTab && tab !== "notes" &&
         tab !== "attention" && (
           <div className="field">
             <label>חיפוש</label>
