@@ -104,7 +104,7 @@ export function EducatorProfileEditor({ initialProfile, regions, subregions, mod
     setMessage(submit ? "הפרטים נשלחו לבדיקה" : "השינויים נשמרו");
     setBusy(false); onSaved?.();
     if (mode==="manager") window.setTimeout(()=>location.reload(),500);
-    if (submit || (mode==="own" && !initialProfile)) location.href="/admin";
+    if (submit || (mode==="own" && !initialProfile)) location.href="/admin?tab=my-card";
   }
 
   return <form className="educator-editor" onSubmit={(e)=>{e.preventDefault();void save(false);}}>
@@ -190,7 +190,7 @@ export function EducatorClaimBox() {
   async function claim() {
     if (!preview || busy) return;
     setBusy(true); const {data,error}=await s.rpc("claim_educator_profile",{p_code:code,p_educator_id:preview.id});
-    if (error || !data) {setMessage("לא ניתן לחבר את הכרטיס עם הקוד הזה כרגע.");setPreview(null);setBusy(false);return;} location.href="/admin";
+    if (error || !data) {setMessage("לא ניתן לחבר את הכרטיס עם הקוד הזה כרגע.");setPreview(null);setBusy(false);return;} location.href="/admin?tab=my-card";
   }
   return <div className="educator-claim-box">
     <h2>כבר יש לך כרטיס במאגר?</h2>
@@ -211,8 +211,8 @@ function needsClaimSetup(profile:any) {
 }
 
 export default function EducatorWorkspace({ profile:initialProfile, managerProfiles:initialManagerProfiles,
-  isManager, regions, subregions }: {
-  profile:any|null; managerProfiles:any[]; isManager:boolean; regions:Region[]; subregions:Subregion[];
+  view, regions, subregions }: {
+  profile:any|null; managerProfiles:any[]; view:"own"|"manager"; regions:Region[]; subregions:Subregion[];
 }) {
   const s=useMemo(()=>createClient(),[]); const [profiles,setProfiles]=useState(initialManagerProfiles || []);
   const [editing,setEditing]=useState<string|null>(null); const [adding,setAdding]=useState(false);
@@ -236,9 +236,9 @@ export default function EducatorWorkspace({ profile:initialProfile, managerProfi
   }
 
   return <div className="educator-workspace">
-    {initialProfile ? <details className="dashboard-panel" open={!isManager}>
-      <summary><span>הכרטיס שלי</span><small>{reviewLabel(initialProfile.review_status)}</small></summary>
+    {view==="own" && (initialProfile ? <section className="dashboard-panel">
       <div className="dashboard-panel-body">
+        <p className="muted">מצב הכרטיס: {reviewLabel(initialProfile.review_status)}</p>
         {initialProfile.review_note && <div className="educator-review-note"><strong>הערה מהמנהלת</strong><p>{initialProfile.review_note}</p></div>}
         {needsClaimSetup(initialProfile) && <div className="educator-onboarding-note">
           <h2>לפני שממשיכות</h2><p>בדקי את אזורי השירות והוסיפי משפט קצר שמבדיל אותך. אחר כך כל שדות הכרטיס יישארו פתוחים לעריכה.</p>
@@ -248,13 +248,12 @@ export default function EducatorWorkspace({ profile:initialProfile, managerProfi
           onSaved={()=>needsClaimSetup(initialProfile) ? location.reload() : setMessage("השינויים נשמרו")} />
         {initialProfile.published && <p><Link className="btn" href={`/educators/${initialProfile.id}`}>צפייה בכרטיס הציבורי</Link></p>}
       </div>
-    </details> : <section className="dashboard-panel dashboard-panel-empty">
+    </section> : <section className="dashboard-panel dashboard-panel-empty">
       <h2>כרטיס המדריכה שלי</h2><p>אפשר לחבר כרטיס קיים או להגיש כרטיס חדש.</p>
-      <Link className="btn primary" href="/educators/join">הצטרפות למאגר המדריכות</Link>
-    </section>}
+      <Link className="btn primary" href="/educators/join">חיבור כרטיס קיים או בקשת הצטרפות</Link>
+    </section>)}
 
-    {isManager && <details className="dashboard-panel" open>
-      <summary><span>ניהול מדריכות</span><small>{profiles.length} כרטיסים</small></summary>
+    {view==="manager" && <section className="dashboard-panel" aria-label="ניהול מדריכות">
       <div className="dashboard-panel-body">
         <div className="educator-manager-toolbar">
           <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="חיפוש מדריכה" aria-label="חיפוש מדריכה" />
@@ -285,6 +284,6 @@ export default function EducatorWorkspace({ profile:initialProfile, managerProfi
             educatorId={p.id} initialProfile={p} regions={regions} subregions={subregions} /></div>}
         </article>)}</div>
       </div>
-    </details>}
+    </section>}
   </div>;
 }
