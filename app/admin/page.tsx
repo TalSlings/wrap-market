@@ -20,15 +20,16 @@ export default async function AdminPage() {
   const {data:{user}}=await s.auth.getUser();
   if (!user) redirect("/login?next=/admin");
 
-  const [contextResult,workspaceResult,regionsResult,subregionsResult]=await Promise.all([
+  const [contextResult,workspaceResult,regionsResult,subregionsResult,legacyAdminResult]=await Promise.all([
     s.rpc("get_my_dashboard_context"),
     s.rpc("get_my_educator_workspace"),
     s.from("regions").select("id,name,sort_order,active").eq("active",true).order("sort_order"),
     s.from("subregions").select("id,name,region_id,sort_order,active").eq("active",true).order("sort_order"),
+    s.from("admin_users").select("user_id").eq("user_id",user.id).maybeSingle(),
   ]);
   const context=(contextResult.data || {}) as any;
   const profile=(workspaceResult.data || null) as any;
-  const isManager=Boolean(context.is_manager);
+  const isManager=Boolean(context.is_manager || legacyAdminResult.data);
   if (!isManager && !profile) redirect("/account");
 
   const regions=regionsResult.data || [];
@@ -62,8 +63,10 @@ export default async function AdminPage() {
     <div className="dashboard-heading"><div><p>קשרים</p><h1>לוח בקרה</h1></div>
       <a className="btn" href="/educators">מעבר למאגר המדריכות</a></div>
 
-    <EducatorWorkspace profile={profile} managerProfiles={managerProfiles} isManager={isManager}
-      regions={regions} subregions={subregions} />
+    {!workspaceResult.error && !contextResult.error ? (
+      <EducatorWorkspace profile={profile} managerProfiles={managerProfiles} isManager={isManager}
+        regions={regions} subregions={subregions} />
+    ) : <p role="status">אזור המדריכות אינו זמין כרגע. ניהול שוק יד שנייה זמין למטה.</p>}
 
     {isManager && <details className="dashboard-panel market-admin-panel">
       <summary><span>ניהול שוק יד שנייה</span><small>מודעות, חומרים, משתמשות והגדרות</small></summary>
